@@ -9,6 +9,7 @@
 #include <private/autogen/config.h>
 #include <hwloc.h>
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -25,6 +26,9 @@ hwloc_utils_input_format_usage(FILE *where, int addspaces)
   fprintf (where, "  -i <XML file>   %*sRead topology from XML file <path>\n",
 	   addspaces, " ");
 #endif
+  fprintf (where, "  --input <JSON file>\n");
+  fprintf (where, "  -i <JSON file>  %*sRead topology from JSON file <path>\n",
+	   addspaces, " ");
 #ifdef HWLOC_LINUX_SYS
   fprintf (where, "  --input <directory>\n");
   fprintf (where, "  -i <directory>  %*sRead topology from chroot containing the /proc and /sys\n",
@@ -42,6 +46,7 @@ hwloc_utils_input_format_usage(FILE *where, int addspaces)
 #ifdef HWLOC_HAVE_XML
 	   "xml, "
 #endif
+	   "json, "
 #ifdef HWLOC_LINUX_SYS
 	   "fsroot, "
 #endif
@@ -52,6 +57,7 @@ hwloc_utils_input_format_usage(FILE *where, int addspaces)
 enum hwloc_utils_input_format {
   HWLOC_UTILS_INPUT_DEFAULT,
   HWLOC_UTILS_INPUT_XML,
+  HWLOC_UTILS_INPUT_JSON,
   HWLOC_UTILS_INPUT_FSROOT,
   HWLOC_UTILS_INPUT_SYNTHETIC
 };
@@ -63,6 +69,8 @@ hwloc_utils_parse_input_format(const char *name, const char *callname)
     return HWLOC_UTILS_INPUT_DEFAULT;
   else if (!strncasecmp(name, "xml", 1))
     return HWLOC_UTILS_INPUT_XML;
+  else if (!strncasecmp(name, "json", 1))
+    return HWLOC_UTILS_INPUT_JSON;
   else if (!strncasecmp(name, "fsroot", 1))
     return HWLOC_UTILS_INPUT_FSROOT;
   else if (!strncasecmp(name, "synthetic", 1))
@@ -154,6 +162,7 @@ hwloc_utils_enable_input_format(struct hwloc_topology *topology,
 	printf("assuming `%s' is a file-system root\n", input);
       input_format = HWLOC_UTILS_INPUT_FSROOT;
     } else if (S_ISREG(inputst.st_mode)) {
+/* FIXME: look at xml/json extension */
       if (verbose)
 	printf("assuming `%s' is a XML file\n", input);
       input_format = HWLOC_UTILS_INPUT_XML;
@@ -177,6 +186,47 @@ hwloc_utils_enable_input_format(struct hwloc_topology *topology,
     exit(EXIT_FAILURE);
 #endif /* HWLOC_HAVE_XML */
     break;
+
+  case HWLOC_UTILS_INPUT_JSON: {
+    int fd;
+    size_t buflen = 4096, offset, readlen;
+    char *buffer = malloc(buflen+1);
+    size_t ret;
+
+    if (!strcmp(input, "-"))
+      input = "/dev/stdin";
+
+    fd = open(input, O_RDONLY);
+    if (fd < 0) {
+      perror("Setting source JSON file");
+      return EXIT_FAILURE;
+    }
+
+    offset = 0; readlen = buflen;
+    while (1) {
+      ret = read(fd, buffer+offset, readlen);
+      if (ret < 0) {
+	perror("Reading source JSON file");
+	return EXIT_FAILURE;
+      }
+
+      offset += ret;
+      buffer[offset] = 0;
+
+      if (ret != readlen)
+	break;
+
+      buflen *= 2;
+      buffer = realloc(buffer, buflen+1);
+      readlen = buflen/2;
+    }
+
+    close(fd);
+
+    hwloc_topology_set_jsonbuffer(topology, buffer, offset+1);
+    free(buffer);
+    break;
+  }
 
   case HWLOC_UTILS_INPUT_FSROOT:
 #ifdef HWLOC_LINUX_SYS

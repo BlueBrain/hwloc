@@ -800,6 +800,8 @@ HWLOC_DECLSPEC int hwloc_topology_set_xml(hwloc_topology_t __hwloc_restrict topo
  */
 HWLOC_DECLSPEC int hwloc_topology_set_xmlbuffer(hwloc_topology_t __hwloc_restrict topology, const char * __hwloc_restrict buffer, int size);
 
+HWLOC_DECLSPEC int hwloc_topology_set_jsonbuffer(hwloc_topology_t __hwloc_restrict topology, const char * __hwloc_restrict buffer, int size);
+
 /** \brief Provide a distance matrix.
  *
  * Provide the matrix of distances between a set of objects of the given type.
@@ -924,6 +926,14 @@ HWLOC_DECLSPEC int hwloc_topology_export_xml(hwloc_topology_t topology, const ch
  * This memory buffer may be loaded later through hwloc_topology_set_xmlbuffer().
  */
 HWLOC_DECLSPEC void hwloc_topology_export_xmlbuffer(hwloc_topology_t topology, char **xmlbuffer, int *buflen);
+
+/** \brief Export the topology into a newly-allocated JSON memory buffer.
+ *
+ * \p jsonbuffer is allocated by the callee and should be free with free() later in the caller.
+ *
+ * This memory buffer may be loaded later through hwloc_topology_set_jsonbuffer().
+ */
+HWLOC_DECLSPEC void hwloc_topology_export_jsonbuffer(hwloc_topology_t topology, char **jsonbuffer, int *buflen);
 
 /** \brief Add a MISC object to the topology
  *

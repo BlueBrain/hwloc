@@ -1926,6 +1926,8 @@ hwloc_discover(struct hwloc_topology *topology)
   } else if (topology->backend_type == HWLOC_BACKEND_XML) {
     hwloc_look_xml(topology);
 #endif
+  } else if (topology->backend_type == HWLOC_BACKEND_JSON) {
+    hwloc_look_json(topology);
   } else {
 
   /* Raw detection, from coarser levels to finer levels for more efficiency.  */
@@ -2130,6 +2132,9 @@ hwloc_discover(struct hwloc_topology *topology)
       /* TODO */
     }
 #endif
+    else if (topology->backend_type == HWLOC_BACKEND_JSON) {
+      /* TODO */
+    }
 #ifdef HWLOC_HAVE_LIBPCI
     else if (topology->is_thissystem) {
       hwloc_look_libpci(topology);
@@ -2383,6 +2388,9 @@ hwloc_backend_exit(struct hwloc_topology *topology)
     hwloc_backend_xml_exit(topology);
     break;
 #endif
+  case HWLOC_BACKEND_JSON:
+    hwloc_backend_json_exit(topology);
+    break;
   case HWLOC_BACKEND_SYNTHETIC:
     hwloc_backend_synthetic_exit(topology);
     break;
@@ -2453,6 +2461,17 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
   errno = ENOSYS;
   return -1;
 #endif /* !HWLOC_HAVE_XML */
+}
+
+int
+hwloc_topology_set_jsonbuffer(struct hwloc_topology *topology __hwloc_attribute_unused,
+                              const char *jsonbuffer __hwloc_attribute_unused,
+                              int size __hwloc_attribute_unused)
+{
+  /* cleanup existing backend */
+  hwloc_backend_exit(topology);
+
+  return hwloc_backend_json_init(topology, jsonbuffer, size);
 }
 
 int

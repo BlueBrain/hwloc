@@ -24,6 +24,7 @@ sources = \
         topology.c \
         traversal.c \
         distances.c \
+        topology-json.c \
         topology-synthetic.c \
         bind.c \
         cpuset.c \

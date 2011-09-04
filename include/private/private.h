@@ -50,6 +50,7 @@ typedef enum hwloc_backend_e {
 #ifdef HWLOC_HAVE_XML
   HWLOC_BACKEND_XML,
 #endif
+  HWLOC_BACKEND_JSON,
   /* This value is only here so that we can end the enum list without
      a comma (thereby preventing compiler warnings) */
   HWLOC_BACKEND_MAX
@@ -152,6 +153,10 @@ struct hwloc_topology {
       } *first_distances, *last_distances;
     } xml;
 #endif /* HWLOC_HAVE_XML */
+    struct hwloc_backend_params_json_s {
+      char *buffer;
+      /* FIXME distances */
+    } json;
     struct hwloc_backend_params_synthetic_s {
       /* synthetic backend parameters */
       char *string;
@@ -185,6 +190,10 @@ extern int hwloc_backend_xml_init(struct hwloc_topology *topology, const char *x
 extern void hwloc_look_xml(struct hwloc_topology *topology);
 extern void hwloc_backend_xml_exit(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_XML */
+
+extern int hwloc_backend_json_init(struct hwloc_topology *topology, const char *jsonbuffer, int buflen);
+extern void hwloc_look_json(struct hwloc_topology *topology);
+extern void hwloc_backend_json_exit(struct hwloc_topology *topology);
 
 #ifdef HWLOC_SOLARIS_SYS
 extern void hwloc_look_solaris(struct hwloc_topology *topology);

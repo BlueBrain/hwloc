@@ -229,7 +229,7 @@ void usage(const char *name, FILE *where)
 #ifdef HWLOC_HAVE_XML
 		  ", xml"
 #endif /* HWLOC_HAVE_XML */
-		  "\n");
+		  ", json\n");
   fprintf (where, "\nFormatting options:\n");
   fprintf (where, "  -l --logical          Display hwloc logical object indexes\n");
   fprintf (where, "                        (default for console output)\n");
@@ -285,7 +285,8 @@ enum output_format {
   LSTOPO_OUTPUT_PDF,
   LSTOPO_OUTPUT_PS,
   LSTOPO_OUTPUT_SVG,
-  LSTOPO_OUTPUT_XML
+  LSTOPO_OUTPUT_XML,
+  LSTOPO_OUTPUT_JSON
 };
 
 static enum output_format
@@ -309,6 +310,8 @@ parse_output_format(const char *name, char *callname)
     return LSTOPO_OUTPUT_SVG;
   else if (!strcasecmp(name, "xml"))
     return LSTOPO_OUTPUT_XML;
+  else if (!strcasecmp(name, "json"))
+    return LSTOPO_OUTPUT_JSON;
 
   fprintf(stderr, "file format `%s' not supported\n", name);
   usage(callname, stderr);
@@ -615,6 +618,9 @@ main (int argc, char *argv[])
       output_xml(topology, filename, logical, legend, verbose_mode);
       break;
 #endif
+    case LSTOPO_OUTPUT_JSON:
+      output_json(topology, filename, logical, legend, verbose_mode);
+      break;
     default:
       fprintf(stderr, "file format not supported\n");
       usage(callname, stderr);

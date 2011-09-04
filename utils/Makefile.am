@@ -19,7 +19,7 @@ if HWLOC_BUILD_UTILS
 bin_PROGRAMS = lstopo hwloc-calc hwloc-bind hwloc-distrib hwloc-ps hwloc-distances
 endif
 
-lstopo_SOURCES = lstopo.h lstopo.c lstopo-color.c lstopo-text.c lstopo-draw.c lstopo-fig.c
+lstopo_SOURCES = lstopo.h lstopo.c lstopo-color.c lstopo-text.c lstopo-draw.c lstopo-fig.c lstopo-json.c
 if HWLOC_HAVE_CAIRO
 lstopo_SOURCES += lstopo-cairo.c
 endif

@@ -482,6 +482,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_discovery_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xml.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xmlbuffer.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_export_jsonbuffer.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_flags_e.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_get_allowed_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_get_allowed_nodeset.3 \
@@ -508,6 +509,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_synthetic.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_xml.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_xmlbuffer.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_jsonbuffer.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_distance_matrix.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_t.3 \
