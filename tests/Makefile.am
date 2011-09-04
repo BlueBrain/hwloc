@@ -42,7 +42,8 @@ check_PROGRAMS = hwloc_bitmap \
 	hwloc_insert_misc \
 	hwloc_topology_restrict \
 	hwloc_obj_infos \
-	hwloc_iodevs
+	hwloc_iodevs \
+	jsonbuffer
 
 if HWLOC_HAVE_LINUX_LIBNUMA
 check_PROGRAMS += linux-libnuma
