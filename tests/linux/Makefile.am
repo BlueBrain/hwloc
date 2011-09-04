@@ -27,6 +27,7 @@ sysfs_outputs = \
 		8ia64-4s2c.output \
 		16amd64-8n2c.output \
 		16amd64-8n2c-cpusets.output \
+		16amd64-8n2c-cpusets.json.output \
 		16amd64-8n2c-cpusets.xml.output \
 		16amd64-8n2c-cpusets_noadmin.output \
 		16em64t-4s2cu2c.output \
@@ -70,6 +71,7 @@ sysfs_tarballs = \
 		8ia64-4s2c.tar.bz2 \
 		16amd64-8n2c.tar.bz2 \
 		16amd64-8n2c-cpusets.tar.bz2 \
+		16amd64-8n2c-cpusets.json.source \
 		16amd64-8n2c-cpusets.xml.source \
 		16amd64-8n2c-cpusets_noadmin.source \
 		16em64t-4s2cu2c.tar.bz2 \
@@ -101,6 +103,7 @@ sysfs_excludes = \
 # Each output `xyz.output' may have a corresponding `xyz.options'
 # file modifying the behavior of lstopo
 sysfs_options = \
+		16amd64-8n2c-cpusets.json.options \
 		16amd64-8n2c-cpusets.xml.options \
 		16amd64-8n2c-cpusets_noadmin.options \
 		16em64t-4s2c2t-offlines.xml.options \
