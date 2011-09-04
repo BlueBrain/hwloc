@@ -162,10 +162,16 @@ hwloc_utils_enable_input_format(struct hwloc_topology *topology,
 	printf("assuming `%s' is a file-system root\n", input);
       input_format = HWLOC_UTILS_INPUT_FSROOT;
     } else if (S_ISREG(inputst.st_mode)) {
-/* FIXME: look at xml/json extension */
-      if (verbose)
-	printf("assuming `%s' is a XML file\n", input);
-      input_format = HWLOC_UTILS_INPUT_XML;
+      char *dot = strrchr(input, '.');
+      if (dot && !strcmp(dot+1, "json")) {
+	if (verbose)
+	  printf("assuming `%s' is a JSON file\n", input);
+	input_format = HWLOC_UTILS_INPUT_JSON;
+      } else {
+	if (verbose)
+	  printf("assuming `%s' is a XML file\n", input);
+	input_format = HWLOC_UTILS_INPUT_XML;
+      }
     } else {
       fprintf (stderr, "Unrecognized input file: %s\n", input);
       usage (callname, stderr);
