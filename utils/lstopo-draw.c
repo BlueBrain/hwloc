@@ -596,17 +596,23 @@ core_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, 
 
   DYNA_CHECK();
 
-  RECURSE_RECT(level, &null_draw_methods, 0, gridsize);
+  if (level->arity) {
+    RECURSE_RECT(level, &null_draw_methods, 0, gridsize);
 
-  methods->box(output, CORE_R_COLOR, CORE_G_COLOR, CORE_B_COLOR, depth, x, totwidth, y, totheight);
+    methods->box(output, CORE_R_COLOR, CORE_G_COLOR, CORE_B_COLOR, depth, x, totwidth, y, totheight);
 
-  if (fontsize) {
-    char text[64];
-    lstopo_obj_snprintf(text, sizeof(text), level, logical);
-    methods->text(output, 0, 0, 0, fontsize, depth-1, x + gridsize, y + gridsize, text);
+    if (fontsize) {
+      char text[64];
+      lstopo_obj_snprintf(text, sizeof(text), level, logical);
+      methods->text(output, 0, 0, 0, fontsize, depth-1, x + gridsize, y + gridsize, text);
+    }
+
+    RECURSE_RECT(level, methods, 0, gridsize);
+  } else {
+    /* Nothing inside, these are dumb cores, show only small squares.  */
+    methods->box(output, CORE_R_COLOR, CORE_G_COLOR, CORE_B_COLOR, depth, x, gridsize, y, gridsize);
+    *retwidth = *retheight = gridsize;
   }
-
-  RECURSE_RECT(level, methods, 0, gridsize);
 
   DYNA_SAVE();
 }
