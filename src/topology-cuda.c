@@ -87,10 +87,11 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
     if (!pci_card)
       return;
 
-    cuda_device = hwloc_alloc_setup_object(HWLOC_OBJ_MISC, -1);
+    cuda_device = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
     snprintf(cuda_name, sizeof(cuda_name), "cuda%d", device);
     cuda_device->name = strdup(cuda_name);
     cuda_device->depth = (unsigned) HWLOC_TYPE_DEPTH_UNKNOWN;
+    cuda_device->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
 
     hwloc_insert_object_by_parent(topology, pci_card, cuda_device);
 

@@ -437,25 +437,31 @@ pci_device_draw(hwloc_topology_t topology __hwloc_attribute_unused, struct draw_
 static void
 os_device_draw(hwloc_topology_t topology __hwloc_attribute_unused, struct draw_methods *methods, int logical __hwloc_attribute_unused, hwloc_obj_t level, void *output, unsigned depth, unsigned x, unsigned *retwidth, unsigned y, unsigned *retheight)
 {
-  unsigned textwidth = 0;
   unsigned totheight = gridsize;
   unsigned totwidth = gridsize;
+  unsigned textwidth = gridsize;
+  unsigned textheight = (fontsize ? (fontsize + gridsize) : 0);
+  unsigned myheight = textheight;
+  unsigned mywidth = 0;
   int n;
+
+  DYNA_CHECK();
 
   if (fontsize) {
     n = strlen(level->name);
-    textwidth = (n * fontsize * 3) / 4;
-    totheight = gridsize + fontsize + gridsize;
-    totwidth = gridsize + textwidth + gridsize;
+    textwidth = (n * fontsize * 4) / 4;
   }
 
-  *retwidth = totwidth;
-  *retheight = totheight;
+  RECURSE_RECT(level, &null_draw_methods, gridsize, gridsize);
 
   methods->box(output, OS_DEVICE_R_COLOR, OS_DEVICE_G_COLOR, OS_DEVICE_B_COLOR, depth, x, *retwidth, y, *retheight);
 
   if (fontsize)
     methods->text(output, 0, 0, 0, fontsize, depth-1, x + gridsize, y + gridsize, level->name);
+
+  RECURSE_RECT(level, methods, gridsize, gridsize);
+
+  DYNA_SAVE();
 }
 
 static void
