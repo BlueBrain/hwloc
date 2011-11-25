@@ -121,7 +121,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
       group->attr->group.tight = 1;
 
       shared->name = strdup("Shared");
-      shared->memory.total_memory = memory->memory.local_memory = prop.sharedMemPerBlock;
+      shared->memory.total_memory = shared->memory.local_memory = prop.sharedMemPerBlock;
       group->name = strdup("MP");
 
       hwloc_insert_object_by_parent(topology, space, shared);
