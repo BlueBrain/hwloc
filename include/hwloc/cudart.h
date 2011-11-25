@@ -21,6 +21,7 @@
 #include <hwloc/linux.h>
 #include <hwloc/helper.h>
 
+#include <cuda.h>
 #include <cuda_runtime_api.h>
 
 
@@ -48,7 +49,7 @@ hwloc_cudart_get_device_pci_ids(hwloc_topology_t topology __hwloc_attribute_unus
     return -1;
   }
 
-#if CUDART_VERSION >= 4000
+#ifdef CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID
   *domain = prop.pciDomainID;
 #else
   *domain = 0;
