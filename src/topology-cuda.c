@@ -99,6 +99,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
     memory->memory.total_memory = memory->memory.local_memory = prop.totalGlobalMem;
     hwloc_insert_object_by_parent(topology, cuda_device, memory);
 
+#ifdef HWLOC_HAVE_CUDA_L2CACHESIZE
     if (prop.l2CacheSize) {
       hwloc_obj_t cache = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
 
@@ -111,6 +112,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
       hwloc_insert_object_by_parent(topology, memory, cache);
       space = cache;
     }
+#endif
 
     hwloc_debug("%d MP(s)\n", prop.multiProcessorCount);
     for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {

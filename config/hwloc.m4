@@ -646,13 +646,10 @@ EOF])
             HWLOC_CUDA_LIBS="-lcudart"
             AC_SUBST(HWLOC_CUDA_LIBS)
             hwloc_have_cudart=yes
-            AC_CHECK_MEMBER([struct cudaDeviceProp.pciDomainID],
-              AC_DEFINE([HWLOC_HAVE_DOMAINID],[1],[Define to 1 if CUDA device properties include DomainID]),
+            AC_CHECK_MEMBER([struct cudaDeviceProp.l2CacheSize],
+              AC_DEFINE([HWLOC_HAVE_CUDA_L2CACHESIZE],[1],[Define to 1 if CUDA device properties include l2CacheSize]),
               , [[#include <cuda_runtime_api.h>]])
             
-            AC_CHECK_MEMBER([struct cudaDeviceProp.pciBusID],
-              AC_DEFINE([HWLOC_HAVE_BUSID],[1],[Define to 1 if CUDA device properties include BusID]),
-              , [[#include <cuda_runtime_api.h>]])
             AC_DEFINE([HWLOC_HAVE_CUDART], [1], [Define to 1 if you have the `cudart' SDK.])
           ])
         ])
