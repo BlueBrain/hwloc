@@ -1,5 +1,5 @@
 # Copyright © 2009-2010 INRIA.  All rights reserved.
-# Copyright © 2009-2010 Université Bordeaux 1
+# Copyright © 2009-2011 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
 # See COPYING in top-level directory.
@@ -37,6 +37,10 @@ ldflags =
 if HWLOC_HAVE_LIBPCI
 sources += topology-libpci.c
 endif HWLOC_HAVE_LIBPCI
+
+if HWLOC_HAVE_CUDART
+sources += topology-cuda.c
+endif HWLOC_HAVE_CUDART
 
 if HWLOC_HAVE_SOLARIS
 sources += topology-solaris.c
@@ -105,13 +109,13 @@ endif HWLOC_HAVE_CPUID
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
-libhwloc_la_LDFLAGS = $(ldflags) -version-number $(libhwloc_so_version) $(HWLOC_LIBXML2_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS) $(HWLOC_PCI_LIBS)
+libhwloc_la_LDFLAGS = $(ldflags) -version-number $(libhwloc_so_version) $(HWLOC_LIBXML2_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS) $(HWLOC_PCI_LIBS) $(HWLOC_CUDA_LIBS)
 
 # Embedded library (note the lack of a .so version number -- that
 # intentionally only appears in the installable library)
 
 libhwloc_embedded_la_SOURCES = $(sources)
-libhwloc_embedded_la_LDFLAGS = $(ldflags) $(HWLOC_LIBXML2_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS)
+libhwloc_embedded_la_LDFLAGS = $(ldflags) $(HWLOC_LIBXML2_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS) $(HWLOC_PCI_LIBS) $(HWLOC_CUDA_LIBS)
 
 # XML data (only install if we're building in standalone mode)
 

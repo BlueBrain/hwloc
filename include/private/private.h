@@ -225,6 +225,10 @@ extern void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs);
 extern void hwloc_look_libpci(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_LIBPCI */
 
+#ifdef HWLOC_HAVE_CUDART
+extern void hwloc_look_cuda(struct hwloc_topology *topology);
+#endif /* HWLOC_HAVE_CUDART */
+
 extern int hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *description);
 extern void hwloc_backend_synthetic_exit(struct hwloc_topology *topology);
 extern void hwloc_look_synthetic (struct hwloc_topology *topology);

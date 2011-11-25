@@ -613,6 +613,52 @@ EOF])
     fi
     HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_PCI_CFLAGS"
 
+    # CUDA support
+    hwloc_have_cuda=no
+    hwloc_have_cudart=no
+    if test "x$enable_cuda" != "xno"; then
+      AC_CHECK_HEADERS([cuda.h], [
+        AC_MSG_CHECKING(if CUDA_VERSION >= 3020)
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <cuda.h>
+#ifndef CUDA_VERSION
+#error CUDA_VERSION undefined
+#elif CUDA_VERSION < 3020
+#error CUDA_VERSION too old
+#endif]], [[int i = 3;]])],
+         [AC_MSG_RESULT(yes)
+          AC_CHECK_LIB([cuda], [cuInit],
+                       [AC_DEFINE([HAVE_CUDA], 1, [Define to 1 if we have -lcuda])
+                        hwloc_have_cuda=yes])],
+         [AC_MSG_RESULT(no)])])
+
+      AC_CHECK_HEADERS([cuda_runtime_api.h], [
+        AC_MSG_CHECKING(if CUDART_VERSION >= 3020)
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <cuda_runtime_api.h>
+#ifndef CUDART_VERSION
+#error CUDART_VERSION undefined
+#elif CUDART_VERSION < 3020
+#error CUDART_VERSION too old
+#endif]], [[int i = 3;]])],
+         [AC_MSG_RESULT(yes)
+          AC_CHECK_LIB([cudart], [cudaGetDeviceProperties], [
+            HWLOC_CUDA_LIBS="-lcudart"
+            AC_SUBST(HWLOC_CUDA_LIBS)
+            hwloc_have_cudart=yes
+            AC_CHECK_MEMBER([struct cudaDeviceProp.pciDomainID],
+              AC_DEFINE([HWLOC_HAVE_DOMAINID],[1],[Define to 1 if CUDA device properties include DomainID]),
+              , [[#include <cuda_runtime_api.h>]])
+            
+            AC_CHECK_MEMBER([struct cudaDeviceProp.pciBusID],
+              AC_DEFINE([HWLOC_HAVE_BUSID],[1],[Define to 1 if CUDA device properties include BusID]),
+              , [[#include <cuda_runtime_api.h>]])
+            AC_DEFINE([HWLOC_HAVE_CUDART], [1], [Define to 1 if you have the `cudart' SDK.])
+          ])
+        ])
+      ])
+    fi
+
     # libxml2 support
     hwloc_libxml2_happy=
     if test "x$enable_libxml2" != "xno"; then

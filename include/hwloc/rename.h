@@ -511,6 +511,8 @@ extern "C" {
 
 #define hwloc_look_libpci HWLOC_NAME(look_libpci)
 
+#define hwloc_look_cuda HWLOC_NAME(look_cuda)
+
 #define hwloc_look_x86 HWLOC_NAME(look_x86)
 
 #define hwloc_backend_synthetic_init HWLOC_NAME(backend_synthetic_init)

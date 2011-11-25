@@ -2289,13 +2289,17 @@ hwloc_discover(struct hwloc_topology *topology)
 #endif
 	  )) {
     hwloc_debug("%s", "\nLooking for PCI devices\n");
-#ifdef HWLOC_HAVE_LIBPCI
     if (topology->is_thissystem) {
+#ifdef HWLOC_HAVE_LIBPCI
       hwloc_look_libpci(topology);
       print_objects(topology, 0, topology->levels[0][0]);
-      gotsomeio = 1;
-    } else
+#ifdef HWLOC_HAVE_CUDART
+      hwloc_look_cuda(topology);
+      print_objects(topology, 0, topology->levels[0][0]);
 #endif
+      gotsomeio = 1;
+#endif
+    } else
     {
       hwloc_debug("%s", "\nno PCI detection\n");
     }
