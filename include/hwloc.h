@@ -486,6 +486,9 @@ union hwloc_obj_attr_u {
   /** \brief Group-specific Object Attributes */
   struct hwloc_group_attr_s {
     unsigned depth;			  /**< \brief Depth of group object */
+    unsigned tight;			  /**< \brief Whether the objects are
+                                            tightly grouped and should thus be
+                                            displayed contiguously */
   } group;
   /** \brief PCI Device specific Object Attributes */
   struct hwloc_pcidev_attr_s {

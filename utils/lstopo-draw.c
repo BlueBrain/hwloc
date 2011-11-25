@@ -704,13 +704,13 @@ machine_draw(hwloc_topology_t topology, struct draw_methods *methods, int logica
   DYNA_SAVE();
 }
 
-#define NETWORK_DRAW_BEGIN() do { \
+#define NETWORK_DRAW_BEGIN(separator, border) do { \
   /* network of machines, either horizontal or vertical */ \
   if (vert) { \
     mywidth += gridsize; \
-    RECURSE_VERT(level, &null_draw_methods, gridsize, gridsize); \
+    RECURSE_VERT(level, &null_draw_methods, separator, border); \
   } else \
-    RECURSE_HORIZ(level, &null_draw_methods, gridsize, gridsize); \
+    RECURSE_HORIZ(level, &null_draw_methods, separator, border); \
 } while(0)
 
 #define NETWORK_DRAW_END() do { \
@@ -767,7 +767,7 @@ system_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical
   DYNA_CHECK();
 
   if (network_level(level))
-    NETWORK_DRAW_BEGIN();
+    NETWORK_DRAW_BEGIN(gridsize, gridsize);
   else
     RECURSE_RECT(level, &null_draw_methods, gridsize, gridsize);
 
@@ -794,6 +794,7 @@ group_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical,
   unsigned mywidth = 0, totwidth;
   unsigned textwidth = level->name ? strlen(level->name) * fontsize : 6*fontsize;
   int vert = prefer_vert(topology, logical, level, output, depth, x, y, gridsize);
+  unsigned separator = gridsize;
 
   DYNA_CHECK();
 
@@ -804,10 +805,13 @@ group_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical,
   }
 #endif
 
+  if (level->attr->group.tight)
+    separator = 0;
+
   if (network_level(level))
-    NETWORK_DRAW_BEGIN();
+    NETWORK_DRAW_BEGIN(gridsize, gridsize);
   else
-    RECURSE_RECT(level, &null_draw_methods, gridsize, gridsize);
+    RECURSE_RECT(level, &null_draw_methods, separator, gridsize);
 
   methods->box(output, MISC_R_COLOR, MISC_G_COLOR, MISC_B_COLOR, depth, x, totwidth, y, totheight);
 
@@ -824,7 +828,7 @@ group_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical,
   if (network_level(level))
     NETWORK_DRAW_END();
   else
-    RECURSE_RECT(level, methods, gridsize, gridsize);
+    RECURSE_RECT(level, methods, separator, gridsize);
 
   DYNA_SAVE();
 }
@@ -841,7 +845,7 @@ misc_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, 
   DYNA_CHECK();
 
   if (network_level(level))
-    NETWORK_DRAW_BEGIN();
+    NETWORK_DRAW_BEGIN(gridsize, gridsize);
   else
     RECURSE_HORIZ(level, &null_draw_methods, gridsize, 0);
 

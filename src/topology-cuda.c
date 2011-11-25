@@ -118,6 +118,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
     for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {
       hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_MEM, -1);
       hwloc_obj_t group = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
+      group->attr->group.tight = 1;
 
       shared->name = strdup("Shared");
       shared->memory.total_memory = memory->memory.local_memory = prop.sharedMemPerBlock;
