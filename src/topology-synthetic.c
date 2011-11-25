@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2011 INRIA.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -248,6 +248,7 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
     case HWLOC_OBJ_BRIDGE:
     case HWLOC_OBJ_PCI_DEVICE:
     case HWLOC_OBJ_OS_DEVICE:
+    case HWLOC_OBJ_MEM:
       /* Shouldn't happen.  */
       abort();
       break;
@@ -297,6 +298,7 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
     case HWLOC_OBJ_BRIDGE:
     case HWLOC_OBJ_PCI_DEVICE:
     case HWLOC_OBJ_OS_DEVICE:
+    case HWLOC_OBJ_MEM:
       abort();
       break;
     case HWLOC_OBJ_MACHINE:

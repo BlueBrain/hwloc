@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2011 INRIA.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -187,6 +187,7 @@ hwloc_obj_type_string (hwloc_obj_type_t obj)
     case HWLOC_OBJ_BRIDGE: return "Bridge";
     case HWLOC_OBJ_PCI_DEVICE: return "PCIDev";
     case HWLOC_OBJ_OS_DEVICE: return "OSDev";
+    case HWLOC_OBJ_MEM: return "Memory";
     case HWLOC_OBJ_PU: return "PU";
     default: return "Unknown";
     }
@@ -207,6 +208,7 @@ hwloc_obj_type_of_string (const char * string)
   if (!strcasecmp(string, "Bridge")) return HWLOC_OBJ_BRIDGE;
   if (!strcasecmp(string, "PCIDev")) return HWLOC_OBJ_PCI_DEVICE;
   if (!strcasecmp(string, "OSDev")) return HWLOC_OBJ_OS_DEVICE;
+  if (!strcasecmp(string, "Memory")) return HWLOC_OBJ_MEM;
   return (hwloc_obj_type_t) -1;
 }
 
@@ -413,6 +415,11 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
       return 0;
     }
     break;
+  case HWLOC_OBJ_MEM:
+    if (obj->name)
+      return hwloc_snprintf(string, size, "%s %s", obj->name, hwloc_obj_type_string(type));
+    else
+      return hwloc_snprintf(string, size, "%s", hwloc_obj_type_string(type));
   default:
     if (size > 0)
       *string = '\0';

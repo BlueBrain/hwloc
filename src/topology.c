@@ -390,12 +390,13 @@ static unsigned obj_type_order[] = {
     /* next entry is HWLOC_OBJ_SOCKET */   4,
     /* next entry is HWLOC_OBJ_CACHE */    5,
     /* next entry is HWLOC_OBJ_CORE */     6,
-    /* next entry is HWLOC_OBJ_PU */       10,
+    /* next entry is HWLOC_OBJ_PU */       11,
     /* next entry is HWLOC_OBJ_GROUP */    2,
-    /* next entry is HWLOC_OBJ_MISC */     11,
+    /* next entry is HWLOC_OBJ_MISC */     12,
     /* next entry is HWLOC_OBJ_BRIDGE */   7,
     /* next entry is HWLOC_OBJ_PCI_DEVICE */  8,
-    /* next entry is HWLOC_OBJ_OS_DEVICE */   9
+    /* next entry is HWLOC_OBJ_OS_DEVICE */   9,
+    /* next entry is HWLOC_OBJ_MEM */      10
 };
 
 static const hwloc_obj_type_t obj_order_type[] = {
@@ -409,6 +410,7 @@ static const hwloc_obj_type_t obj_order_type[] = {
   HWLOC_OBJ_BRIDGE,
   HWLOC_OBJ_PCI_DEVICE,
   HWLOC_OBJ_OS_DEVICE,
+  HWLOC_OBJ_MEM,
   HWLOC_OBJ_PU,
   HWLOC_OBJ_MISC,
 };
