@@ -231,6 +231,19 @@ hwloc__xml_import_object_attr(struct hwloc_topology *topology __hwloc_attribute_
     }
   }
 
+  else if (!strcmp(name, "tight")) {
+    unsigned long lvalue = strtoul(value, NULL, 10);
+    switch (obj->type) {
+      case HWLOC_OBJ_GROUP:
+        obj->attr->group.tight = lvalue;
+	break;
+      default:
+	if (hwloc__xml_verbose())
+	  fprintf(stderr, "ignoring depth attribute for object type without depth\n");
+	break;
+    }
+  }
+
   else if (!strcmp(name, "pci_busid")) {
     switch (obj->type) {
     case HWLOC_OBJ_PCI_DEVICE:
@@ -1241,6 +1254,8 @@ hwloc__xml_export_object (hwloc__xml_export_output_t output, hwloc_topology_t to
   case HWLOC_OBJ_GROUP:
     sprintf(tmp, "%u", obj->attr->group.depth);
     hwloc__xml_export_new_prop(output, "depth", tmp);
+    sprintf(tmp, "%u", obj->attr->group.tight);
+    hwloc__xml_export_new_prop(output, "tight", tmp);
     break;
   case HWLOC_OBJ_BRIDGE:
     sprintf(tmp, "%u-%u", obj->attr->bridge.upstream_type, obj->attr->bridge.downstream_type);
