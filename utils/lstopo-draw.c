@@ -730,6 +730,17 @@ machine_draw(hwloc_topology_t topology, struct draw_methods *methods, int logica
   } \
 } while(0)
 
+static int network_level(hwloc_obj_t level)
+{
+  hwloc_obj_t parent;
+  for (parent = level->parent; parent; parent = parent->parent)
+    if (parent->type == HWLOC_OBJ_MACHINE)
+      /* There is a machine on top of us, so we are not at network level */
+      return 0;
+  /* Only a network if there are several children */
+  return level->arity > 1;
+}
+
 static void
 system_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, hwloc_obj_t level, void *output, unsigned depth, unsigned x, unsigned *retwidth, unsigned y, unsigned *retheight)
 {
@@ -740,7 +751,7 @@ system_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical
 
   DYNA_CHECK();
 
-  if (level->arity > 1 && (level->children[0]->type == HWLOC_OBJ_MACHINE || !level->children[0]->cpuset))
+  if (network_level(level))
     NETWORK_DRAW_BEGIN();
   else
     RECURSE_RECT(level, &null_draw_methods, gridsize, gridsize);
@@ -753,7 +764,7 @@ system_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical
     methods->text(output, 0, 0, 0, fontsize, depth-1, x + gridsize, y + gridsize, text);
   }
 
-  if (level->arity > 1 && (level->children[0]->type == HWLOC_OBJ_MACHINE || !level->children[0]->cpuset))
+  if (network_level(level))
     NETWORK_DRAW_END();
   else
     RECURSE_RECT(level, methods, gridsize, gridsize);
@@ -778,7 +789,7 @@ group_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical,
   }
 #endif
 
-  if (level->arity > 1 && (level->children[0]->type == HWLOC_OBJ_MACHINE || !level->children[0]->cpuset))
+  if (network_level(level))
     NETWORK_DRAW_BEGIN();
   else
     RECURSE_RECT(level, &null_draw_methods, gridsize, gridsize);
@@ -795,7 +806,7 @@ group_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical,
     }
   }
 
-  if (level->arity > 1 && (level->children[0]->type == HWLOC_OBJ_MACHINE || !level->children[0]->cpuset))
+  if (network_level(level))
     NETWORK_DRAW_END();
   else
     RECURSE_RECT(level, methods, gridsize, gridsize);
@@ -814,7 +825,7 @@ misc_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, 
 
   DYNA_CHECK();
 
-  if (level->arity > 1 && (level->children[0]->type == HWLOC_OBJ_MACHINE || !level->children[0]->cpuset))
+  if (network_level(level))
     NETWORK_DRAW_BEGIN();
   else
     RECURSE_HORIZ(level, &null_draw_methods, gridsize, 0);
@@ -831,8 +842,8 @@ misc_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, 
     }
   }
 
-  if (level->arity > 1 && (level->children[0]->type == HWLOC_OBJ_MACHINE || !level->children[0]->cpuset))
-    NETWORK_DRAW_BEGIN();
+  if (network_level(level))
+    NETWORK_DRAW_END();
   else
     RECURSE_HORIZ(level, methods, gridsize, 0);
 

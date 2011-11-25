@@ -59,7 +59,6 @@ static hwloc_obj_t hwloc_topology_get_pcidev(hwloc_topology_t topology, hwloc_ob
 
 void hwloc_look_cuda(struct hwloc_topology *topology)
 {
-#if CUDA_VERSION >= 3020
   int cnt, device;
   cudaError_t cures;
   struct cudaDeviceProp prop;
@@ -101,8 +100,9 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
     hwloc_insert_object_by_parent(topology, cuda_device, memory);
 
     if (prop.l2CacheSize) {
-      hwloc_debug("%d KiB cache\n", prop.l2CacheSize >> 10);
       hwloc_obj_t cache = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
+
+      hwloc_debug("%d KiB cache\n", prop.l2CacheSize >> 10);
 
       cache->attr->cache.size = prop.l2CacheSize;
       cache->attr->cache.depth = 2;
@@ -114,29 +114,23 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
 
     hwloc_debug("%d MP(s)\n", prop.multiProcessorCount);
     for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {
-      hwloc_obj_t mp = hwloc_alloc_setup_object(HWLOC_OBJ_MISC, i);
       hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
-      mp->name = strdup("SM");
-      mp->depth = (unsigned) HWLOC_TYPE_DEPTH_UNKNOWN;
-
-      hwloc_insert_object_by_parent(topology, space, mp);
+      hwloc_obj_t group = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
 
       shared->memory.total_memory = memory->memory.local_memory = prop.sharedMemPerBlock;
+      group->name = strdup("MP");
 
-      hwloc_insert_object_by_parent(topology, mp, shared);
+      hwloc_insert_object_by_parent(topology, space, shared);
+      hwloc_insert_object_by_parent(topology, shared, group);
 
       hwloc_debug("%d cores\n", cores);
       for (j = 0; j < cores; j++) {
         hwloc_obj_t core = hwloc_alloc_setup_object(HWLOC_OBJ_CORE, j);
-        core->logical_index = j;
-
-        hwloc_insert_object_by_parent(topology, shared, core);
+        hwloc_insert_object_by_parent(topology, group, core);
       }
     }
 #if 0
     printf("Clock %0.3fGHz\n", (float)(float)  prop.clockRate / (1 << 20));
 #endif
   }
-
-#endif
 }
