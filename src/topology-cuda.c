@@ -9,7 +9,6 @@
 #include <private/private.h>
 #include <private/misc.h>
 #include <private/debug.h>
-#include <hwloc/cuda.h>
 #include <hwloc/cudart.h>
 
 #include <cuda.h>
