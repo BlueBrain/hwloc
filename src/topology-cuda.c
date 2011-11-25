@@ -16,6 +16,7 @@
 
 static int hwloc_cuda_cores_per_MP(int major, int minor)
 {
+  /* TODO: use nvml instead? */
   switch (major) {
     case 1:
       switch (minor) {
