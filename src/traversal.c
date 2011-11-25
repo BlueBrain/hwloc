@@ -417,7 +417,7 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
     break;
   case HWLOC_OBJ_MEM:
     if (obj->name)
-      return hwloc_snprintf(string, size, "%s %s", obj->name, hwloc_obj_type_string(type));
+      return hwloc_snprintf(string, size, "%s", obj->name);
     else
       return hwloc_snprintf(string, size, "%s", hwloc_obj_type_string(type));
   default:
