@@ -94,7 +94,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
     cuda_device->depth = (unsigned) HWLOC_TYPE_DEPTH_UNKNOWN;
     cuda_device->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
 
-    hwloc_obj_add_info(cuda_device, "CUDAname", strdup(prop.name));
+    hwloc_obj_add_info(cuda_device, "CUDAname", prop.name);
 
     hwloc_insert_object_by_parent(topology, pci_card, cuda_device);
 
