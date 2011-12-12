@@ -27,6 +27,7 @@ nodist_libhwloc_ports_la_SOURCES = \
         traversal.c \
         topology-synthetic.c \
         topology-solaris.c \
+        topology-solaris-chiptype.c \
         topology-aix.c \
         topology-osf.c \
         topology-windows.c \
@@ -37,6 +38,7 @@ nodist_libhwloc_ports_la_SOURCES = \
 libhwloc_ports_la_SOURCES = \
         include/windows.h \
         include/kstat.h \
+        include/picl.h \
         include/sys/rset.h \
         include/sys/lgrp_user.h \
         include/sys/sysctl.h \
@@ -46,6 +48,7 @@ libhwloc_ports_la_SOURCES = \
         include/sys/mpctl.h \
         include/sys/cpuset.h \
         include/sys/systemcfg.h \
+        include/sys/systeminfo.h \
         include/radset.h \
         include/cpuset.h \
         include/numa.h \

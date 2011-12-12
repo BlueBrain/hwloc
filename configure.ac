@@ -174,15 +174,7 @@ append_env() {
 hwloc_xml_status=basic
 AS_IF([test "$hwloc_libxml2_happy" = "yes"], [hwloc_xml_status=full])
 
-hwloc_numa_status=
-AS_IF([test "$enable_mbind" = "yes"],
-      [append_env hwloc_numa_status "binding"])
-AS_IF([test "$enable_set_mempolicy" = "yes"], 
-      [append_env hwloc_numa_status "set policy"])
-AS_IF([test "$enable_migrate_pages" = "yes"],
-      [append_env hwloc_numa_status "migrate pages"])
-AS_IF([test "$hwloc_numa_status" = ""], [hwloc_numa_status=none])
-
+# Beginning of generic support
 cat <<EOF
 
 -----------------------------------------------------------------------------
@@ -191,7 +183,15 @@ Hwloc optional build support status (more details can be found above):
 Probe / display PCI devices: $hwloc_pci_happy
 Graphical output (Cairo):    $hwloc_cairo_happy
 XML input / output:          $hwloc_xml_status
-Memory support:              $hwloc_numa_status
+EOF
+
+# Linux specific support
+AS_IF([test "$hwloc_linux" = "yes"], [cat <<EOF
+libnuma memory support:      $hwloc_linux_libnuma_happy
+EOF])
+
+# End of generic support
+cat <<EOF
 -----------------------------------------------------------------------------
 
 EOF

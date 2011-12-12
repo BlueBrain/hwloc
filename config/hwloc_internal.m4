@@ -65,6 +65,11 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
                   AS_HELP_STRING([--disable-pci],
                                  [Disable the PCI device discovery using libpci]))
 
+    # Linux libnuma
+    AC_ARG_ENABLE([libnuma],
+                  AS_HELP_STRING([--disable-libnuma],
+                                 [Disable the Linux libnuma]))
+
 ])dnl
 
 #-----------------------------------------------------------------------
@@ -378,6 +383,7 @@ EOF
 	hwloc_config_prefix[tests/ports/traversal.c]:hwloc_config_prefix[src/traversal.c]
 	hwloc_config_prefix[tests/ports/topology-synthetic.c]:hwloc_config_prefix[src/topology-synthetic.c]
 	hwloc_config_prefix[tests/ports/topology-solaris.c]:hwloc_config_prefix[src/topology-solaris.c]
+	hwloc_config_prefix[tests/ports/topology-solaris-chiptype.c]:hwloc_config_prefix[src/topology-solaris-chiptype.c]
 	hwloc_config_prefix[tests/ports/topology-aix.c]:hwloc_config_prefix[src/topology-aix.c]
 	hwloc_config_prefix[tests/ports/topology-osf.c]:hwloc_config_prefix[src/topology-osf.c]
 	hwloc_config_prefix[tests/ports/topology-windows.c]:hwloc_config_prefix[src/topology-windows.c]
