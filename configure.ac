@@ -85,7 +85,7 @@ AC_SUBST([libhwloc_so_version])
 # Setup the header file
 AH_TOP([/* -*- c -*-
  *
- * Copyright © 2009 CNRS, INRIA., Université Bordeaux 1  All rights reserved.
+ * Copyright © 2009, 2011 CNRS, INRIA., Université Bordeaux 1  All rights reserved.
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * $COPYRIGHT$
  * 
@@ -180,14 +180,15 @@ cat <<EOF
 -----------------------------------------------------------------------------
 Hwloc optional build support status (more details can be found above):
 
-Probe / display PCI devices: $hwloc_pci_happy
-Graphical output (Cairo):    $hwloc_cairo_happy
-XML input / output:          $hwloc_xml_status
+Probe / display PCI devices:  $hwloc_pci_happy
+Probe / display CUDA devices: $hwloc_have_cuda
+Graphical output (Cairo):     $hwloc_cairo_happy
+XML input / output:           $hwloc_xml_status
 EOF
 
 # Linux specific support
 AS_IF([test "$hwloc_linux" = "yes"], [cat <<EOF
-libnuma memory support:      $hwloc_linux_libnuma_happy
+libnuma memory support:       $hwloc_linux_libnuma_happy
 EOF])
 
 # End of generic support
