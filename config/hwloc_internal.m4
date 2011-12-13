@@ -65,6 +65,11 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
                   AS_HELP_STRING([--disable-pci],
                                  [Disable the PCI device discovery using libpci]))
 
+    # CUDA?
+    AC_ARG_ENABLE([cuda],
+                  AS_HELP_STRING([--disable-cuda],
+                                 [Disable the CUDA device discovery using libcudart]))
+
     # Linux libnuma
     AC_ARG_ENABLE([libnuma],
                   AS_HELP_STRING([--disable-libnuma],
