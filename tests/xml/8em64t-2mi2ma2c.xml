@@ -2,7 +2,7 @@
 <!DOCTYPE topology SYSTEM "hwloc.dtd">
 <topology>
   <object type="System" os_index="0">
-    <object type="Group" depth="0">
+    <object type="Group" depth="0" tight="0">
       <object type="Machine" os_index="0" cpuset="0x00000003" complete_cpuset="0x00000003" online_cpuset="0x00000003" allowed_cpuset="0x00000003" local_memory="1016368">
         <page_type size="4096" count="65536"/>
         <page_type size="1048576" count="1024"/>
@@ -41,7 +41,7 @@
         </object>
       </object>
     </object>
-    <object type="Group" depth="0">
+    <object type="Group" depth="0" tight="0">
       <object type="Machine" os_index="0" cpuset="0x00000003" complete_cpuset="0x00000003" online_cpuset="0x00000003" allowed_cpuset="0x00000003" local_memory="1016368">
         <page_type size="2048" count="1"/>
         <info name="DMIBoardVendor" value="Dell Inc."/>
