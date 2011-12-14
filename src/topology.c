@@ -395,7 +395,7 @@ static unsigned obj_type_order[] = {
     /* next entry is HWLOC_OBJ_MISC */     11,
     /* next entry is HWLOC_OBJ_BRIDGE */   7,
     /* next entry is HWLOC_OBJ_PCI_DEVICE */  8,
-    /* next entry is HWLOC_OBJ_OS_DEVICE */   9,
+    /* next entry is HWLOC_OBJ_OS_DEVICE */   9
 };
 
 static const hwloc_obj_type_t obj_order_type[] = {
