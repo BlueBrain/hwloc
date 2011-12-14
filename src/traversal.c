@@ -187,7 +187,6 @@ hwloc_obj_type_string (hwloc_obj_type_t obj)
     case HWLOC_OBJ_BRIDGE: return "Bridge";
     case HWLOC_OBJ_PCI_DEVICE: return "PCIDev";
     case HWLOC_OBJ_OS_DEVICE: return "OSDev";
-    case HWLOC_OBJ_MEM: return "Memory";
     case HWLOC_OBJ_PU: return "PU";
     default: return "Unknown";
     }
@@ -200,7 +199,7 @@ hwloc_obj_type_of_string (const char * string)
   if (!strcasecmp(string, "Machine")) return HWLOC_OBJ_MACHINE;
   if (!strcasecmp(string, "Misc")) return HWLOC_OBJ_MISC;
   if (!strcasecmp(string, "Group")) return HWLOC_OBJ_GROUP;
-  if (!strcasecmp(string, "NUMANode") || !strcasecmp(string, "Node")) return HWLOC_OBJ_NODE;
+  if (!strcasecmp(string, "NUMANode") || !strcasecmp(string, "Node") || !strcasecmp(string, "Memory")) return HWLOC_OBJ_NODE;
   if (!strcasecmp(string, "Socket")) return HWLOC_OBJ_SOCKET;
   if (!strcasecmp(string, "Cache")) return HWLOC_OBJ_CACHE;
   if (!strcasecmp(string, "Core")) return HWLOC_OBJ_CORE;
@@ -208,7 +207,6 @@ hwloc_obj_type_of_string (const char * string)
   if (!strcasecmp(string, "Bridge")) return HWLOC_OBJ_BRIDGE;
   if (!strcasecmp(string, "PCIDev")) return HWLOC_OBJ_PCI_DEVICE;
   if (!strcasecmp(string, "OSDev")) return HWLOC_OBJ_OS_DEVICE;
-  if (!strcasecmp(string, "Memory")) return HWLOC_OBJ_MEM;
   return (hwloc_obj_type_t) -1;
 }
 
@@ -383,7 +381,6 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
   case HWLOC_OBJ_MISC:
   case HWLOC_OBJ_SYSTEM:
   case HWLOC_OBJ_MACHINE:
-  case HWLOC_OBJ_NODE:
   case HWLOC_OBJ_SOCKET:
   case HWLOC_OBJ_CORE:
   case HWLOC_OBJ_PU:
@@ -415,7 +412,7 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
       return 0;
     }
     break;
-  case HWLOC_OBJ_MEM:
+  case HWLOC_OBJ_NODE:
     if (obj->name)
       return hwloc_snprintf(string, size, "%s", obj->name);
     else

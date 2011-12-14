@@ -98,7 +98,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
 
     hwloc_insert_object_by_parent(topology, pci_card, cuda_device);
 
-    space = memory = hwloc_alloc_setup_object(HWLOC_OBJ_MEM, -1);
+    space = memory = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
     memory->name = strdup("Global");
     memory->memory.total_memory = memory->memory.local_memory = prop.totalGlobalMem;
     hwloc_insert_object_by_parent(topology, cuda_device, memory);
@@ -120,7 +120,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
 
     hwloc_debug("%d MP(s)\n", prop.multiProcessorCount);
     for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {
-      hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_MEM, -1);
+      hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
       hwloc_obj_t group = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
       group->attr->group.tight = 1;
 

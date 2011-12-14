@@ -239,10 +239,6 @@ typedef enum {
 			  * They are not added to the topology unless I/O discovery
 			  * is enabled with hwloc_topology_set_flags().
 			  */
-  HWLOC_OBJ_MEM,	/**< \brief Memory.
-			  * These objects represent embedded memory, which is
-			  * not part of the main memory.
-			  */
 
   HWLOC_OBJ_TYPE_MAX    /**< \private Sentinel value */
 

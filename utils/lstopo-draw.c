@@ -961,7 +961,6 @@ get_type_fun(hwloc_obj_type_t type)
     case HWLOC_OBJ_PCI_DEVICE: return pci_device_draw;
     case HWLOC_OBJ_OS_DEVICE: return os_device_draw;
     case HWLOC_OBJ_BRIDGE: return bridge_draw;
-    case HWLOC_OBJ_MEM: return node_draw;
     default:
     case HWLOC_OBJ_MISC: return misc_draw;
     case HWLOC_OBJ_TYPE_MAX: assert(0);
