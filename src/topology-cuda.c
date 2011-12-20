@@ -119,31 +119,31 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
 #endif
 
     hwloc_debug("%d MP(s)\n", prop.multiProcessorCount);
-    for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {
-      hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
-      hwloc_obj_t group = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
-      group->attr->group.tight = 1;
+    if (topology->flags & HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS) {
+      for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {
+        hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
+        hwloc_obj_t group = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
+        group->attr->group.tight = 1;
 
-      shared->name = strdup("Shared");
-      shared->memory.total_memory = shared->memory.local_memory = prop.sharedMemPerBlock;
-      group->name = strdup("MP");
+        shared->name = strdup("Shared");
+        shared->memory.total_memory = shared->memory.local_memory = prop.sharedMemPerBlock;
+        group->name = strdup("MP");
 
-      hwloc_insert_object_by_parent(topology, space, shared);
-      hwloc_insert_object_by_parent(topology, shared, group);
+        hwloc_insert_object_by_parent(topology, space, shared);
+        hwloc_insert_object_by_parent(topology, shared, group);
 
-      if (topology->flags & HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS) {
         hwloc_debug("%d cores\n", cores);
         for (j = 0; j < cores; j++) {
           hwloc_obj_t core = hwloc_alloc_setup_object(HWLOC_OBJ_CORE, j);
           hwloc_insert_object_by_parent(topology, group, core);
         }
-      } else {
-        char name[16];
-        hwloc_obj_t coreset = hwloc_alloc_setup_object(HWLOC_OBJ_MISC, -1);
-        snprintf(name, sizeof(name), "%d cores", cores);
-        coreset->name = strdup(name);
-        hwloc_insert_object_by_parent(topology, group, coreset);
       }
+    } else {
+      char name[32];
+      hwloc_obj_t coreset = hwloc_alloc_setup_object(HWLOC_OBJ_MISC, -1);
+      snprintf(name, sizeof(name), "%d x (%d cores + %uKB)", prop.multiProcessorCount, cores, (unsigned) (prop.sharedMemPerBlock / 1024));
+      coreset->name = strdup(name);
+      hwloc_insert_object_by_parent(topology, space, coreset);
     }
 #if 0
     printf("Clock %0.3fGHz\n", (float)(float)  prop.clockRate / (1 << 20));
