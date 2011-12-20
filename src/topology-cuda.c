@@ -131,10 +131,18 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
       hwloc_insert_object_by_parent(topology, space, shared);
       hwloc_insert_object_by_parent(topology, shared, group);
 
-      hwloc_debug("%d cores\n", cores);
-      for (j = 0; j < cores; j++) {
-        hwloc_obj_t core = hwloc_alloc_setup_object(HWLOC_OBJ_CORE, j);
-        hwloc_insert_object_by_parent(topology, group, core);
+      if (topology->flags & HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS) {
+        hwloc_debug("%d cores\n", cores);
+        for (j = 0; j < cores; j++) {
+          hwloc_obj_t core = hwloc_alloc_setup_object(HWLOC_OBJ_CORE, j);
+          hwloc_insert_object_by_parent(topology, group, core);
+        }
+      } else {
+        char name[16];
+        hwloc_obj_t coreset = hwloc_alloc_setup_object(HWLOC_OBJ_MISC, -1);
+        snprintf(name, sizeof(name), "%d cores", cores);
+        coreset->name = strdup(name);
+        hwloc_insert_object_by_parent(topology, group, coreset);
       }
     }
 #if 0

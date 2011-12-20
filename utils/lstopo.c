@@ -256,6 +256,9 @@ void usage(const char *name, FILE *where)
   fprintf (where, "  --no-bridges          Do not any I/O bridge except hostbridges\n");
   fprintf (where, "  --whole-io            Show all I/O devices and bridges\n");
 #endif
+#ifdef HWLOC_HAVE_CUDART
+  fprintf (where, "  --whole-accelerators  Show all cores in accelerators\n");
+#endif
   fprintf (where, "Input options:\n");
   hwloc_utils_input_format_usage(where, 6);
   fprintf (where, "  --thissystem          Assume that the input topology provides the topology\n"
@@ -409,6 +412,8 @@ main (int argc, char *argv[])
 	flags &= ~(HWLOC_TOPOLOGY_FLAG_IO_BRIDGES);
       else if (!strcmp (argv[1], "--whole-io"))
 	flags |= HWLOC_TOPOLOGY_FLAG_WHOLE_IO;
+      else if (!strcmp (argv[1], "--whole-accelerators"))
+	flags |= HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS;
       else if (!strcmp (argv[1], "--merge"))
 	merge = 1;
       else if (!strcmp (argv[1], "--thissystem"))

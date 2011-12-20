@@ -719,7 +719,14 @@ enum hwloc_topology_flags_e {
    * and bridges (even those that have no device behind them) using the libpci
    * backend.
    */
-  HWLOC_TOPOLOGY_FLAG_WHOLE_IO = (1<<4)
+  HWLOC_TOPOLOGY_FLAG_WHOLE_IO = (1<<4),
+
+  /* \brief Detect each and every core of accelerators.
+   *
+   * This flag enables detection of all cores inside accelerators, even if
+   * there are usually a myriad of them and makes the output unreadable.
+   */
+  HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS = (1<<5)
 };
 
 /** \brief Set OR'ed flags to non-yet-loaded topology.
