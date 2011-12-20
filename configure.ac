@@ -181,7 +181,7 @@ cat <<EOF
 Hwloc optional build support status (more details can be found above):
 
 Probe / display PCI devices:  $hwloc_pci_happy
-Probe / display CUDA devices: $hwloc_have_cuda
+Probe / display CUDA devices: $hwloc_have_cudart
 Graphical output (Cairo):     $hwloc_cairo_happy
 XML input / output:           $hwloc_xml_status
 EOF

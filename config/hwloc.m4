@@ -670,6 +670,11 @@ EOF])
           ])
         ])
       ])
+
+      AS_IF([test "$enable_cuda" = "yes" -a "$hwloc_have_cudart" = "no"],
+            [AC_MSG_WARN([Specified --enable-cuda switch, but could not])
+             AC_MSG_WARN([find appropriate support])
+             AC_MSG_ERROR([Cannote continue])])
     fi
 
     # libxml2 support
