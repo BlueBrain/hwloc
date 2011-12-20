@@ -27,14 +27,18 @@ DOX_TAG = $(DOX_DIR)/$(PACKAGE).tag
 # tree (e.g., everything in the man and latex directories).
 #
 
+# images already available in repository
 PREBUILT_IMAGES = images/dudley.png images/emmett.png images/hagrid.png
-image_built_sources = images/diagram.png images/diagram.eps
+# images built from repository before inclusion in make dist
+BUILT_IMAGES = images/diagram.png images/diagram.eps
 
 EXTRA_DIST = \
         hwloc.doxy \
         doxygen.css \
         doxygen.cfg \
         images/diagram.fig \
+        images/devel09-pci.png \
+        images/devel09-pci.pdf \
         images/ppc64-with-smt.png \
         images/ppc64-with-smt.pdf \
         images/ppc64-without-smt.png \
@@ -46,7 +50,7 @@ EXTRA_DIST = \
         www.open-mpi.org-footer.inc \
         www.open-mpi.org-header.inc \
         $(PREBUILT_IMAGES) \
-        $(image_built_sources)
+        $(BUILT_IMAGES)
 
 #
 # Files where the doxygen inputs live (i.e., dependencies).  Make the
@@ -79,7 +83,7 @@ dox_inputs = $(DOX_CONFIG) \
 #
 
 if HWLOC_BUILD_DOXYGEN
-BUILT_SOURCES = $(image_built_sources)
+BUILT_SOURCES = $(BUILT_IMAGES)
 
 images/diagram.png: $(srcdir)/images/diagram.fig
 	$(MKDIR_P) images
