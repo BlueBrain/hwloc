@@ -3,6 +3,8 @@
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
+# FIXME GL/display functions
+
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
 
 DOCDIR = $(HWLOC_top_builddir)/doc

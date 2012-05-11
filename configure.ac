@@ -189,6 +189,7 @@ Hwloc optional build support status (more details can be found above):
 Probe / display PCI devices: $hwloc_pci_happy
 Graphical output (Cairo):    $hwloc_cairo_happy
 XML input / output:          $hwloc_xml_status
+GL:                          $hwloc_gl_happy
 EOF
 
 # Linux specific support

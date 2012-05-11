@@ -29,7 +29,8 @@ sources = \
         topology-xml.c \
         bind.c \
         bitmap.c \
-        misc.c
+        misc.c \
+	gl.c
 ldflags =
 
 # Conditionally add to the sources and ldflags

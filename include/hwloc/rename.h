@@ -7,6 +7,7 @@
 #ifndef HWLOC_RENAME_H
 #define HWLOC_RENAME_H
 
+/* FIXME GL/display functions */
 #include <hwloc/autogen/config.h>
 
 

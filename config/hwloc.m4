@@ -11,6 +11,7 @@ dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart,
 dnl                         University of Stuttgart.  All rights reserved.
 dnl Copyright © 2006-2011  Cisco Systems, Inc.  All rights reserved.
 dnl See COPYING in top-level directory.
+# FIXME marwan copyright header (check other files as well)
 
 # Main hwloc m4 macro, to be invoked by the user
 #
@@ -695,7 +696,75 @@ EOF])
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
     fi
     HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_PCI_CFLAGS"
+    
+    # GL Support 
+    hwloc_gl_happy=no
+    if test "x$enable_gl" != "xno"; then
+# FIXME add --disable-gl
+    	hwloc_gl_happy=yes								
 
+# FIXME merge these checks with the existing ones
+       # X11 support. Cairo is checking for this module. 
+       # Check if found for not in order not to DUBLICATE the search.    
+       if test "x$found_X11" != "xyes"; then 
+          AC_CHECK_HEADERS([X11/Xlib.h], [
+            AC_CHECK_HEADERS([X11/Xutil.h X11/keysym.h], [
+              AC_CHECK_LIB([X11], [XOpenDisplay], [
+                enable_X11=yes found_X11=yes
+                AC_SUBST([HWLOC_X11_LIBS], ["-lX11"])
+                AC_DEFINE([HWLOC_HAVE_X11], [1], [Define to 1 if X11 libraries are available.])
+              ])]
+            )],,
+            [[#include <X11/Xlib.h>]]
+          )
+       fi
+       
+       # If X11 was not found disable the GL Module 
+       if test "x$enable_X11" != "xyes"; then
+       		AC_MSG_WARN([X11 headers not found, GL back-end disabled])
+       		hwloc_gl_happy=no
+       fi
+	  
+       # Xext support.  
+       AC_CHECK_LIB([Xext], [XextFindDisplay],
+       		[enable_Xext=yes LIBS="$LIBS -lXext"
+        	AC_SUBST([HWLOC_XEXT_LIBS], ["-lXext"])])
+         
+       # If Xext was not found disable the GL Module 
+       if test "x$enable_Xext" != "xyes"; then
+       		AC_MSG_WARN([Xext libs not found, GL back-end disabled])
+          	hwloc_gl_happy=no
+       fi
+       
+       # Debian / Ubuntu 
+       # There is no .pc or package configuration file shipped with the 
+       # the nvidia-setting package, so we can't use AC_CHECK_LIB,
+       # instead we just check if the files are existing or not 
+       # to enable the GL module 
+        
+       NVCTRL_LIB_DIR=/usr/lib
+       NVCTRL_INV_DIR=/usr/include/NVCtrl
+	   AC_CHECK_FILE($NVCTRL_LIB_DIR/libXNVCtrl.so,
+	   		AC_CHECK_FILE($NVCTRL_INV_DIR/NVCtrl.h,
+	   			AC_CHECK_FILE($NVCTRL_INV_DIR/NVCtrlLib.h, hwloc_gl_happy="yes", hwloc_gl_happy="no"), 
+	   				hwloc_gl_happy="no"), 
+	   					hwloc_gl_happy="no")
+	   
+       if test "x$hwloc_gl_happy" = "xyes"; then
+       		AC_DEFINE([HWLOC_HAVE_GL], [1], [Define to 1 if you have the GL module components.])
+		AC_SUBST([HWLOC_HAVE_GL], [1])
+  		CFLAGS="$HWLOC_CFLAGS $HWLOC_X11_CFLAGS -I$NVCTRL_INV_DIR"    
+  		LIBS="$HWLOC_LIBS $HWLOC_X11_LIBS $HWLOC_XEXT_LIBS"
+  		HWLOC_LIBS="$HWLOC_LIBS -L$NVCTRL_LIB_DIR -lXNVCtrl"
+		hwloc_have_gl=yes
+	else
+	   	AS_IF([test "$enable_gl" = "yes"],
+	   	[AC_MSG_WARN([--enable-gl requested, but GL/X11 support was not found due to a missing component])
+	   	AC_MSG_ERROR([Cannot continue])])
+	   	AC_SUBST([HWLOC_HAVE_GL], [0])
+ 	fi      
+    fi
+    
     # libxml2 support
     hwloc_libxml2_happy=
     if test "x$enable_libxml2" != "xno"; then
@@ -722,6 +791,7 @@ EOF])
     HWLOC_CPPFLAGS='-I$(HWLOC_top_builddir)/include -I$(HWLOC_top_srcdir)/include'
     AC_SUBST(HWLOC_CPPFLAGS)
     HWLOC_LDFLAGS='-L$(HWLOC_top_builddir)/src'
+    HWLOC_LDFLAGS="$HWLOC_LDFLAGS $HWLOC_LDFLAGS_GL"
     AC_SUBST(HWLOC_LDFLAGS)
     AC_SUBST(HWLOC_LIBS)
 
@@ -808,6 +878,8 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
                        [test "x$hwloc_have_libibverbs" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_CUDA],
 		       [test "x$hwloc_have_cuda" = "xyes"])
+	AM_CONDITIONAL([HWLOC_HAVE_GL],
+		       [test "x$hwloc_have_gl" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_MYRIEXPRESS],
 		       [test "x$hwloc_have_myriexpress" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_CUDART],
