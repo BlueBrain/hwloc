@@ -9,6 +9,9 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <hwloc/gl.h>
+#include <X11/Xlib.h>
+#include <NVCtrl/NVCtrl.h>
+#include <NVCtrl/NVCtrlLib.h>
 
 /*****************************************************************
  * Allocates a hwloc_obj_t of type HWLOC_OBJ_PCI_DEVICE and returns a

@@ -7,9 +7,6 @@
 #define HWLOC_GL_H
 
 #include <hwloc.h>
-#include <X11/Xlib.h>
-#include <NVCtrl/NVCtrl.h>
-#include <NVCtrl/NVCtrlLib.h>
 
 /* FIXME: don't include this header everywhere else */
 /* FIXME: rename into display.h ? */
