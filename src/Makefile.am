@@ -29,8 +29,7 @@ sources = \
         topology-xml.c \
         bind.c \
         bitmap.c \
-        misc.c \
-	gl.c
+        misc.c
 ldflags =
 
 # Conditionally add to the sources and ldflags
@@ -38,6 +37,10 @@ ldflags =
 if HWLOC_HAVE_LIBPCI
 sources += topology-libpci.c
 endif HWLOC_HAVE_LIBPCI
+
+if HWLOC_HAVE_GL
+sources += gl.c
+endif HWLOC_HAVE_GL
 
 if HWLOC_HAVE_SOLARIS
 sources += topology-solaris.c
