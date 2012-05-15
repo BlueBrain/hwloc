@@ -1,5 +1,6 @@
 /*
  * Copyright © 2012 Blue Brain Project, BBP/EPFL. All rights reserved.
+ * Copyright © 2012 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -154,7 +155,7 @@ hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
  * which contains the pci info required for doing the matching a
  * pci device in the topology.
  ****************************************************************/
-int hwloc_gl_get_gpu_display(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
+int hwloc_gl_get_gpu_display(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
 {
   hwloc_obj_t query_display_obj;
 
@@ -201,9 +202,9 @@ int hwloc_gl_get_gpu_display(hwloc_topology_t topology, const hwloc_obj_t pcidev
  * is just used for adding the display parameters in the topology
  * created by running the "lstop" utility.
  ****************************************************************/
-int hwloc_gl_get_gpu_display_private(const hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
+int hwloc_gl_get_gpu_display_private(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
 {
-  return hwloc_gl_get_gpu_display(NULL, pcidev_obj, port, device);
+  return hwloc_gl_get_gpu_display(topology, pcidev_obj, port, device);
 }
 
 /*****************************************************************
@@ -213,7 +214,7 @@ int hwloc_gl_get_gpu_display_private(const hwloc_obj_t pcidev_obj, unsigned *por
  * Returns NULL if no GPU was connected to the give port and
  * device or for non exisiting display.
  ****************************************************************/
-hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, const int port, const int device)
+hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, int port, int device)
 {
   char x_display [10];
   hwloc_obj_t display_obj;
@@ -233,7 +234,7 @@ hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, const int por
  * topology.
  ****************************************************************/
 hwloc_bitmap_t
-hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj)
+hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, hwloc_obj_t pcidev_obj)
 {
   int i;
   hwloc_bitmap_t cpuset;
@@ -279,7 +280,7 @@ hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj)
  * X systems.
  * It returns empty (zero) cpuset for an invalid display.
  ****************************************************************/
-hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, const int port, const int device)
+hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, int device)
 {
   char x_display [10];
   hwloc_obj_t display_obj;
@@ -305,7 +306,7 @@ hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, const int 
  * Returns the cpuset of the socket connected to the host bridge
  * connecting the pci device defined by pcidev_obj.
  ****************************************************************/
-hwloc_bitmap_t hwloc_get_pcidevice_cpuset(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj)
+hwloc_bitmap_t hwloc_get_pcidevice_cpuset(hwloc_topology_t topology, hwloc_obj_t pcidev_obj)
 {
     return hwloc_bitmap_dup(hwloc_gl_get_pci_cpuset(topology, pcidev_obj));
 }

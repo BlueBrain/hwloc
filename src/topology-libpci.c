@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2012 Blue Brain Project, EPFL. All rights reserved.
  * See COPYING in top-level directory.
@@ -200,7 +200,7 @@ hwloc_linux_lookup_display_class(struct hwloc_topology *topology, struct hwloc_o
   int err;
 
   /* Getting the display info */
-  err = hwloc_gl_get_gpu_display_private(pcidev, &port, &device);
+  err = hwloc_gl_get_gpu_display_private(topology, pcidev, &port, &device);
 
   /* If GPU, Appending the display as a children to the GPU
    * and add a display object with the display name */
