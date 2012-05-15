@@ -65,6 +65,11 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
                   AS_HELP_STRING([--disable-pci],
                                  [Disable the PCI device discovery using libpci]))
 
+    # GL/Display
+    AC_ARG_ENABLE([gl],
+		  AS_HELP_STRING([--disable-gl],
+				 [Disable the GL/display device discovery]))
+
     # Linux libnuma
     AC_ARG_ENABLE([libnuma],
                   AS_HELP_STRING([--disable-libnuma],
