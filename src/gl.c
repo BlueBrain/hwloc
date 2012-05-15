@@ -154,19 +154,13 @@ hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
  * which contains the pci info required for doing the matching a
  * pci device in the topology.
  ****************************************************************/
-hwloc_gl_display_info_t hwloc_gl_get_gpu_display(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj)
+int hwloc_gl_get_gpu_display(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
 {
-  hwloc_gl_display_info_t display = NULL;
   hwloc_obj_t query_display_obj;
 
-  int x_server_max;
-  int x_screen_max;
-  int i,j;
-
-  /* Return -1's in case of failure of getting valid display info */
-  display = malloc (sizeof(display));
-  display->port = -1;
-  display->device = -1;
+  unsigned x_server_max;
+  unsigned x_screen_max;
+  unsigned i,j;
 
   /* Try the first 10 servers with 10 screens */
   /* For each x server, if the first x screen fails move to the next x server */
@@ -191,14 +185,14 @@ hwloc_gl_display_info_t hwloc_gl_get_gpu_display(hwloc_topology_t topology, cons
           query_display_obj->attr->pcidev.domain == pcidev_obj->attr->pcidev.domain &&
           query_display_obj->attr->pcidev.func == pcidev_obj->attr->pcidev.func) {
 
-        display->port = i;
-        display->device = j;
+        *port = i;
+        *device = j;
 
-        return display;
+        return 0;
       }
     }
   }
-  return display;
+  return -1;
 }
 
 /*****************************************************************
@@ -207,9 +201,9 @@ hwloc_gl_display_info_t hwloc_gl_get_gpu_display(hwloc_topology_t topology, cons
  * is just used for adding the display parameters in the topology
  * created by running the "lstop" utility.
  ****************************************************************/
-hwloc_gl_display_info_t hwloc_gl_get_gpu_display_private(const hwloc_obj_t pcidev_obj)
+int hwloc_gl_get_gpu_display_private(const hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
 {
-  return hwloc_gl_get_gpu_display(NULL, pcidev_obj);
+  return hwloc_gl_get_gpu_display(NULL, pcidev_obj, port, device);
 }
 
 /*****************************************************************

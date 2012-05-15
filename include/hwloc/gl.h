@@ -15,15 +15,6 @@
 extern "C" {
 #endif
 
-/* FIXME: drop this structure */
-struct hwloc_gl_display_info
-{
-  int port;   /* Port (X-server or ignored) */
-  int device; /* Device (X-screen, later Windows GPU affinity device) */
-} ;
-
-typedef struct hwloc_gl_display_info* hwloc_gl_display_info_t;
-
 /** \brief Queries a display defined by its port and device in the
  * string format ":[port].[device]", and returns a hwloc_obj_t of
  * type HWLOC_OBJ_PCI_DEVICE containg the desired pci parameters
@@ -35,18 +26,19 @@ HWLOC_DECLSPEC hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, cha
 /** \brief Returns a cpuset of the socket attached to the host bridge
  * where the GPU defined by pcidev_obj is connected in the topology.
  */
+/* FIXME: fill a cpuset instead of returning it? */
 HWLOC_DECLSPEC hwloc_bitmap_t hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj);
 
 /** \brief Returns a DISPLAY for a given GPU defined by pcidev_obj.
  */
-HWLOC_DECLSPEC hwloc_gl_display_info_t hwloc_gl_get_gpu_display(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj);
+HWLOC_DECLSPEC int hwloc_gl_get_gpu_display(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device);
 
 /** \brief Returns the DISPLAY parameters for a given pcidev_obj.
  * Note: This function doesn't need to have an input topology and
  * is just used for adding the display parameters in the topology
  * created by running the "lstop" utility.
  */
-hwloc_gl_display_info_t hwloc_gl_get_gpu_display_private(const hwloc_obj_t pcidev_obj);
+int hwloc_gl_get_gpu_display_private(const hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device);
 
 /** \brief Returns an object of type HWLOC_OBJ_PCI_DEVICE
  * representing the GPU connected to the display defined by

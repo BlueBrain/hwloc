@@ -61,13 +61,15 @@ int main(void)
   number_gpus = 0;
   for (i = 0; i < number_pci_devices; ++i) {
       hwloc_obj_t pcidev_obj = hwloc_get_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, i);
+      unsigned port, device;
+      int err;
 
       /* Check the returning port and devices */
-      hwloc_gl_display_info_t display_info = hwloc_gl_get_gpu_display(topology, pcidev_obj);
+      err = hwloc_gl_get_gpu_display(topology, pcidev_obj, &port, &device);
 
-      if (display_info->port != -1 && display_info->device != -1) {
+      if (!err) {
           number_gpus++;
-          printf("GPU # %d is connected to DISPLAY:%u.%u \n", number_gpus, display_info->port, display_info->device);
+          printf("GPU # %d is connected to DISPLAY:%u.%u \n", number_gpus, port, device);
         }
     }
 
