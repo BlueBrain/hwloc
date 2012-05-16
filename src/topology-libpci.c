@@ -207,6 +207,7 @@ hwloc_linux_lookup_display_class(struct hwloc_topology *topology, struct hwloc_o
   if (!err) {
     char display_name[64];
     snprintf(display_name, sizeof(display_name), ":%d.%d", port, device);
+    /* FIXME remove misc obj and check osdev */
     hwloc_topology_insert_misc_object_by_parent(topology, pcidev, display_name);
     hwloc_linux_add_os_device(topology, pcidev, HWLOC_OBJ_OSDEV_DISPLAY, display_name);
   }
@@ -356,6 +357,7 @@ hwloc_pci_traverse_lookuposdevices_cb(struct hwloc_topology *topology, struct hw
   hwloc_linux_lookup_drm_class(topology, pcidev, pcidevpath);
   hwloc_linux_lookup_block_class(topology, pcidev, pcidevpath);
 #ifdef HWLOC_HAVE_GL
+  /* FIXME: need proper callback in gl.c source file */
   hwloc_linux_lookup_display_class(topology, pcidev);
 #endif
   }
