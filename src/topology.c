@@ -268,6 +268,54 @@ void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value)
   obj->infos_count++;
 }
 
+int hwloc__obj_add_valarray(hwloc_obj_t obj, char *name, unsigned nb, float *values, unsigned *idx)
+{
+  struct hwloc_valarray_s *valarray = malloc(sizeof(*valarray));
+  if (!valarray)
+    goto out;
+  valarray->nb = nb;
+  valarray->name = name;
+  valarray->values = values;
+  valarray->idx = idx;
+  obj->valarray = realloc(obj->valarray, (obj->valarray_count+1) * sizeof(*obj->valarray));
+  if (!obj->valarray)
+    goto out_valarray;
+  obj->valarray[obj->valarray_count++] = valarray;
+  return 0;
+
+ out_valarray:
+  free(valarray);
+ out:
+  free(name);
+  free(values);
+  free(idx);
+  errno = ENOMEM;
+  return -1;
+}
+
+int hwloc_obj_add_valarray(hwloc_obj_t obj, const char *_name, unsigned nb, const float *_values, const unsigned *_idx)
+{
+  char *name;
+  float *values;
+  unsigned *idx;
+
+  name = strdup(_name);
+
+  values = malloc(nb*sizeof(*values));
+  memcpy(values, _values, nb*sizeof(*values));
+
+  idx = malloc(nb*sizeof(*idx));
+  if (_idx) {
+    memcpy(idx, _idx, nb*sizeof(*idx));
+  } else {
+    unsigned i;
+    for(i=0; i<nb; i++)
+      idx[i] = i;
+  }
+
+  return hwloc__obj_add_valarray(obj, name, nb, values, idx);
+}
+
 /* Free an object and all its content.  */
 void
 hwloc_free_unlinked_object(hwloc_obj_t obj)

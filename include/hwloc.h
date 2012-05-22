@@ -1296,6 +1296,23 @@ hwloc_obj_get_info_by_name(hwloc_obj_t obj, const char *name)
  */
 HWLOC_DECLSPEC void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value);
 
+/** \brief Attach a custom array of values to the given object.
+ *
+ * Attach an array of \p nb float values \p values with an optional
+ * array of indexes \p idx to object \p obj.
+ *
+ * \p name may be used to recognize arrays if the object contains
+ * several of them.
+ *
+ * If the array of indexes \p idx is \c NULL, it is set to an array
+ * of indexes going from 0 to \p nb - 1.
+ *
+ * The input data is copied before being added to the object.
+ *
+ * \return 0 on success.
+ */
+HWLOC_DECLSPEC int hwloc_obj_add_valarray(hwloc_obj_t obj, const char *name, unsigned nb, const float *values, const unsigned *idx);
+
 /** @} */
 
 

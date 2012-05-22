@@ -275,6 +275,9 @@ extern void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc
 /* Insert uname-specific names/values in the object infos array */
 extern void hwloc_add_uname_info(struct hwloc_topology *topology);
 
+/* Insert a valarray without duplicating memory (memory is given by the caller) */
+extern int hwloc__obj_add_valarray(hwloc_obj_t obj, char *name, unsigned nb, float *values, unsigned *idx);
+
 #ifdef HWLOC_INSIDE_LIBHWLOC
 /** \brief Return a locally-allocated stringified bitmap for printf-like calls. */
 static __hwloc_inline char *
