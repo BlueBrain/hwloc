@@ -840,7 +840,8 @@ static int
 hwloc__xml_import_valarray(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj,
 			   hwloc__xml_import_state_t state)
 {
-  struct hwloc_valarray_s *valarray = NULL;
+  unsigned *idxs;
+  float *values;
   char *name = NULL;
   unsigned long nb = 0;
   char *tag;
@@ -861,11 +862,8 @@ hwloc__xml_import_valarray(hwloc_topology_t topology __hwloc_attribute_unused, h
   if (nb && name) {
     unsigned i;
 
-    valarray = malloc(sizeof(*valarray));
-    valarray->nb = nb;
-    valarray->name = strdup(name);
-    valarray->values = malloc(nb*sizeof(float));
-    valarray->idx = malloc(nb*sizeof(unsigned));
+    values = malloc(nb*sizeof(float));
+    idxs = malloc(nb*sizeof(unsigned));
 
     for(i=0; i<nb; i++) {
       struct hwloc__xml_import_state_s childstate;
@@ -875,7 +873,7 @@ hwloc__xml_import_valarray(hwloc_topology_t topology __hwloc_attribute_unused, h
       ret = hwloc__xml_import_find_child(state, &childstate, &tag);
       if (ret <= 0 || strcmp(tag, "valarrayslot"))
 	/* a valarray child is needed */
-	goto out_valarray;
+	goto out_free;
 
       while (1) {
 	char *attrname, *attrvalue;
@@ -888,29 +886,26 @@ hwloc__xml_import_valarray(hwloc_topology_t topology __hwloc_attribute_unused, h
       }
 
       if (!valstr || !idxstr)
-	goto out_valarray;
+	goto out_free;
 
-      valarray->values[i] = (float) atof(valstr);
-      valarray->idx[i] = atoi(idxstr);
+      values[i] = (float) atof(valstr);
+      idxs[i] = atoi(idxstr);
 
       ret = hwloc__xml_import_close_tag(&childstate);
       if (ret < 0)
-	goto out_valarray;
+	goto out_free;
 
       hwloc__xml_import_close_child(&childstate);
     }
 
-    obj->valarray = realloc(obj->valarray, (obj->valarray_count+1) * sizeof(*obj->valarray));
-    obj->valarray[obj->valarray_count++] = valarray;
+    hwloc__obj_add_valarray(obj, strdup(name), nb, values, idxs);
   }
 
   return hwloc__xml_import_close_tag(state);
 
-out_valarray:
-  free(valarray->name);
-  free(valarray->values);
-  free(valarray->idx);
-  free(valarray);
+out_free:
+  free(values);
+  free(idxs);
   return -1;
 }
 
