@@ -281,6 +281,13 @@ hwloc_free_unlinked_object(hwloc_obj_t obj)
     free(obj->infos[i].name);
     free(obj->infos[i].value);
   }
+  for(i=0; i<obj->valarray_count; i++) {
+    free(obj->valarray[i]->name);
+    free(obj->valarray[i]->values);
+    free(obj->valarray[i]->idx);
+    free(obj->valarray[i]);
+  }
+  free(obj->valarray);
   free(obj->infos);
   hwloc_clear_object_distances(obj);
   free(obj->memory.page_types);
@@ -662,6 +669,18 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	  }
 	  obj->infos_count = 0;
 	  obj->infos = NULL;
+	}
+	if (obj->valarray_count) {
+	  if (child->valarray_count) {
+	    child->valarray_count += obj->valarray_count;
+	    child->valarray = realloc(child->valarray, child->valarray_count * sizeof(*child->valarray));
+	    memcpy(child->valarray + obj->valarray_count, obj->valarray, obj->valarray_count * sizeof(*child->valarray));
+	  } else {
+	    child->valarray_count = obj->valarray_count;
+	    child->valarray = obj->valarray;
+	  }
+	  obj->valarray_count = 0;
+	  obj->valarray = NULL;
 	}
 	if (obj->name) {
 	  if (child->name)

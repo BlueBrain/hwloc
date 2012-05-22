@@ -470,6 +470,9 @@ struct hwloc_obj {
   int symmetric_subtree;		/**< \brief Set if the subtree of objects below this object is symmetric,
 					  * which means all children and their children have identical subtrees.
 					  */
+
+  struct hwloc_valarray_s **valarray;	/**< \brief Arrays of numeric attributes */
+  unsigned valarray_count;
 };
 /**
  * \brief Convenience typedef; a pointer to a struct hwloc_obj.
@@ -559,6 +562,14 @@ struct hwloc_distances_s {
 struct hwloc_obj_info_s {
   char *name;	/**< \brief Info name */
   char *value;	/**< \brief Info value */
+};
+
+/** \brief Array of numeric attributes */
+struct hwloc_valarray_s {
+  char *name;		/**< \brief Array name */
+  unsigned nb;		/**< \brief Number of elements in the array */
+  float *values;	/**< \brief Actual array of values */
+  unsigned *idx;	/**< \brief Array of indexes describing the values meaning */
 };
 
 /** @} */

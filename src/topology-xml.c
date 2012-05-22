@@ -837,6 +837,84 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
 }
 
 static int
+hwloc__xml_import_valarray(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj,
+			   hwloc__xml_import_state_t state)
+{
+  struct hwloc_valarray_s *valarray = NULL;
+  char *name = NULL;
+  unsigned long nb = 0;
+  char *tag;
+  int ret;
+
+  while (1) {
+    char *attrname, *attrvalue;
+    if (hwloc__xml_import_next_attr(state, &attrname, &attrvalue) < 0)
+      break;
+    if (!strcmp(attrname, "nb"))
+      nb = strtoul(attrvalue, NULL, 10);
+    else if (!strcmp(attrname, "name"))
+      name = attrvalue;
+    else
+      return -1;
+  }
+
+  if (nb && name) {
+    unsigned i;
+
+    valarray = malloc(sizeof(*valarray));
+    valarray->nb = nb;
+    valarray->name = strdup(name);
+    valarray->values = malloc(nb*sizeof(float));
+    valarray->idx = malloc(nb*sizeof(unsigned));
+
+    for(i=0; i<nb; i++) {
+      struct hwloc__xml_import_state_s childstate;
+      char *valstr = NULL;
+      char *idxstr = NULL;
+
+      ret = hwloc__xml_import_find_child(state, &childstate, &tag);
+      if (ret <= 0 || strcmp(tag, "valarrayslot"))
+	/* a valarray child is needed */
+	goto out_valarray;
+
+      while (1) {
+	char *attrname, *attrvalue;
+	if (hwloc__xml_import_next_attr(&childstate, &attrname, &attrvalue) < 0)
+	  break;
+	if (!strcmp(attrname, "value"))
+	  valstr = (char *) attrvalue;
+	else if (!strcmp(attrname, "idx"))
+	  idxstr = (char *) attrvalue;
+      }
+
+      if (!valstr || !idxstr)
+	goto out_valarray;
+
+      valarray->values[i] = (float) atof(valstr);
+      valarray->idx[i] = atoi(idxstr);
+
+      ret = hwloc__xml_import_close_tag(&childstate);
+      if (ret < 0)
+	goto out_valarray;
+
+      hwloc__xml_import_close_child(&childstate);
+    }
+
+    obj->valarray = realloc(obj->valarray, (obj->valarray_count+1) * sizeof(*obj->valarray));
+    obj->valarray[obj->valarray_count++] = valarray;
+  }
+
+  return hwloc__xml_import_close_tag(state);
+
+out_valarray:
+  free(valarray->name);
+  free(valarray->values);
+  free(valarray->idx);
+  free(valarray);
+  return -1;
+}
+
+static int
 hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
 			 hwloc__xml_import_state_t state)
 {
@@ -879,6 +957,8 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
       ret = hwloc__xml_import_info(topology, obj, &childstate);
     } else if (!strcmp(tag, "distances")) {
       ret = hwloc__xml_import_distances(topology, obj, &childstate);
+    } else if (!strcmp(tag, "valarray")) {
+      ret = hwloc__xml_import_valarray(topology, obj, &childstate);
     } else
       ret = -1;
 
@@ -1344,6 +1424,26 @@ hwloc__xml_export_object (hwloc__xml_export_output_t output, hwloc_topology_t to
       hwloc__xml_export_end_child(output, "latency", 0);
     }
     hwloc__xml_export_end_child(output, "distances", nbobjs*nbobjs);
+  }
+
+  for(i=0; i<obj->valarray_count; i++) {
+    unsigned nb = obj->valarray[i]->nb;
+    unsigned j;
+    hwloc__xml_export_new_child(output, "valarray");
+    sprintf(tmp, "%u", nb);
+    hwloc__xml_export_new_prop(output, "nb", tmp);
+    hwloc__xml_export_new_prop(output, "name", obj->valarray[i]->name);
+    hwloc__xml_export_end_props(output, nb);
+    for(j=0; j<nb; j++) {
+      hwloc__xml_export_new_child(output, "valarrayslot");
+      sprintf(tmp, "%f", obj->valarray[i]->values[j]);
+      hwloc__xml_export_new_prop(output, "value", tmp);
+      sprintf(tmp, "%u", obj->valarray[i]->idx[j]);
+      hwloc__xml_export_new_prop(output, "idx", tmp);
+      hwloc__xml_export_end_props(output, 0);
+      hwloc__xml_export_end_child(output, "valarrayslot", 0);
+    }
+    hwloc__xml_export_end_child(output, "valarray", nb);
   }
 
   if (obj->arity) {
