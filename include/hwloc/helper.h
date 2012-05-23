@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <errno.h>
-#include <hwloc/gl.h>
 
 #ifdef __cplusplus
 extern "C" {
