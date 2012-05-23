@@ -19,6 +19,7 @@ int main(void)
   unsigned long loading_flags;
   hwloc_obj_t pcidev_obj;
   int success;
+  hwloc_bitmap_t set;
   char* cpuset_string;
   unsigned number_pci_devices;
   unsigned number_gpus;
@@ -62,7 +63,6 @@ int main(void)
 
       /* Check the returning port and devices */
       err = hwloc_gl_get_gpu_display(topology, pcidev_obj, &port, &device);
-
       if (!err) {
           number_gpus++;
           printf("GPU # %d is connected to DISPLAY:%u.%u \n", number_gpus, port, device);
@@ -71,9 +71,14 @@ int main(void)
 
   /* Case 3: Get the GPU connected to a valid display defined by its port and device */
   pcidev_obj = hwloc_gl_get_gpu_by_display(topology, 0, 0);
-  if (pcidev_obj != NULL)
-    printf("GPU %s is connected to DISPLAY:%u.%u \n", pcidev_obj->name, 0, 0);
-  else
+  if (pcidev_obj != NULL) {
+    set = hwloc_bitmap_alloc();
+    hwloc_gl_get_display_cpuset(topology, 0, 0, set);
+    hwloc_bitmap_asprintf(&cpuset_string, set);
+    printf("GPU %s is connected to DISPLAY:%u.%u close to %s\n", pcidev_obj->name, 0, 0, cpuset_string);
+    free(cpuset_string);
+    hwloc_bitmap_free(set);
+  } else
     printf("No GPU connected to DISPLAY:%u.%u \n", 0, 0);
 
   return 0;

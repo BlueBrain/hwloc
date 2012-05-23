@@ -218,30 +218,3 @@ hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, int port, int
   else
     return NULL;
 }
-
-/*****************************************************************
- * Returns the cpuset of the socket connected to the host bridge
- * connecting the GPU attached to the display defined by the
- * input port and device integers and having the generic format
- * [:][port][.][device] or the format [:][server][.][screen] under
- * X systems.
- * It returns NULL for an invalid display.
- ****************************************************************/
-hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, int device)
-{
-  char x_display [10];
-  hwloc_obj_t display_obj;
-
-  /* Formulate the display string */
-  snprintf(x_display, sizeof(x_display), ":%d.%d", port, device);
-  display_obj = hwloc_gl_query_display(topology, x_display);
-
-  if (display_obj != NULL) {
-    hwloc_obj_t parent = display_obj;
-    while (!parent->cpuset)
-      parent = parent->parent;
-    return hwloc_bitmap_dup(parent->cpuset);
-  }
-  else /* If the gl module was not enabled or wrong display */
-    return NULL;
-}

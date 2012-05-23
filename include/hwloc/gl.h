@@ -49,7 +49,20 @@ HWLOC_DECLSPEC hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology
  * host bridge connecting the GPU attached to the display
  * defined by its input port and device.
  */
-HWLOC_DECLSPEC hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, int device);
+static __hwloc_inline int
+hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, int device,
+			    hwloc_cpuset_t set)
+{
+  hwloc_obj_t obj = hwloc_gl_get_gpu_by_display(topology, port, device);
+  if (!obj) {
+    errno = EINVAL;
+    return -1;
+  }
+  while (!obj->cpuset)
+    obj = obj->parent;
+  hwloc_bitmap_copy(set, obj->cpuset);
+  return 0;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
