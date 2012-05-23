@@ -24,6 +24,17 @@ extern "C" {
  */
 HWLOC_DECLSPEC hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName);
 
+/** \brief Find the PCI device object matching the GPU connected to the
+ * display defined by its port and device as [:][port][.][device]
+ */
+static __hwloc_inline hwloc_obj_t
+hwloc_get_pcidev_by_display(hwloc_topology_t topology, int port, int device)
+{
+  char x_display [10];
+  snprintf(x_display,sizeof(x_display),":%d.%d", port, device);
+  return hwloc_gl_query_display(topology, x_display);
+}
+
 /** \brief Returns a cpuset of the socket attached to the host bridge
  * where the GPU defined by pcidev_obj is connected in the topology.
  */

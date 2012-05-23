@@ -1334,27 +1334,6 @@ hwloc_get_pcidev_by_busidstring(hwloc_topology_t topology, const char *busid)
   return hwloc_get_pcidev_by_busid(topology, domain, bus, dev, func);
 }
 
-/* FIXME move GL/display helpers to hwloc/gl.h */
-/** \brief Find the PCI device object matching the GPU connected to the
- * display defined by its port and device as [:][port][.][device]
- */
-static __hwloc_inline hwloc_obj_t
-hwloc_get_pcidev_by_display(hwloc_topology_t topology, const int port, const int device)
-{
-  hwloc_obj_t pcidev_obj;
-
-  /* Forming the display string */
-  char x_display [10];
-  snprintf(x_display,sizeof(x_display),":%d.%d", port, device);
-
-  pcidev_obj = hwloc_gl_query_display(topology, x_display);
-
-  if (pcidev_obj != NULL)
-    return pcidev_obj;
-  else
-    return NULL;
-}
-
 /** \brief Get the next OS device in the system.
  *
  * \return the first OS device if \p prev is \c NULL.
