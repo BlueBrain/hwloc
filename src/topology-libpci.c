@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <setjmp.h>
-#include <hwloc/gl.h>
+#include <hwloc/gl.h> /* FIXME: move this code out of the PCI backend, call it from the core */
 #ifdef HWLOC_LINUX_SYS
 #include <hwloc/linux.h>
 #include <dirent.h>
@@ -193,6 +193,7 @@ hwloc_linux_lookup_drm_class(struct hwloc_topology *topology, struct hwloc_obj *
  * Looks for the GPUs connected to the system and then shows
  * the attached displays to them
  */
+/* FIXME: do this in the core, not in this PCI backend */
 static void
 hwloc_linux_lookup_display_class(struct hwloc_topology *topology, struct hwloc_obj *pcidev)
 {
@@ -207,8 +208,6 @@ hwloc_linux_lookup_display_class(struct hwloc_topology *topology, struct hwloc_o
   if (!err) {
     char display_name[64];
     snprintf(display_name, sizeof(display_name), ":%d.%d", port, device);
-    /* FIXME remove misc obj and check osdev */
-    hwloc_topology_insert_misc_object_by_parent(topology, pcidev, display_name);
     hwloc_linux_add_os_device(topology, pcidev, HWLOC_OBJ_OSDEV_DISPLAY, display_name);
   }
 }
