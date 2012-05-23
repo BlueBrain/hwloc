@@ -1,0 +1,85 @@
+.\" -*- nroff -*-
+.\" Copyright © 2012 inria.  All rights reserved.
+.\" See COPYING in top-level directory.
+.TH HWLOC-ANNOTATE "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
+.SH NAME
+hwloc-annotate \- Add info attributes to a XML topology
+.
+.\" **************************
+.\"    Synopsis Section
+.\" **************************
+.SH SYNOPSIS
+.B hwloc-annotate
+[\fIoptions\fR]
+\fI<input.xml>\fR
+\fI<output.xml>\fR
+\fI<location>\fR
+\fI<mode>\fR
+\fI<annotation>\fR
+.
+.\" **************************
+.\"    Options Section
+.\" **************************
+.SH OPTIONS
+.
+.\" **************************
+.\"    Description Section
+.\" **************************
+.SH DESCRIPTION
+.
+hwloc-annotate loads a topology from a XML file, adds some annotations,
+and export the resulting topology to another XML file.
+The input and output files may be the same.
+.
+The annotation may be either string info attributes, or arrays of values.
+This is specified by the \fImode\fR.
+.
+Annotations may be added to one specific object in the topology,
+all of them, or all of a given type. This is specified by the \fIlocation\fR.
+.
+.PP
+.B NOTE:
+It is highly recommended that you read the hwloc(7) overview page
+before reading this man page.  Most of the concepts described in
+hwloc(7) directly apply to the hwloc-bind utility.
+.
+.\" **************************
+.\"    Examples Section
+.\" **************************
+.SH EXAMPLES
+.PP
+hwloc-annotate's operation is best described through several examples.
+.
+.PP
+Add an info attribute to all Core objects:
+
+    $ hwloc-annotate input.xml output.xml Core:all infoname infovalue
+
+Add an info attribute to the root object of the topology
+and modify the input XML directly:
+
+    $ hwloc-annotate file.xml file.xml root infoname infovalue
+
+Add an array of two values to the 3rd L2 cache object (logically indexed):
+
+    $ hwloc-annotate input.xml output.xml L2Cache:2 valarray 0=2.3 1=3.4
+.
+.\" **************************
+.\" Return value section
+.\" **************************
+.SH RETURN VALUE
+Upon successful execution, hwloc-annotate generates the output topology.
+The return value is 0.
+.
+.PP
+hwloc-annotate will return nonzero if any kind of error occurs, such as
+(but not limited to) failure to parse the command line.
+.
+.\" **************************
+.\"    See also section
+.\" **************************
+.SH SEE ALSO
+.
+.ft R
+hwloc(7), lstopo(1)
+.sp
