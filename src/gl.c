@@ -82,7 +82,7 @@ hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
     free(ptr_binary_data);
 
     /* Gets the ID's of the GPU defined by gpu_number
-         * For further details, see the <NVCtrl/NVCtrlLib.h> */
+     * For further details, see the <NVCtrl/NVCtrlLib.h> */
     success_info = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
                                                NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
     if (success_info) {

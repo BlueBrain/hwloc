@@ -200,7 +200,7 @@ hwloc_linux_lookup_display_class(struct hwloc_topology *topology, struct hwloc_o
   unsigned port, device;
   int err;
 
-  /* Getting the display info */
+  /* Getting the display info [:port.device] */
   err = hwloc_gl_get_gpu_display(topology, pcidev, &port, &device);
 
   /* If GPU, Appending the display as a children to the GPU
