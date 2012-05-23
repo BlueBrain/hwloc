@@ -4,7 +4,6 @@
  * See COPYING in top-level directory.
  */
 
-/* FIXME rename file to topology-gl.c or topology-display.c ? */
 #include <private/autogen/config.h>
 #include <hwloc.h>
 #include <hwloc/helper.h>

@@ -39,7 +39,7 @@ sources += topology-libpci.c
 endif HWLOC_HAVE_LIBPCI
 
 if HWLOC_HAVE_GL
-sources += gl.c
+sources += topology-gl.c
 endif HWLOC_HAVE_GL
 
 if HWLOC_HAVE_SOLARIS
