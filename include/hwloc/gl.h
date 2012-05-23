@@ -35,12 +35,6 @@ hwloc_get_pcidev_by_display(hwloc_topology_t topology, int port, int device)
   return hwloc_gl_query_display(topology, x_display);
 }
 
-/** \brief Returns a cpuset of the socket attached to the host bridge
- * where the GPU defined by pcidev_obj is connected in the topology.
- */
-/* FIXME: fill a cpuset instead of returning it? */
-HWLOC_DECLSPEC hwloc_bitmap_t hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, hwloc_obj_t pcidev_obj);
-
 /** \brief Returns a DISPLAY for a given GPU defined by pcidev_obj.
  */
 HWLOC_DECLSPEC int hwloc_gl_get_gpu_display(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device);

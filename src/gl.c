@@ -229,49 +229,6 @@ hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, int port, int
   else
     return NULL;
 }
-/*****************************************************************
- * Returns a cpuset of the socket attached to the host bridge
- * where the GPU defined by the pcidev_obj is connected in the
- * topology.
- ****************************************************************/
-hwloc_bitmap_t
-hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, hwloc_obj_t pcidev_obj)
-{
-  int i;
-  hwloc_bitmap_t cpuset;
-  int pci_dev_count; /* The number of PCI devices in the topology */
-
-  pci_dev_count = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PCI_DEVICE);
-  cpuset = hwloc_bitmap_alloc();
-
-  for (i = 0; i < pci_dev_count; ++i) {
-    /* PCI device object */
-    hwloc_obj_t pci_dev_object;
-    pci_dev_object = hwloc_get_obj_by_type (topology, HWLOC_OBJ_PCI_DEVICE, i);
-
-    /* PCI device ID */
-    if (pcidev_obj->attr->pcidev.bus == pci_dev_object->attr->pcidev.bus &&
-        pcidev_obj->attr->pcidev.device_id == pci_dev_object->attr->pcidev.device_id &&
-        pcidev_obj->attr->pcidev.domain == pci_dev_object->attr->pcidev.domain &&
-        pcidev_obj->attr->pcidev.func == pci_dev_object->attr->pcidev.func) {
-
-      /* Host bridge of the PCI device */
-      hwloc_obj_t host_bridge;
-      host_bridge = hwloc_get_hostbridge_by_pcibus (topology,
-                                                    pci_dev_object->attr->pcidev.domain,
-                                                    pci_dev_object->attr->pcidev.bus);
-
-      /* Get the cpuset of the socket attached to host
-       * bridge at which the PCI device is connected */
-      cpuset = host_bridge->prev_sibling->cpuset;
-      return hwloc_bitmap_dup(cpuset);
-    }
-  }
-
-  /* If not existing in the topology */
-  hwloc_bitmap_zero(cpuset);
-  return hwloc_bitmap_dup(cpuset);
-}
 
 /*****************************************************************
  * Returns the cpuset of the socket connected to the host bridge
@@ -279,26 +236,23 @@ hwloc_gl_get_pci_cpuset(hwloc_topology_t topology, hwloc_obj_t pcidev_obj)
  * input port and device integers and having the generic format
  * [:][port][.][device] or the format [:][server][.][screen] under
  * X systems.
- * It returns empty (zero) cpuset for an invalid display.
+ * It returns NULL for an invalid display.
  ****************************************************************/
 hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, int device)
 {
   char x_display [10];
   hwloc_obj_t display_obj;
-  hwloc_bitmap_t cpuset;
-
-  /* Allocate the cpuset and initialize it to zeros in case of failure */
-  cpuset = hwloc_bitmap_alloc();
-  hwloc_bitmap_zero(cpuset);
 
   /* Formulate the display string */
   snprintf(x_display, sizeof(x_display), ":%d.%d", port, device);
   display_obj = hwloc_gl_query_display(topology, x_display);
 
   if (display_obj != NULL) {
-    cpuset = hwloc_gl_get_pci_cpuset(topology, display_obj);
-    return hwloc_bitmap_dup(cpuset);
+    hwloc_obj_t parent = display_obj;
+    while (!parent->cpuset)
+      parent = parent->parent;
+    return hwloc_bitmap_dup(parent->cpuset);
   }
   else /* If the gl module was not enabled or wrong display */
-    return hwloc_bitmap_dup(cpuset);
+    return NULL;
 }
