@@ -13,12 +13,16 @@
 
 static void usage(const char *callname __hwloc_attribute_unused, FILE *where)
 {
-	fprintf(where, "Usage: hwloc-annotate <input.xml> <output.xml> <location> <annotation>\n");
+	fprintf(where, "Usage: hwloc-annotate [options] <input.xml> <output.xml> <location> <annotation>\n");
+	fprintf(where, "  <location> may be:\n");
+	fprintf(where, "    all, root, <type>:<logicalindex>, <type>:all\n");
 	fprintf(where, "  <annotation> may be:\n");
 	fprintf(where, "    info <name> <value>\n");
 	fprintf(where, "    valarray <name> <nb> <index1>=<value1> <index2>=<value2> [...]\n");
-	fprintf(where, "  <location> may be:\n");
-	fprintf(where, "    all, root, <type>:<logicalindex>\n");
+	fprintf(where, "    none\n");
+        fprintf(where, "Options:\n");
+	fprintf(where, "  --ci\tClear existing infos\n");
+	fprintf(where, "  --cv\tClear existing valarrays\n");
 }
 
 static char *infoname = NULL, *infovalue = NULL;
@@ -28,10 +32,36 @@ static unsigned valarraynb;
 static float *valarrayvalues = NULL;
 static unsigned *valarrayidx = NULL;
 
+static int clearinfos = 0;
+static int clearvalarrays = 0;
+
 static void apply(hwloc_obj_t obj)
 {
+	unsigned i;
+	if (clearinfos) {
+		/* this may be considered dangerous, applications should not modify objects directly */
+		for(i=0; i<obj->infos_count; i++) {
+			free(obj->infos[i].name);
+			free(obj->infos[i].value);
+		}
+		free(obj->infos);
+		obj->infos = NULL;
+		obj->infos_count = 0;
+	}
 	if (infoname)
 		hwloc_obj_add_info(obj, infoname, infovalue);
+	if (clearvalarrays) {
+		/* this may be considered dangerous, applications should not modify objects directly */
+		for(i=0; i<obj->valarray_count; i++) {
+			free(obj->valarray[i]->name);
+			free(obj->valarray[i]->values);
+			free(obj->valarray[i]->idx);
+			free(obj->valarray[i]);
+		}
+		free(obj->valarray);
+		obj->valarray = NULL;
+		obj->valarray_count = 0;
+	}
 	if (valarrayname)
 		hwloc_obj_add_valarray(obj, valarrayname, valarraynb, valarrayvalues, valarrayidx);
 }
@@ -57,7 +87,19 @@ int main(int argc, char *argv[])
 	argc--;
 	argv++;
 
-	/* FIXME: option for clearing */
+	while (argc && *argv[0] == '-') {
+		if (!strcmp(argv[0], "--ci"))
+			clearinfos = 1;
+		else if (!strcmp(argv[0], "--cv"))
+			clearvalarrays = 1;
+		else {
+			fprintf(stderr, "Unrecognized options: %s\n", argv[0]);
+			usage(callname, stderr);
+			exit(EXIT_FAILURE);
+		}
+		argc--;
+		argv++;
+	}
 
 	if (argc < 3) {
 		usage(callname, stderr);
@@ -74,7 +116,6 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	if (!strcmp(argv[0], "info")) {
-		/* FIXME: handle "clear" ? */
 		if (argc < 3) {
 			usage(callname, stderr);
 			exit(EXIT_FAILURE);
@@ -83,7 +124,6 @@ int main(int argc, char *argv[])
 		infovalue = argv[2];
 
 	} else if (!strcmp(argv[0], "valarray")) {
-		/* FIXME: handle "clear" ? */
 		if (argc < 3) {
 			usage(callname, stderr);
 			exit(EXIT_FAILURE);
@@ -107,6 +147,8 @@ int main(int argc, char *argv[])
 			sscanf(argv[i], "%u=%f", &valarrayidx[i], &valarrayvalues[i]);
 		}
 
+	} else if (!strcmp(argv[0], "none")) {
+		/* do nothing (maybe clear) */
 	} else {
 		fprintf(stderr, "Unrecognized annotation type: %s\n", argv[0]);
 		usage(callname, stderr);
