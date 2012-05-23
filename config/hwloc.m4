@@ -716,7 +716,7 @@ EOF])
           AC_CHECK_LIB([XNVCtrl], [XNVCTRLQueryTargetAttribute], [:], [
             AC_MSG_WARN([XNVCTRLQueryTargetAttribute not found, GL backend disabled])
             hwloc_gl_happy=no
-          ])
+          ], [-lXext])
         ], [
           AC_MSG_WARN([NVCtrl headers not found, GL backend disabled])
           hwloc_gl_happy=no
@@ -724,7 +724,7 @@ EOF])
 
         if test "x$hwloc_gl_happy" = "xyes"; then
             AC_DEFINE([HWLOC_HAVE_GL], [1], [Define to 1 if you have the GL module components.])
-            HWLOC_LIBS="$HWLOC_LIBS -lXNVCtrl -lX11"
+            HWLOC_LIBS="$HWLOC_LIBS -lXNVCtrl -lXext -lX11"
             hwloc_have_gl=yes
 	else
             AS_IF([test "$enable_gl" = "yes"], [
