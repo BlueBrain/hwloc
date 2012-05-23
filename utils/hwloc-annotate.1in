@@ -25,9 +25,13 @@ hwloc-annotate \- Add info attributes to a XML topology
 .TP 10
 \fB\-\-ci\fR
 Clear the existing info attributes in the target objects before annotating.
+If no new annotation has to be added after clearing, \fImode\fR should be
+set to \fInone\fR.
 .TP 10
 \fB\-\-cv\fR
 Clear the existing valarray attributes in the target objects before annotating.
+If no new annotation has to be added after clearing, \fImode\fR should be
+set to \fInone\fR.
 .
 .\" **************************
 .\"    Description Section
@@ -39,10 +43,37 @@ and export the resulting topology to another XML file.
 The input and output files may be the same.
 .
 The annotation may be either string info attributes, or arrays of values.
-This is specified by the \fImode\fR.
+This is specified by the \fImode\fR:
+.TP
+.B info infoname infovalue
+Specifies a new string info attribute whose name is \fIinfoname\fR and
+value is \fIinfovalue\fR.
+.TP
+.B valarray name nb index1=value1 index2=value2 ...
+Specifies a valarray attribute whose name is \fIname\fR and which contains
+\fInb\fR values.
+Each value is given as the following \fIindex=value\fR argument.
+.TP
+.B none
+No new annotation is added. This is useful when clearing existing attributes.
 .
+.PP
 Annotations may be added to one specific object in the topology,
-all of them, or all of a given type. This is specified by the \fIlocation\fR.
+all of them, or all of a given type.
+This is specified by the \fIlocation\fR:
+.TP
+.B all
+annotates all objects in the topology.
+.TP
+.B root
+annotates the root object of the topology.
+.TP
+.B <type>:all
+annotates all objects of the given type.
+.TP
+.B <type>:<index>
+annotates the object of the given type and index.
+The index is logical.
 .
 .PP
 .B NOTE:
