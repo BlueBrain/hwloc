@@ -45,16 +45,12 @@ int main(void)
   for (i = 0; i < number_pci_devices; ++i) {
       hwloc_obj_t pcidev_obj = hwloc_get_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, i);
 
-      hwloc_bitmap_t cpuset ;
-      cpuset = hwloc_bitmap_alloc();
-      hwloc_bitmap_zero(cpuset);
-      cpuset = hwloc_get_pcidevice_cpuset(topology, pcidev_obj);
-
+      hwloc_bitmap_t cpuset = hwloc_gl_get_pci_cpuset(topology, pcidev_obj);
       /* Print the cpuset corresponding to each pci device */
       hwloc_bitmap_asprintf(&cpuset_string, cpuset);
-
       printf(" %s | %s \n", cpuset_string, pcidev_obj->name);
       free(cpuset_string);
+      hwloc_bitmap_free(cpuset);
     }
 
   /* Case 2: Get the number of connected GPUs in the topology and their attached displays */

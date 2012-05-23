@@ -302,12 +302,3 @@ hwloc_bitmap_t hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, 
   else /* If the gl module was not enabled or wrong display */
     return hwloc_bitmap_dup(cpuset);
 }
-
-/*****************************************************************
- * Returns the cpuset of the socket connected to the host bridge
- * connecting the pci device defined by pcidev_obj.
- ****************************************************************/
-hwloc_bitmap_t hwloc_get_pcidevice_cpuset(hwloc_topology_t topology, hwloc_obj_t pcidev_obj)
-{
-    return hwloc_bitmap_dup(hwloc_gl_get_pci_cpuset(topology, pcidev_obj));
-}
