@@ -39,13 +39,6 @@ hwloc_get_pcidev_by_display(hwloc_topology_t topology, int port, int device)
  */
 HWLOC_DECLSPEC int hwloc_gl_get_gpu_display(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device);
 
-/** \brief Returns the DISPLAY parameters for a given pcidev_obj.
- * Note: This function doesn't need to have an input topology and
- * is just used for adding the display parameters in the topology
- * created by running the "lstop" utility.
- */
-HWLOC_DECLSPEC int hwloc_gl_get_gpu_display_private(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device);
-
 /** \brief Returns an object of type HWLOC_OBJ_PCI_DEVICE
  * representing the GPU connected to the display defined by
  * its port and device.
