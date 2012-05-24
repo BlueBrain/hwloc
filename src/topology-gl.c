@@ -69,7 +69,7 @@ hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
     goto out_display;
 
   err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-				    NV_CTRL_PCI_ID, &nv_ctrl_pci_device);
+				    NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
   if (!err)
     goto out_display;
 
@@ -86,7 +86,7 @@ hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
   display_obj = hwloc_get_pcidev_by_busid(topology,
 					  (unsigned) nv_ctrl_pci_domain,
 					  (unsigned) nv_ctrl_pci_bus,
-					  (unsigned) nv_ctrl_pci_device & 0x0000FFFF,
+					  (unsigned) nv_ctrl_pci_device,
 					  (unsigned) nv_ctrl_pci_func);
 
   XCloseDisplay(display);
