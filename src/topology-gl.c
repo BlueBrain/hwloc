@@ -15,21 +15,6 @@
 #include <NVCtrl/NVCtrlLib.h>
 
 /*****************************************************************
- * Allocates a hwloc_obj_t of type HWLOC_OBJ_PCI_DEVICE and returns a
- * pointer to this object.
- ****************************************************************/
-static hwloc_obj_t hwloc_gl_alloc_pcidev_object(void)
-{
-  struct hwloc_obj *obj = malloc(sizeof(*obj));
-  memset(obj, 0, sizeof(*obj));
-  obj->type = HWLOC_OBJ_PCI_DEVICE;
-  obj->os_level = -1;
-  obj->attr = malloc(sizeof(*obj->attr));
-  memset(obj->attr, 0, sizeof(*obj->attr));
-  return obj;
-}
-
-/*****************************************************************
  * Queries a display defined by its port and device numbers in the
  * string format ":[port].[device]", and
  * returns a hwloc_obj_t containg the desired pci parameters (bus,
@@ -37,25 +22,19 @@ static hwloc_obj_t hwloc_gl_alloc_pcidev_object(void)
  ****************************************************************/
 hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
 {
-  hwloc_obj_t display_obj = NULL;
-
 #ifdef HWLOC_HAVE_GL
+  hwloc_obj_t display_obj = NULL;
   Display* display;
   int opcode, event, error;
   int default_screen_number;
   unsigned int *ptr_binary_data;
   int data_lenght;
   int gpu_number;
-
-  int num_pci_devices;
   int nv_ctrl_pci_bus;
   int nv_ctrl_pci_device;
   int nv_ctrl_pci_domain;
   int nv_ctrl_pci_func;
-
-  int success_gpu;
-  int success_info;
-  int i;
+  int err;
 
   display = XOpenDisplay(displayName);
   if (display == 0) {
@@ -73,80 +52,54 @@ hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
 
   /* Gets the GPU number attached to the default screen. */
   /* For further details, see the <NVCtrl/NVCtrlLib.h> */
-  success_gpu = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, default_screen_number, 0,
-                                          NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
-                                          (unsigned char **) &ptr_binary_data, &data_lenght);
-  if (success_gpu) {
-    gpu_number = ptr_binary_data[1];
-    free(ptr_binary_data);
+  err = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, default_screen_number, 0,
+				      NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
+				      (unsigned char **) &ptr_binary_data, &data_lenght);
+  if (!err)
+    goto out_display;
 
-    /* Gets the ID's of the GPU defined by gpu_number
-     * For further details, see the <NVCtrl/NVCtrlLib.h> */
-    success_info = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-                                               NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
-    if (success_info) {
-      success_info = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-                                                 NV_CTRL_PCI_ID, &nv_ctrl_pci_device);
-      if (success_info) {
-        success_info = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-                                                   NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
-        if (success_info) {
-          success_info = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-                                                     NV_CTRL_PCI_FUNCTION, &nv_ctrl_pci_func);
+  gpu_number = ptr_binary_data[1];
+  free(ptr_binary_data);
 
-          if (topology != NULL) {
-            /* This part only works if the I/O and BRIDGES flags are set */
-            num_pci_devices = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PCI_DEVICE);
-            if (num_pci_devices > 0)
-            {
-              for (i = 0; i < num_pci_devices; ++i)
-              {
-                display_obj = hwloc_get_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, i);
+  /* Gets the ID's of the GPU defined by gpu_number
+   * For further details, see the <NVCtrl/NVCtrlLib.h> */
+  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+				    NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
+  if (!err)
+    goto out_display;
 
-                /* For further details, see the <NVCtrl/NVCtrlLib.h> */
-                if ((int) display_obj->attr->pcidev.bus == (int) nv_ctrl_pci_bus &&
-                    (int) display_obj->attr->pcidev.device_id == ((int) nv_ctrl_pci_device & 0x0000FFFF) &&
-                    (int) display_obj->attr->pcidev.domain == (int) nv_ctrl_pci_domain &&
-                    (int) display_obj->attr->pcidev.func == (int) nv_ctrl_pci_func) {
-                  return display_obj;
-                }
-              }
-            }
-          }
-          else {
-            display_obj = hwloc_gl_alloc_pcidev_object();
+  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+				    NV_CTRL_PCI_ID, &nv_ctrl_pci_device);
+  if (!err)
+    goto out_display;
 
-            display_obj->attr->pcidev.bus = nv_ctrl_pci_bus;
-            display_obj->attr->pcidev.device_id = nv_ctrl_pci_device & 0x0000FFFF;
-            display_obj->attr->pcidev.domain = nv_ctrl_pci_domain;
-            display_obj->attr->pcidev.func = nv_ctrl_pci_func;
-          }
-        }
-        else {
-          XCloseDisplay(display);
-          return display_obj;
-        }
-      }
-      else {
-        XCloseDisplay(display);
-        return display_obj;
-      }
-    }
-    else {
-      XCloseDisplay(display);
-      return display_obj;
-    }
-  }
-  else
-    fprintf(stderr, "Failed to query the GPUs attached to the default screen \n");
+  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+				    NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
+  if (!err)
+    goto out_display;
 
-  /* Closing the connection */
+  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+				    NV_CTRL_PCI_FUNCTION, &nv_ctrl_pci_func);
+  if (!err)
+    goto out_display;
+
+  display_obj = hwloc_get_pcidev_by_busid(topology,
+					  (unsigned) nv_ctrl_pci_domain,
+					  (unsigned) nv_ctrl_pci_bus,
+					  (unsigned) nv_ctrl_pci_device & 0x0000FFFF,
+					  (unsigned) nv_ctrl_pci_func);
+
   XCloseDisplay(display);
   return display_obj;
 
+out_display:
+  XCloseDisplay(display);
+  errno = EINVAL;
+  return NULL;
+
 #else
-  printf("GL module is not loaded \n");
-  return display_obj;
+  errno = ENOSYS;
+  return NULL;
 #endif
 }
 
