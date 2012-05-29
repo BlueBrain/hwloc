@@ -25,7 +25,8 @@ noinst_HEADERS = \
         private/private.h \
         private/debug.h \
         private/misc.h \
-        private/cpuid.h
+        private/cpuid.h \
+		private/backend.h
 
 if HWLOC_HAVE_LINUX
 include_hwloc_HEADERS += \
