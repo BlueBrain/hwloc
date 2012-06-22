@@ -24,6 +24,7 @@
 #include <sys/utsname.h>
 #endif
 #include <string.h>
+#include <hwloc/topology.h>
 
 #ifdef HWLOC_HAVE_ATTRIBUTE_FORMAT
 # if HWLOC_HAVE_ATTRIBUTE_FORMAT
@@ -34,10 +35,6 @@
 #else
 # define __hwloc_attribute_format(type, str, arg)
 #endif
-
-
-
-struct hwloc_topology;
 
 extern void hwloc_distances_init(struct hwloc_topology *topology);
 extern void hwloc_distances_clear(struct hwloc_topology *topology);

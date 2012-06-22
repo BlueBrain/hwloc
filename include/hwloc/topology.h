@@ -6,27 +6,11 @@
 #include <hwloc/bitmap.h>
 #include <private/debug.h>
 #include <sys/types.h>
-#include <private/backend.h>
+#include <hwloc/backend.h>
 
-/* N'existera normalement plus */
-
-typedef enum hwloc_backend_e {
-	/*HWLOC_BACKEND_NONE,*/
-	/*HWLOC_BACKEND_SYNTHETIC,*/
-	/*#ifdef HWLOC_LINUX_SYS*/
-	/*HWLOC_BACKEND_LINUXFS,*/
-	/*#endif*/
-	/*HWLOC_BACKEND_XML,*/
-	/*HWLOC_BACKEND_CUSTOM,*/
-	/* This value is only here so that we can end the enum list without*/
-	/*a comma (thereby preventing compiler warnings) */
-	HWLOC_BACKEND_MAX
-} hwloc_backend_t;
-
-/* *************************** */
 
 struct hwloc_used_backends{
-	struct hwloc_backends_st* backend;
+	struct hwloc_backend_st* backend;
 	struct hwloc_used_backends* next;
 	struct hwloc_used_backends* previous;
 };
@@ -183,7 +167,7 @@ extern int hwloc_connect_levels(hwloc_topology_t topology);
  *
  * In case of error, hwloc_report_os_error() is called.
  */
-extern void hwloc_insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj);
+HWLOC_DECLSPEC void hwloc_insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj);
 
 /* Error reporting */
 typedef void (*hwloc_report_error_t)(const char * msg, int line);
@@ -208,10 +192,10 @@ extern int hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc
 extern void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, hwloc_obj_t obj);
 
 /* Insert uname-specific names/values in the object infos array */
-extern void hwloc_add_uname_info(struct hwloc_topology *topology);
+HWLOC_DECLSPEC void hwloc_add_uname_info(struct hwloc_topology *topology);
 
 
-#ifdef HWLOC_INSIDE_LIBHWLOC
+/* FIXME #ifdef HWLOC_INSIDE_LIBHWLOC */
 /** \brief Return a locally-allocated stringified bitmap for printf-like calls. */
 static __hwloc_inline char *
 hwloc_bitmap_printf_value(hwloc_const_bitmap_t bitmap)
@@ -269,7 +253,7 @@ hwloc_setup_level(int procid_max, unsigned num, unsigned *osphysids, unsigned *p
     }
   hwloc_debug("%s", "\n");
 }
-#endif
+/* #endif */
 
 /* This can be used for the alloc field to get allocated data that can be freed by free() */
 void *hwloc_alloc_heap(hwloc_topology_t topology, size_t len);
@@ -293,6 +277,6 @@ hwloc_alloc_or_fail(hwloc_topology_t topology, size_t len, int flags)
   return hwloc_alloc(topology, len);
 }
 
-
+HWLOC_DECLSPEC void alloc_cpusets(hwloc_obj_t obj);
 
 #endif /* HWLOC_TOPOLOGY_H */

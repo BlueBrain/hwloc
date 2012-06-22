@@ -5,7 +5,7 @@
 # See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
-AM_CPPFLAGS = $(HWLOC_CPPFLAGS) -DHWLOC_INSIDE_LIBHWLOC
+AM_CPPFLAGS = $(HWLOC_CPPFLAGS) -DHWLOC_INSIDE_LIBHWLOC -rdynamic
 AM_LDFLAGS = $(HWLOC_LDFLAGS)
 
 EXTRA_DIST = dolib.c
@@ -19,6 +19,8 @@ else
 noinst_LTLIBRARIES = libhwloc_embedded.la
 endif
 
+SUBDIRS=backends
+
 # Sources and ldflags
 
 sources = \
@@ -29,8 +31,9 @@ sources = \
         topology-xml.c \
         bind.c \
         bitmap.c \
-        misc.c
-ldflags =
+        misc.c \
+		backend.c
+ldflags = 
 
 # Conditionally add to the sources and ldflags
 
@@ -45,7 +48,7 @@ ldflags += -lpicl
 endif HWLOC_HAVE_SOLARIS
 
 if HWLOC_HAVE_LINUX
-sources += topology-linux.c
+#sources += topology-linux.c
 endif HWLOC_HAVE_LINUX
 
 if HWLOC_HAVE_AIX

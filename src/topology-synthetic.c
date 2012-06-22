@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <strings.h>
 
+/* TODO remove old code commented out */
+
+int hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *description);
+
 /* Read from DESCRIPTION a series of integers describing a symmetrical
    topology and update `topology->synthetic_description' accordingly.  On
    success, return zero.  */
@@ -34,7 +38,8 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   if (env)
     verbose = atoi(env);
 
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
+  /* assert(topology->backend_type == HWLOC_BACKEND_NONE); */
+  assert(topology->used_backends == NULL);
 
   for (pos = description, count = 1; *pos; pos = next_pos) {
 #define HWLOC_OBJ_TYPE_UNKNOWN ((hwloc_obj_type_t) -1)
@@ -205,7 +210,7 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
       topology->backend_params.synthetic.depth[i] = cache_depth--;
   }
 
-  topology->backend_type = HWLOC_BACKEND_SYNTHETIC;
+  /* topology->backend_type = HWLOC_BACKEND_SYNTHETIC; */
   topology->backend_params.synthetic.string = strdup(description);
   topology->backend_params.synthetic.arity[count-1] = 0;
   topology->is_thissystem = 0;
@@ -216,9 +221,9 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
 void
 hwloc_backend_synthetic_exit(struct hwloc_topology *topology)
 {
-  assert(topology->backend_type == HWLOC_BACKEND_SYNTHETIC);
+  /* assert(topology->backend_type == HWLOC_BACKEND_SYNTHETIC); */
   free(topology->backend_params.synthetic.string);
-  topology->backend_type = HWLOC_BACKEND_NONE;
+  /* topology->backend_type = HWLOC_BACKEND_NONE; */
 }
 
 /*

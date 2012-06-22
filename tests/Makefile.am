@@ -44,7 +44,8 @@ check_PROGRAMS = hwloc_bitmap \
 	hwloc_topology_restrict \
 	hwloc_obj_infos \
 	hwloc_iodevs \
-	xmlbuffer
+	xmlbuffer \
+	hwloc_backends_new
 
 if HWLOC_HAVE_LINUX_LIBNUMA
 check_PROGRAMS += linux-libnuma

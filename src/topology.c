@@ -25,7 +25,7 @@
 #include <private/private.h>
 #include <private/debug.h>
 /* CHANGED */
-#include <private/topology.h>
+#include <hwloc/topology.h>
 /* CHANGED */
 
 #ifdef HAVE_MACH_MACH_INIT_H
@@ -46,6 +46,9 @@
 #ifdef HWLOC_WIN_SYS
 #include <windows.h>
 #endif
+
+void add_to_used_backends(struct hwloc_topology* topology, struct hwloc_backend_st* backend);
+struct hwloc_backend_st* browse_global_backends(struct hwloc_topology* topology, char* backend_name);
 
 unsigned hwloc_get_api_version(void)
 {
@@ -935,11 +938,12 @@ hwloc_topology_insert_misc_object_by_parent(struct hwloc_topology *topology, hwl
 hwloc_obj_t
 hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, int groupdepth)
 {
+  struct hwloc_used_backends* temp = topology->used_backends;
+  int custom = -1;
+
   hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
   obj->attr->group.depth = groupdepth;
 
-  struct hwloc_used_backends* temp = topology->used_backends;
-  int custom = -1;
   while (temp != NULL){
 	  if (strcmp(temp->backend->name, "custom") == 0){
 		  custom = 0;
@@ -2129,7 +2133,7 @@ static int dontfree_membind(hwloc_topology_t topology __hwloc_attribute_unused, 
   return 0;
 }
 
-static void alloc_cpusets(hwloc_obj_t obj)
+void alloc_cpusets(hwloc_obj_t obj)
 {
   obj->cpuset = hwloc_bitmap_alloc_full();
   obj->complete_cpuset = hwloc_bitmap_alloc();
@@ -2146,15 +2150,16 @@ static void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
 static int
 hwloc_discover(struct hwloc_topology *topology)
 {
-	int gotsomeio = 1;
+	int gotsomeio = 0;
+	struct hwloc_backends_loaded* temp;
 /* TODO Sera à mettre dans les fonctions hwloc_look des backends concernés
 
   if (topology->backend_type == HWLOC_BACKEND_SYNTHETIC) {
     alloc_cpusets(topology->levels[0][0]);
     hwloc_look_synthetic(topology);
-  } else if (topology->backend_type == HWLOC_BACKEND_CUSTOM) {
+  } else if (topology->backend_type == HWLOC_BACKEND_CUSTOM) { */
      /* nothing to do, just connect levels below */
-  } else if (topology->backend_type == HWLOC_BACKEND_XML) {
+  /* } else if (topology->backend_type == HWLOC_BACKEND_XML) {
     if (hwloc_look_xml(topology) < 0) {
       hwloc_topology_clear(topology);
       return -1;
@@ -2203,26 +2208,28 @@ hwloc_discover(struct hwloc_topology *topology)
    * Here, we only allocate cpusets for the root object.
    */
 
-	/*alloc_cpusets(topology->levels[0][0]);*/
+	/* TODO alloc_cpusets(topology->levels[0][0]);*/
 
   /* Each OS type should also fill the bind functions pointers, at least the
    * set_cpubind one
    */
 	
 	hwloc_debug("%s", "\nLooking for base backend\n");
-	topology->base_backends->backends->hwloc_look(topology);
+	fprintf(stderr, "**topology.c: hwloc_topology_discovery: Before look\n");
+	topology->base_backends->backend->hwloc_look(topology);
+	fprintf(stderr, "**topology.c: hwloc_topology_discover: After discover\n");
 
-/* faire un backend par defaut 
+/* TODO faire un backend par defaut 
 #    ifndef HAVE_OS_SUPPORT
-    hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
-#    endif /* Unsupported OS */
-*/
+    hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology)); */
+/* #    endif */  /* Unsupported OS */
 
-/* A faire dans le backends
+
+/* TODO A faire dans le backends
 #    ifndef HWLOC_LINUX_SYS
-    if (topology->is_thissystem) {
+    if (topology->is_thissystem) { */
       /* gather uname info, except for Linux, which does it internally depending on load options */
-      hwloc_add_uname_info(topology);
+/*      hwloc_add_uname_info(topology);
     }
 #    endif
 
@@ -2323,7 +2330,6 @@ hwloc_discover(struct hwloc_topology *topology)
   if (topology->global_backends)
 	  gotsomeio = 1;
 
-  struct hwloc_backends_loaded* temp;
   if (topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO))
   {
 	  gotsomeio = 1;
@@ -2341,11 +2347,12 @@ hwloc_discover(struct hwloc_topology *topology)
 		  hwloc_debug("%s", "\nIO devices enable, but no IO backends found \n");
 
       print_objects(topology, 0, topology->levels[0][0]);
-    } else
-    {
-      hwloc_debug("%s", "\nno IO detection\n");
-    }
+  } 
+  else
+  {
+	  hwloc_debug("%s", "\nno IO detection\n");
   }
+  
   /* if we got anything, filter interesting objects and update the tree */
   if (gotsomeio) {
     hwloc_drop_useless_io(topology, topology->levels[0][0]);
@@ -2376,7 +2383,7 @@ hwloc_discover(struct hwloc_topology *topology)
     topology->is_thissystem = 1;
 
   if (topology->is_thissystem) {
-	  topology->base_backends->backends->hwloc_set_hooks(topology);
+	  topology->base_backends->backend->hwloc_set_hooks(topology);
   } else {
     topology->set_thisproc_cpubind = dontset_thisproc_cpubind;
     topology->get_thisproc_cpubind = dontget_thisproc_cpubind;
@@ -2524,11 +2531,17 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
     topology->ignored_types[i] = HWLOC_IGNORE_TYPE_NEVER;
   topology->ignored_types[HWLOC_OBJ_GROUP] = HWLOC_IGNORE_TYPE_KEEP_STRUCTURE;
 
-  /* Load backends */
-  topology->base_backends = hwloc_backend_load("backends", "hwloc_backends_base");
-  topology->global_backends = hwloc_backend_load("backends", "hwloc_backends_global");
-  topology->io_backends = hwloc_backend_load("backends", "io_backends_base");
+  fprintf(stderr, "**topology.c: Before backends loading\n");
 
+  /* Load backends */
+  /* FIXME : Hard coded for test, it should be interesting to install backends in th system */
+  topology->base_backends = hwloc_backend_load("/home/antoine/hwloc/hwloc-backends/src/backends/.libs", "libhwlocbackendsbase");
+  
+  fprintf(stderr, "**topology.c: After backends loading\n");
+
+  /* topology->global_backends = hwloc_backend_load("../backends", "hwloc_backends_global");
+  topology->io_backends = hwloc_backend_load("../backends", "io_backends_base");
+*/
   hwloc_distances_init(topology);
 
   /* Make the topology look like something coherent but empty */
@@ -2604,12 +2617,12 @@ hwloc_backend_exit(struct hwloc_topology *topology)
 	while (topology->used_backends != NULL){
 		temp->backend->hwloc_backend_exit(topology);
 		
-		temp = used_backends->next;
+		temp = topology->used_backends->next;
 		if (temp != NULL){
 			temp->previous = NULL;
-			free(used_backends);
+			free(topology->used_backends);
 		}
-		used_backends = temp;
+		topology->used_backends = temp;
 	}
 
 	if (topology->is_loaded) {
@@ -2621,9 +2634,12 @@ hwloc_backend_exit(struct hwloc_topology *topology)
 }
 
 void 
-add_to_used_backends(struct hwloc_backend_st* backend){
+add_to_used_backends(struct hwloc_topology* topology, struct hwloc_backend_st* backend){
 	if (topology->used_backends == NULL){
+		topology->used_backends = malloc(sizeof (struct hwloc_used_backends));
 		topology->used_backends->backend = backend;
+		topology->used_backends->next = NULL;
+		topology->used_backends->previous = NULL;
 	}
 	else{
 		struct hwloc_used_backends* used = malloc(sizeof (struct hwloc_used_backends));
@@ -2638,13 +2654,20 @@ add_to_used_backends(struct hwloc_backend_st* backend){
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
 {
+	if (topology->base_backends == NULL) {
+		/* ERROR */
+		return -1;
+	}
+	
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
 
 #ifdef HWLOC_LINUX_SYS
-  add_to_used_backends(base_backends->backend);
-  if (base_backends->backend->hwloc_backend_init(topology, fsroot_path) < 0)
+  if (topology->base_backends->backend->hwloc_backend_init(topology, fsroot_path) < 0)
+  {
     return -1;
+  }
+  add_to_used_backends(topology, topology->base_backends->backend);
   return 0;
 #else /* HWLOC_LINUX_SYS */
   errno = ENOSYS;
@@ -2653,7 +2676,8 @@ hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_pa
 }
 
 struct hwloc_backend_st*
-browse_global_backends(struct hwloc_topology* topology){
+browse_global_backends(struct hwloc_topology* topology, char* backend_name)
+{
 	struct hwloc_backends_loaded* temp;
 	
 	temp = topology->global_backends;
@@ -2667,19 +2691,20 @@ browse_global_backends(struct hwloc_topology* topology){
 	}
 	return NULL;
 }
-}
 
 int
 hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *description)
 {
+  struct hwloc_backend_st* backend;
+  
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
 
-  struct hwloc_backend_st* backend;
-
   if ((backend = browse_global_backends(topology, "synthetic")) != NULL){
-	  add_to_used_backends(backend);
-	  return backend->hwloc_backend_init(topology, description);
+	  if (backend->hwloc_backend_init(topology, description) == 0){
+	  	add_to_used_backends(topology, backend);
+	  	return 0;
+	  }
   }
   return -1;
 }
@@ -2688,21 +2713,23 @@ int
 hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
                        const char *xmlpath __hwloc_attribute_unused)
 {
+  struct hwloc_backend_st* backend;
+  
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
 
-  struct hwloc_backend_st* backend;
-
   if ((backend = browse_global_backends(topology, "xml")) != NULL){
-	  add_to_used_backends(backend);
-	  return backend->hwloc_backend_init(topology, xmlpath, NULL, 0);
+	  if (backend->hwloc_backend_init(topology, xmlpath, NULL, 0) == 0){
+	  	add_to_used_backends(topology, backend);
+	  	return 0;
+	  }
   }
   return -1;
 }
 
 int
 hwloc_topology_set_custom(struct hwloc_topology *topology)
-{
+{	
 	/* We make custom as a backend in order to add it to the used backends list */
 	struct hwloc_backend_st* backend = malloc(sizeof (struct hwloc_backend_st));
 	backend->name = "custom";
@@ -2713,10 +2740,10 @@ hwloc_topology_set_custom(struct hwloc_topology *topology)
 	
 	/* cleanup existing backend */
 	hwloc_backend_exit(topology);
-
-	add_to_used_backends(backend);
 	
-	return hwloc_backend_custom_init(topology);
+	hwloc_backend_custom_init(topology);
+	add_to_used_backends(topology, backend);
+	return 0;
 }
 
 int
@@ -2724,14 +2751,16 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
                              const char *xmlbuffer __hwloc_attribute_unused,
                              int size __hwloc_attribute_unused)
 {
+  struct hwloc_backend_st* backend;
+  
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
-  
-  struct hwloc_backend_st* backend;
 
   if ((backend = browse_global_backends(topology, "xml")) != NULL){
-	  add_to_used_backends(backend);
-	  return backend->hwloc_backend_init(topology, NULL, xmlbuffer, size);
+	  if (backend->hwloc_backend_init(topology, NULL, xmlbuffer, size) == 0){
+	  	add_to_used_backends(topology, backend);
+	  	return 0;
+	  }
   }
   return -1;
 }
@@ -2844,10 +2873,10 @@ hwloc_topology_destroy (struct hwloc_topology *topology)
 int
 hwloc_topology_load (struct hwloc_topology *topology)
 {
-  char *local_env;
+  /* char *local_env; */
   int err;
   
-  if (topology->base_backends == NULL /* || topology->global_backends == NULL */) {
+  if (topology->base_backends == NULL /* TODO || topology->global_backends == NULL */) {
 	  /* ERROR */
 	  return -1;
   }
@@ -2863,8 +2892,10 @@ hwloc_topology_load (struct hwloc_topology *topology)
    */
   hwloc_distances_set_from_env(topology);
 
+  fprintf(stderr, "**topology.c: hwloc_topology_load: Before discover\n");
   /* actual topology discovery */
   err = hwloc_discover(topology);
+  fprintf(stderr, "**topology.c: hwloc_topology_load: After discover\n");
   if (err < 0)
     return err;
 

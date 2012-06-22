@@ -416,16 +416,18 @@ EOF
     # built in standalone mode, only generate them in
     # standalone mode.
     AC_CONFIG_LINKS(
-        hwloc_config_prefix[tests/ports/topology.c]:hwloc_config_prefix[src/topology.c]
-	hwloc_config_prefix[tests/ports/traversal.c]:hwloc_config_prefix[src/traversal.c]
-	hwloc_config_prefix[tests/ports/topology-synthetic.c]:hwloc_config_prefix[src/topology-synthetic.c]
-	hwloc_config_prefix[tests/ports/topology-solaris.c]:hwloc_config_prefix[src/topology-solaris.c]
-	hwloc_config_prefix[tests/ports/topology-solaris-chiptype.c]:hwloc_config_prefix[src/topology-solaris-chiptype.c]
-	hwloc_config_prefix[tests/ports/topology-aix.c]:hwloc_config_prefix[src/topology-aix.c]
-	hwloc_config_prefix[tests/ports/topology-osf.c]:hwloc_config_prefix[src/topology-osf.c]
-	hwloc_config_prefix[tests/ports/topology-windows.c]:hwloc_config_prefix[src/topology-windows.c]
-	hwloc_config_prefix[tests/ports/topology-darwin.c]:hwloc_config_prefix[src/topology-darwin.c]
-	hwloc_config_prefix[tests/ports/topology-freebsd.c]:hwloc_config_prefix[src/topology-freebsd.c]
-	hwloc_config_prefix[tests/ports/topology-hpux.c]:hwloc_config_prefix[src/topology-hpux.c])
+			hwloc_config_prefix[tests/ports/topology.c]:hwloc_config_prefix[src/topology.c]
+			hwloc_config_prefix[tests/ports/traversal.c]:hwloc_config_prefix[src/traversal.c]
+			hwloc_config_prefix[tests/ports/topology-synthetic.c]:hwloc_config_prefix[src/topology-synthetic.c]
+			hwloc_config_prefix[tests/ports/topology-solaris.c]:hwloc_config_prefix[src/topology-solaris.c]
+			hwloc_config_prefix[tests/ports/topology-solaris-chiptype.c]:hwloc_config_prefix[src/topology-solaris-chiptype.c]
+			hwloc_config_prefix[tests/ports/topology-aix.c]:hwloc_config_prefix[src/topology-aix.c]
+			hwloc_config_prefix[tests/ports/topology-osf.c]:hwloc_config_prefix[src/topology-osf.c]
+			hwloc_config_prefix[tests/ports/topology-windows.c]:hwloc_config_prefix[src/topology-windows.c]
+			hwloc_config_prefix[tests/ports/topology-darwin.c]:hwloc_config_prefix[src/topology-darwin.c]
+			hwloc_config_prefix[tests/ports/topology-freebsd.c]:hwloc_config_prefix[src/topology-freebsd.c]
+			hwloc_config_prefix[tests/ports/topology-hpux.c]:hwloc_config_prefix[src/topology-hpux.c]
+			hwloc_config_prefix[tests/ports/backend.c]:hwloc_config_prefix[src/backend.c]
+			hwloc_config_prefix[tests/ports/hwloc_backends_base_topology-linux.c]:hwloc_config_prefix[src/backends/hwloc_backends_base_topology-linux.c])
     ])
 ])dnl

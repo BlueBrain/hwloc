@@ -770,7 +770,8 @@ EOF])
     AC_CONFIG_FILES(
         hwloc_config_prefix[Makefile]
         hwloc_config_prefix[include/Makefile]
-        hwloc_config_prefix[src/Makefile ]
+        hwloc_config_prefix[src/Makefile]
+		hwloc_config_prefix[src/backends/Makefile]
     )
 
     # Cleanup

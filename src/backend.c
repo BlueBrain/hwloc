@@ -1,5 +1,4 @@
-#include <private/autogen/config.h>
-#include <private/backend.h>
+#include <hwloc/backend.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +9,9 @@
 #include <string.h>
 
 char* prefix;
+int backends_filter(const struct dirent* backend);
+struct hwloc_backends_loaded* load(char* path);
+
 
 /* Use for scandir filtering */
 int 
@@ -20,7 +22,7 @@ backends_filter(const struct dirent* backend)
 	char regexp[256];
 
 	strcpy(regexp, prefix);
-	strcat(regexp, "[:print:]*");
+	strcat(regexp, "[[:print:]]*so$");
 
 	error = regcomp(&preg, regexp, REG_ICASE|REG_NOSUB|REG_EXTENDED);
 	if (error == 0)
@@ -41,14 +43,15 @@ backends_filter(const struct dirent* backend)
 
 
 
-struct hwloc_backend_loaded* 
+struct hwloc_backends_loaded* 
 load(char* path)
 {
-	struct hwloc_backend_st* (*get_backend)();
+	struct hwloc_backend_st* (*get_backend)(void);
 	void* handle;
 	char* error;
+	struct hwloc_backends_loaded* backend_loaded;
 
-	handle = dlopen(*path, RTLD_LAZY);
+	handle = dlopen(path, RTLD_LAZY);
 	if (!handle)
 	{
 		fputs(dlerror(), stderr);
@@ -62,7 +65,7 @@ load(char* path)
 		return NULL;
 	}
 
-	struct hwloc_backends_loaded* backend_loaded = malloc(sizeof(struct hwloc_backends_loaded));
+	backend_loaded = malloc(sizeof(struct hwloc_backends_loaded));
 	backend_loaded->handle = handle;
 	backend_loaded->backend = get_backend();
 	backend_loaded->next = NULL;
@@ -73,33 +76,40 @@ load(char* path)
 
 
 struct hwloc_backends_loaded* 
-hwloc_backend_load(char* path, const char* backend_prefix)
+hwloc_backend_load(char* path, char* backend_prefix)
 {
 	struct dirent** namelist;
-	int n_backends; /* # of corresponding backends found */
-	char* backend_path;
+	int n_backends = 0; /* # of corresponding backends found */
+	char* backend_path = NULL;
 	struct hwloc_backends_loaded* backends_loaded = NULL;
 	struct hwloc_backends_loaded* backend = NULL;
 	struct hwloc_backends_loaded* buff = NULL;
+	int i;
 
 	prefix = malloc(sizeof(backend_prefix));
 	prefix = backend_prefix;
 
-	/* backends_filter returns non-zero if backend name matches with backend_prefix */
-	n_backends = scandir(*path, &namelist, backends_filter, 0);
+	fprintf(stderr, "**backend.c: prefix = %s\n", prefix); 
 
-	for (int i = 0 ; i < n_backends ; i++)
+	/* backends_filter returns non-zero if backend name matches with backend_prefix */
+	n_backends = scandir(path, &namelist, backends_filter, 0);
+
+	for (i = 0 ; i < n_backends ; i++)
 	{
 		backend_path = malloc(strlen(path)*sizeof(char)+sizeof(namelist[i]->d_name)+1);
 		strcpy(backend_path, path);
 		strcat(backend_path, "/");
 		strcat(backend_path, namelist[i]->d_name);
+	
+		fprintf(stderr, "**backend.c: backend_path -> %s\n", backend_path);
 
 		if ((backend = load(backend_path)) != NULL)
 		{
 			if (i == 0)
+			{
 				backends_loaded = backend;
 				buff = backend;
+			}
 			else
 			{
 				buff->next = backend;

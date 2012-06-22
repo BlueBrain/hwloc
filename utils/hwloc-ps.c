@@ -178,7 +178,8 @@ int main(int argc, char *argv[])
 #endif /* HWLOC_LINUX_SYS */
 
     if (show_threads) {
-#ifdef HWLOC_LINUX_SYS
+/* FIXME #ifdef HWLOC_LINUX_SYS */
+#if 0
       /* check if some threads must be displayed */
       unsigned pathlen = 6 + strlen(dirent->d_name) + 1 + 4 + 1;
       char *path;

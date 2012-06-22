@@ -19,6 +19,8 @@
 #include <libxml/tree.h>
 #endif
 
+/* TODO remove old code commented out */
+
 static int
 hwloc__xml_verbose(void)
 {
@@ -119,8 +121,9 @@ hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, con
   }
 
   topology->is_thissystem = 0;
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
-  topology->backend_type = HWLOC_BACKEND_XML;
+  /* assert(topology->backend_type == HWLOC_BACKEND_NONE);
+  topology->backend_type = HWLOC_BACKEND_XML; */
+  assert(topology->used_backends == NULL);
 
   return 0;
 }
@@ -139,8 +142,8 @@ hwloc_backend_xml_exit(struct hwloc_topology *topology)
     assert(topology->backend_params.xml.buffer);
     free(topology->backend_params.xml.buffer);
   }
-  assert(topology->backend_type == HWLOC_BACKEND_XML);
-  topology->backend_type = HWLOC_BACKEND_NONE;
+  /* assert(topology->backend_type == HWLOC_BACKEND_XML);
+  toplogy->backend_type = HWLOC_BACKEND_NONE; */
 }
 
 /************************************************

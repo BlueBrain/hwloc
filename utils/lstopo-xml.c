@@ -15,11 +15,11 @@
 
 void output_xml(hwloc_topology_t topology, const char *filename, int logical __hwloc_attribute_unused, int legend __hwloc_attribute_unused, int verbose_mode __hwloc_attribute_unused)
 {
-  if (!filename || !strcasecmp(filename, "-.xml"))
-    filename = "-";
+	if (!filename || !strcasecmp(filename, "-.xml"))
+		filename = "-";
 
-  if (hwloc_topology_export_xml(topology, filename) < 0) {
-    fprintf(stderr, "Failed to export XML to %s (%s)\n", filename, strerror(errno));
-    return;
-  }
+	if (hwloc_topology_export_xml(topology, filename) < 0) {
+		fprintf(stderr, "Failed to export XML to %s (%s)\n", filename, strerror(errno));
+		return;
+	}
 }

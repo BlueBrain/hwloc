@@ -17,7 +17,9 @@ include_hwloc_HEADERS = \
         hwloc/openfabrics-verbs.h \
         hwloc/cuda.h \
         hwloc/cudart.h \
-        hwloc/rename.h
+        hwloc/rename.h \
+		hwloc/backend.h \
+		hwloc/topology.h 
 include_hwloc_autogendir = $(includedir)/hwloc/autogen
 nodist_include_hwloc_autogen_HEADERS = hwloc/autogen/config.h 
 
@@ -25,9 +27,7 @@ noinst_HEADERS = \
         private/private.h \
         private/debug.h \
         private/misc.h \
-        private/cpuid.h \
-		private/backend.h \
-		private/topology.h
+        private/cpuid.h
 
 if HWLOC_HAVE_LINUX
 include_hwloc_HEADERS += \
