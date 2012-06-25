@@ -2873,7 +2873,7 @@ hwloc_topology_destroy (struct hwloc_topology *topology)
 int
 hwloc_topology_load (struct hwloc_topology *topology)
 {
-  /* char *local_env; */
+  char *local_env;
   int err;
   
   if (topology->base_backends == NULL /* TODO || topology->global_backends == NULL */) {
@@ -2885,6 +2885,61 @@ hwloc_topology_load (struct hwloc_topology *topology)
     hwloc_topology_clear(topology);
     hwloc_topology_setup_defaults(topology);
     topology->is_loaded = 0;
+  }
+  
+  /* enforce backend anyway if a FORCE variable was given */
+#ifdef HWLOC_LINUX_SYS
+  {
+    char *fsroot_path_env = getenv("HWLOC_FORCE_FSROOT");
+    if (fsroot_path_env) {
+      hwloc_backend_exit(topology);
+	  topology->base_backends->backend->hwloc_backend_init(topology, fsroot_path_env);
+	  add_to_used_backends(topology, topology->base_backends->backend);
+
+    }
+  }
+#endif
+ /* {
+    char *xmlpath_env = getenv("HWLOC_FORCE_XMLFILE");
+    if (xmlpath_env) {
+      hwloc_backend_exit(topology);
+      hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
+    }
+  }*/
+  
+  /* only apply non-FORCE variables if we have not changed the backend yet */
+#ifdef HWLOC_LINUX_SYS
+  if (topology->used_backends == NULL && topology->base_backends != NULL) {
+    char *fsroot_path_env = getenv("HWLOC_FSROOT");
+    if (fsroot_path_env){
+		topology->base_backends->backend->hwloc_backend_init(topology, fsroot_path_env);
+		add_to_used_backends(topology, topology->base_backends->backend);
+	}
+  }
+#endif
+/*  if (topology->backend_type == HWLOC_BACKEND_NONE) {
+    char *xmlpath_env = getenv("HWLOC_XMLFILE");
+    if (xmlpath_env)
+      hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
+  }*/
+  
+  /* always apply non-FORCE THISSYSTEM since it was explicitly designed to override setups from other backends */
+  local_env = getenv("HWLOC_THISSYSTEM");
+  if (local_env)
+    topology->is_thissystem = atoi(local_env);
+
+/* if we haven't chosen the backend, set the OS-specific one if needed */
+  if (topology->used_backends == NULL) {
+#ifdef HWLOC_LINUX_SYS
+  {
+	  if (topology->base_backends->backend->hwloc_backend_init(topology, "/") < 0)
+		  return -1;
+	  
+	  fprintf(stderr, "**topology.c: hwloc_topology_load: fsroot %s\n", topology->backend_params.linuxfs.root_path);
+	 
+	  add_to_used_backends(topology, topology->base_backends->backend);
+  }
+#endif
   }
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.
@@ -2898,6 +2953,11 @@ hwloc_topology_load (struct hwloc_topology *topology)
   fprintf(stderr, "**topology.c: hwloc_topology_load: After discover\n");
   if (err < 0)
     return err;
+  
+  /* enforce THISSYSTEM if given in a FORCE variable */
+  local_env = getenv("HWLOC_FORCE_THISSYSTEM");
+  if (local_env)
+    topology->is_thissystem = atoi(local_env);
 
 #ifndef HWLOC_DEBUG
   if (getenv("HWLOC_DEBUG_CHECK"))

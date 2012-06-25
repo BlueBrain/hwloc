@@ -18,6 +18,7 @@
 
 /* On some systems, snprintf returns the size of written data, not the actually
  * required size.  hwloc_snprintf always report the actually required size. */
+HWLOC_DECLSPEC
 int hwloc_snprintf(char *str, size_t size, const char *format, ...) __hwloc_attribute_format(printf, 3, 4);
 
 /* Check whether needle matches the beginning of haystack, at least n, and up
