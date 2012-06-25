@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <hwloc/backend.h>
 
+extern void hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc_obj *pcidev);
+extern int hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology, struct hwloc_obj *pcidev, hwloc_bitmap_t cpuset);
 
 struct hwloc_used_backends{
 	struct hwloc_backend_st* backend;
