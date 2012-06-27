@@ -2,7 +2,6 @@
 #define HWLOC_BACKEND_H
 
 #include <hwloc/autogen/config.h>
-#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,14 +15,18 @@ struct hwloc_topology;
 /*HWLOC_BACKEND_IO *//* PCI, CUDA, ... */
 /*} hwloc_backend_type;*/
 
+struct hwloc_backend_params_st{
+	void* param;
+	struct hwloc_backend_params_st* next_param;
+};
+
 struct hwloc_backend_st{
 	/*hwloc_backend_type type;*/
 	char* name;
-	/*void* data; *//* Could be used for XML or linux (for fs_root) backends */
 	void (*hwloc_look)(struct hwloc_topology*); /* Fill the bind functions pointers 
 										 		* at least the set_cpubinvbd one */
 	void (*hwloc_set_hooks)(struct hwloc_topology*); /* Set binding hooks */
-	int (*hwloc_backend_init)(struct hwloc_topology*, ...); /* One topology should be passed in parameter */
+	int (*hwloc_backend_init)(struct hwloc_topology*, struct hwloc_backend_params_st*);
 	void (*hwloc_backend_exit)(struct hwloc_topology*);
 };
 

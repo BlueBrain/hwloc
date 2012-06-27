@@ -2654,6 +2654,8 @@ add_to_used_backends(struct hwloc_topology* topology, struct hwloc_backend_st* b
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
 {
+	struct hwloc_backend_params_st* backend_params; 
+
 	if (topology->base_backends == NULL) {
 		/* ERROR */
 		return -1;
@@ -2663,10 +2665,16 @@ hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_pa
   hwloc_backend_exit(topology);
 
 #ifdef HWLOC_LINUX_SYS
-  if (topology->base_backends->backend->hwloc_backend_init(topology, fsroot_path) < 0)
+  backend_params = malloc(sizeof (struct hwloc_backend_params_st));
+  backend_params->param = (void *)fsroot_path;
+  backend_params->next_param = NULL;
+	  
+  if (topology->base_backends->backend->hwloc_backend_init(topology, backend_params) < 0)
   {
-    return -1;
+	  free(backend_params);
+	  return -1;
   }
+  free(backend_params);
   add_to_used_backends(topology, topology->base_backends->backend);
   return 0;
 #else /* HWLOC_LINUX_SYS */
@@ -2696,16 +2704,23 @@ int
 hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *description)
 {
   struct hwloc_backend_st* backend;
+  struct hwloc_backend_params_st* backend_params;
   
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
+  
+  backend_params = malloc(sizeof (struct hwloc_backend_params_st));
+  backend_params->param = (void *)description;
+  backend_params->next_param = NULL;
 
   if ((backend = browse_global_backends(topology, "synthetic")) != NULL){
-	  if (backend->hwloc_backend_init(topology, description) == 0){
-	  	add_to_used_backends(topology, backend);
-	  	return 0;
+	  if (backend->hwloc_backend_init(topology, backend_params) == 0){
+		  free(backend_params);
+		  add_to_used_backends(topology, backend);
+		  return 0;
 	  }
   }
+  free(backend_params);
   return -1;
 }
 
@@ -2719,10 +2734,10 @@ hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
   hwloc_backend_exit(topology);
 
   if ((backend = browse_global_backends(topology, "xml")) != NULL){
-	  if (backend->hwloc_backend_init(topology, xmlpath, NULL, 0) == 0){
-	  	add_to_used_backends(topology, backend);
+	 /*FIXME if (backend->hwloc_backend_init(topology, xmlpath, NULL, 0) == 0){
+	  	add_to_used_backends(topology, backend);*/
 	  	return 0;
-	  }
+	  /*}*/
   }
   return -1;
 }
@@ -2757,10 +2772,10 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
   hwloc_backend_exit(topology);
 
   if ((backend = browse_global_backends(topology, "xml")) != NULL){
-	  if (backend->hwloc_backend_init(topology, NULL, xmlbuffer, size) == 0){
-	  	add_to_used_backends(topology, backend);
+	  /* FIXME if (backend->hwloc_backend_init(topology, NULL, xmlbuffer, size) == 0){
+	  	add_to_used_backends(topology, backend);*/
 	  	return 0;
-	  }
+	  /*}*/
   }
   return -1;
 }
@@ -2875,6 +2890,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
 {
   char *local_env;
   int err;
+  struct hwloc_backend_params_st* backend_params; 
   
   if (topology->base_backends == NULL /* TODO || topology->global_backends == NULL */) {
 	  /* ERROR */
@@ -2893,9 +2909,15 @@ hwloc_topology_load (struct hwloc_topology *topology)
     char *fsroot_path_env = getenv("HWLOC_FORCE_FSROOT");
     if (fsroot_path_env) {
       hwloc_backend_exit(topology);
-	  topology->base_backends->backend->hwloc_backend_init(topology, fsroot_path_env);
-	  add_to_used_backends(topology, topology->base_backends->backend);
+	  
+	  backend_params = malloc(sizeof (struct hwloc_backend_params_st));
+	  backend_params->param = (void *)fsroot_path_env;
+	  backend_params->next_param = NULL;
+	  
+	  topology->base_backends->backend->hwloc_backend_init(topology, backend_params);
+	  free(backend_params);
 
+	  add_to_used_backends(topology, topology->base_backends->backend);
     }
   }
 #endif
@@ -2912,7 +2934,14 @@ hwloc_topology_load (struct hwloc_topology *topology)
   if (topology->used_backends == NULL && topology->base_backends != NULL) {
     char *fsroot_path_env = getenv("HWLOC_FSROOT");
     if (fsroot_path_env){
-		topology->base_backends->backend->hwloc_backend_init(topology, fsroot_path_env);
+		backend_params = malloc(sizeof (struct hwloc_backend_params_st));
+		backend_params->param = (void *)fsroot_path_env;
+		backend_params->next_param = NULL;
+		
+		topology->base_backends->backend->hwloc_backend_init(topology, backend_params);
+
+		free(backend_params);
+
 		add_to_used_backends(topology, topology->base_backends->backend);
 	}
   }
@@ -2932,10 +2961,16 @@ hwloc_topology_load (struct hwloc_topology *topology)
   if (topology->used_backends == NULL) {
 #ifdef HWLOC_LINUX_SYS
   {
-	  if (topology->base_backends->backend->hwloc_backend_init(topology, "/") < 0)
-		  return -1;
+	  backend_params = malloc(sizeof (struct hwloc_backend_params_st));
+	  backend_params->param = "/";
+	  backend_params->next_param = NULL;
 	  
-	  fprintf(stderr, "**topology.c: hwloc_topology_load: fsroot %s\n", topology->backend_params.linuxfs.root_path);
+	  if (topology->base_backends->backend->hwloc_backend_init(topology, backend_params) < 0){
+		  free(backend_params);
+		  return -1;
+	  }
+	  
+	  free(backend_params);
 	 
 	  add_to_used_backends(topology, topology->base_backends->backend);
   }

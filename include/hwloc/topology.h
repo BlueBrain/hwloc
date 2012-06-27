@@ -102,14 +102,14 @@ struct hwloc_topology {
 
 /* N'existera plus car lié au backend */
 	union hwloc_backend_params_u {
-#ifdef HWLOC_LINUX_SYS
-		struct hwloc_backend_params_linuxfs_s {
-			/* FS root parameters */
-			char *root_path; /* The path of the file system root, used when browsing, e.g., Linux' sysfs and procfs. */
-			int root_fd; /* The file descriptor for the file system root, used when browsing, e.g., Linux' sysfs and procfs. */
-			struct utsname utsname; /* cached result of uname, used multiple times */
-		} linuxfs;
-#endif /* HWLOC_LINUX_SYS */
+		/*#ifdef HWLOC_LINUX_SYS*/
+		/*struct hwloc_backend_params_linuxfs_s {*/
+		/**//* FS root parameters */
+		/*char *root_path; *//* The path of the file system root, used when browsing, e.g., Linux' sysfs and procfs. */
+		/*int root_fd; *//* The file descriptor for the file system root, used when browsing, e.g., Linux' sysfs and procfs. */
+		/*struct utsname utsname; *//* cached result of uname, used multiple times */
+		/*} linuxfs;*/
+		/*#endif *//* HWLOC_LINUX_SYS */
 #if defined(HWLOC_OSF_SYS) || defined(HWLOC_COMPILE_PORTS)
 		struct hwloc_backend_params_osf {
 			int nbnodes;

@@ -11,6 +11,7 @@
 #include <private/private.h>
 #include <private/debug.h>
 #include <private/misc.h>
+#include <hwloc/topology.h>
 
 #ifdef HWLOC_HAVE_LIBPCI
 
@@ -62,7 +63,7 @@ hwloc_pci_traverse_lookuposdevices_cb(struct hwloc_topology *topology, struct hw
     return;
 
 #ifdef HWLOC_LINUX_SYS
-  hwloc_linuxfs_pci_lookup_osdevices(topology, pcidev);
+  /* FIXME hwloc_linuxfs_pci_lookup_osdevices(topology, pcidev); */
 #endif
 }
 
@@ -246,7 +247,8 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_o
   } else {
     /* get the hostbridge cpuset. it's not a PCI device, so we use its first child locality info */
 #ifdef HWLOC_LINUX_SYS
-    err = hwloc_linuxfs_get_pcidev_cpuset(topology, hostbridge->first_child, cpuset);
+	  /*FIXME err = hwloc_linuxfs_get_pcidev_cpuset(topology, hostbridge->first_child, cpuset);*/
+	  err = -1;
 #else
     err = -1;
 #endif
