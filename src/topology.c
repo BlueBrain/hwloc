@@ -2534,13 +2534,13 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
   fprintf(stderr, "**topology.c: Before backends loading\n");
 
   /* Load backends */
-  /* FIXME : Hard coded for test, it should be interesting to install backends in th system */
+  /* FIXME : Hard coded for test, it should be interesting to install backends in the system */
   topology->base_backends = hwloc_backend_load("/home/antoine/hwloc/hwloc-backends/src/backends/.libs", "libhwlocbackendsbase");
-  
+  topology->io_backends = hwloc_backend_load("/home/antoine/hwloc/hwloc-backends/src/backends/.libs", "libhwlocbackendsio");
+
   fprintf(stderr, "**topology.c: After backends loading\n");
 
   /* topology->global_backends = hwloc_backend_load("../backends", "hwloc_backends_global");
-  topology->io_backends = hwloc_backend_load("../backends", "io_backends_base");
 */
   hwloc_distances_init(topology);
 

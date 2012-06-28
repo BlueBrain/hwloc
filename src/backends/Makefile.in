@@ -115,6 +115,15 @@ libhwlocbackendsbasetopologylinux_la_LINK = $(LIBTOOL) $(AM_V_lt) \
 	$(CCLD) $(libhwlocbackendsbasetopologylinux_la_CFLAGS) \
 	$(CFLAGS) $(libhwlocbackendsbasetopologylinux_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+libhwlocbackendsiotopologylibpci_la_LIBADD =
+am_libhwlocbackendsiotopologylibpci_la_OBJECTS = libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.lo
+libhwlocbackendsiotopologylibpci_la_OBJECTS =  \
+	$(am_libhwlocbackendsiotopologylibpci_la_OBJECTS)
+libhwlocbackendsiotopologylibpci_la_LINK = $(LIBTOOL) $(AM_V_lt) \
+	--tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link \
+	$(CCLD) $(libhwlocbackendsiotopologylibpci_la_CFLAGS) \
+	$(CFLAGS) $(libhwlocbackendsiotopologylibpci_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include/private/autogen -I$(top_builddir)/include/hwloc/autogen
 depcomp = $(SHELL) $(top_srcdir)/./config/depcomp
 am__depfiles_maybe = depfiles
@@ -141,8 +150,10 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(libhwlocbackendsbasetopologylinux_la_SOURCES)
-DIST_SOURCES = $(libhwlocbackendsbasetopologylinux_la_SOURCES)
+SOURCES = $(libhwlocbackendsbasetopologylinux_la_SOURCES) \
+	$(libhwlocbackendsiotopologylibpci_la_SOURCES)
+DIST_SOURCES = $(libhwlocbackendsbasetopologylinux_la_SOURCES) \
+	$(libhwlocbackendsiotopologylibpci_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -329,11 +340,15 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LTLIBRARIES = libhwlocbackendsbasetopologylinux.la
+lib_LTLIBRARIES = libhwlocbackendsbasetopologylinux.la libhwlocbackendsiotopologylibpci.la
 libhwlocbackendsbasetopologylinux_la_SOURCES = hwloc_backends_base_topology-linux.c
 libhwlocbackendsbasetopologylinux_la_CPPFLAGS = $(HWLOC_CPPFLAGS) -fPIC
 libhwlocbackendsbasetopologylinux_la_CFLAGS = $(HWLOC_CFLAGS) -fPIC
 libhwlocbackendsbasetopologylinux_la_LDFLAGS = $(HWLOC_LDLAGS) -shared -fPIC -module -avoid-version
+libhwlocbackendsiotopologylibpci_la_SOURCES = hwloc_backends_io_topology-libpci.c
+libhwlocbackendsiotopologylibpci_la_CPPFLAGS = $(HWLOC_CPPFLAGS) -fPIC
+libhwlocbackendsiotopologylibpci_la_CFLAGS = $(HWLOC_CFLAGS) -fPIC
+libhwlocbackendsiotopologylibpci_la_LDFLAGS = $(HWLOC_LDLAGS) -shared -fPIC -module -avoid-version
 all: all-am
 
 .SUFFIXES:
@@ -402,6 +417,8 @@ clean-libLTLIBRARIES:
 	done
 libhwlocbackendsbasetopologylinux.la: $(libhwlocbackendsbasetopologylinux_la_OBJECTS) $(libhwlocbackendsbasetopologylinux_la_DEPENDENCIES) $(EXTRA_libhwlocbackendsbasetopologylinux_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libhwlocbackendsbasetopologylinux_la_LINK) -rpath $(libdir) $(libhwlocbackendsbasetopologylinux_la_OBJECTS) $(libhwlocbackendsbasetopologylinux_la_LIBADD) $(LIBS)
+libhwlocbackendsiotopologylibpci.la: $(libhwlocbackendsiotopologylibpci_la_OBJECTS) $(libhwlocbackendsiotopologylibpci_la_DEPENDENCIES) $(EXTRA_libhwlocbackendsiotopologylibpci_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libhwlocbackendsiotopologylibpci_la_LINK) -rpath $(libdir) $(libhwlocbackendsiotopologylibpci_la_OBJECTS) $(libhwlocbackendsiotopologylibpci_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -410,6 +427,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhwlocbackendsbasetopologylinux_la-hwloc_backends_base_topology-linux.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -441,6 +459,13 @@ libhwlocbackendsbasetopologylinux_la-hwloc_backends_base_topology-linux.lo: hwlo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hwloc_backends_base_topology-linux.c' object='libhwlocbackendsbasetopologylinux_la-hwloc_backends_base_topology-linux.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhwlocbackendsbasetopologylinux_la_CPPFLAGS) $(CPPFLAGS) $(libhwlocbackendsbasetopologylinux_la_CFLAGS) $(CFLAGS) -c -o libhwlocbackendsbasetopologylinux_la-hwloc_backends_base_topology-linux.lo `test -f 'hwloc_backends_base_topology-linux.c' || echo '$(srcdir)/'`hwloc_backends_base_topology-linux.c
+
+libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.lo: hwloc_backends_io_topology-libpci.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhwlocbackendsiotopologylibpci_la_CPPFLAGS) $(CPPFLAGS) $(libhwlocbackendsiotopologylibpci_la_CFLAGS) $(CFLAGS) -MT libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.lo -MD -MP -MF $(DEPDIR)/libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.Tpo -c -o libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.lo `test -f 'hwloc_backends_io_topology-libpci.c' || echo '$(srcdir)/'`hwloc_backends_io_topology-libpci.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.Tpo $(DEPDIR)/libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hwloc_backends_io_topology-libpci.c' object='libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libhwlocbackendsiotopologylibpci_la_CPPFLAGS) $(CPPFLAGS) $(libhwlocbackendsiotopologylibpci_la_CFLAGS) $(CFLAGS) -c -o libhwlocbackendsiotopologylibpci_la-hwloc_backends_io_topology-libpci.lo `test -f 'hwloc_backends_io_topology-libpci.c' || echo '$(srcdir)/'`hwloc_backends_io_topology-libpci.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

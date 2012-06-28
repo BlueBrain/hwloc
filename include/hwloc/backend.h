@@ -10,7 +10,7 @@ extern "C" {
 struct hwloc_topology;
 struct hwloc_obj; 
 struct hwloc_bitmap_s;
-typedef struct hwloc_bitmap_s * hwloc_bitmap_t;
+/*typedef struct hwloc_bitmap_s * hwloc_bitmap_t;*/
 
 /*typedef enum {*/
 /*HWLOC_BACKEND_GLOBAL, *//* XML, Synthetic, ... */ 
@@ -36,7 +36,7 @@ struct hwloc_backend_st{
 	/* libpci callbacks */
 	/* **************** */
 	void (*hwloc_linuxfs_pci_lookup_osdevices)(struct hwloc_topology*, struct hwloc_obj*);
-	int (*hwloc_linuxfs_get_pcidev_cpuset)(struct hwloc_topology*, struct hwloc_obj*, hwloc_bitmap_t);
+	int (*hwloc_linuxfs_get_pcidev_cpuset)(struct hwloc_topology*, struct hwloc_obj*, struct hwloc_bitmap_s* /*hwloc_bitmap_t*/);
 };
 
 struct hwloc_backends_loaded{

@@ -170,7 +170,7 @@ HWLOC_DECLSPEC void hwloc_insert_object_by_cpuset(struct hwloc_topology *topolog
 
 /* Error reporting */
 typedef void (*hwloc_report_error_t)(const char * msg, int line);
-extern void hwloc_report_os_error(const char * msg, int line);
+HWLOC_DECLSPEC void hwloc_report_os_error(const char * msg, int line);
 extern int hwloc_hide_errors(void);
 /*
  * Add an object to the topology and specify which error callback to use
@@ -188,7 +188,7 @@ extern int hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc
  *
  * Remember to call topology_connect() afterwards to fix handy pointers.
  */
-extern void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, hwloc_obj_t obj);
+HWLOC_DECLSPEC void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, hwloc_obj_t obj);
 
 /* Insert uname-specific names/values in the object infos array */
 HWLOC_DECLSPEC void hwloc_add_uname_info(struct hwloc_topology *topology);
