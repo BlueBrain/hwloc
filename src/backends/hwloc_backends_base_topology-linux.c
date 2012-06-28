@@ -110,6 +110,9 @@ void hwloc_backend_linuxfs_exit(struct hwloc_topology *topology);
 struct hwloc_obj *hwloc_alloc_setup_object(hwloc_obj_type_t type, signed idx);
 void hwloc_look_linuxfs(struct hwloc_topology *topology);
 void hwloc_set_linuxfs_hooks(struct hwloc_topology *topology);
+void hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc_obj *pcidev);
+int hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology __hwloc_attribute_unused, struct hwloc_obj *pcidev, hwloc_bitmap_t cpuset);
+
 
 struct hwloc_backend_params_linuxfs_s {
 	/* FS root parameters */
@@ -3729,6 +3732,8 @@ hwloc_get_backend(void){
 	backend->hwloc_set_hooks = hwloc_set_linuxfs_hooks;
 	backend->hwloc_backend_init = hwloc_backend_linuxfs_init;
 	backend->hwloc_backend_exit = hwloc_backend_linuxfs_exit;
+	backend->hwloc_linuxfs_pci_lookup_osdevices = hwloc_linuxfs_pci_lookup_osdevices;
+	backend->hwloc_linuxfs_get_pcidev_cpuset = hwloc_linuxfs_get_pcidev_cpuset;
 
 	return backend;
 }
