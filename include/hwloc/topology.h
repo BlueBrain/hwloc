@@ -124,15 +124,15 @@ struct hwloc_topology {
 				struct hwloc_xml_imported_distances_s *prev, *next;
 			} *first_distances, *last_distances;
 		} xml;
-		struct hwloc_backend_params_synthetic_s {
-			/* synthetic backend parameters */
-			char *string;
-#define HWLOC_SYNTHETIC_MAX_DEPTH 128
-			unsigned arity[HWLOC_SYNTHETIC_MAX_DEPTH];
-			hwloc_obj_type_t type[HWLOC_SYNTHETIC_MAX_DEPTH];
-			unsigned id[HWLOC_SYNTHETIC_MAX_DEPTH];
-			unsigned depth[HWLOC_SYNTHETIC_MAX_DEPTH]; /* For cache/misc */
-		} synthetic;
+		/*struct hwloc_backend_params_synthetic_s {*/
+		/**//* synthetic backend parameters */
+		/*char *string;*/
+		/*#define HWLOC_SYNTHETIC_MAX_DEPTH 128*/
+		/*unsigned arity[HWLOC_SYNTHETIC_MAX_DEPTH];*/
+		/*hwloc_obj_type_t type[HWLOC_SYNTHETIC_MAX_DEPTH];*/
+		/*unsigned id[HWLOC_SYNTHETIC_MAX_DEPTH];*/
+		/*unsigned depth[HWLOC_SYNTHETIC_MAX_DEPTH]; *//* For cache/misc */
+		/*} synthetic;*/
 	} backend_params;
 /* ********************************** */
 

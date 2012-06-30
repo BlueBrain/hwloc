@@ -27,7 +27,7 @@ sources = \
         topology.c \
         traversal.c \
         distances.c \
-        topology-synthetic.c \
+        #topology-synthetic.c \
         topology-xml.c \
         bind.c \
         bitmap.c \
@@ -38,7 +38,7 @@ ldflags =
 # Conditionally add to the sources and ldflags
 
 if HWLOC_HAVE_LIBPCI
-sources += topology-libpci.c
+#sources += topology-libpci.c
 endif HWLOC_HAVE_LIBPCI
 
 if HWLOC_HAVE_SOLARIS
