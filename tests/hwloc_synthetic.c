@@ -27,7 +27,6 @@ int main(void)
   hwloc_topology_load(topology);
 
   /* internal checks */
-
   hwloc_topology_check(topology);
 
   /* local checks */
