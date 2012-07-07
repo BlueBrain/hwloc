@@ -10,6 +10,7 @@ dnl                         All rights reserved.
 dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart, 
 dnl                         University of Stuttgart.  All rights reserved.
 dnl Copyright © 2006-2011  Cisco Systems, Inc.  All rights reserved.
+dnl Copyright © 2012       Oracle and/or its affiliates.  All rights reserved.
 dnl See COPYING in top-level directory.
 
 # Main hwloc m4 macro, to be invoked by the user
@@ -375,7 +376,9 @@ EOF])
                    [HWLOC_LIBS="-lm $HWLOC_LIBS"])
     ], [], [[#include <math.h>]])
 
-    AC_CHECK_HEADERS([picl.h])
+    AC_CHECK_HEADERS([picl.h], [
+      AC_CHECK_LIB([picl], [picl_initialize],
+                   [HWLOC_LIBS="-lpicl $HWLOC_LIBS"])])
 
     AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN,
     		_SC_NPROCESSORS_CONF,
@@ -567,6 +570,7 @@ EOF])
     ]])
     AC_CHECK_FUNC([sched_setaffinity], [hwloc_have_sched_setaffinity=yes])
     AC_CHECK_HEADERS([sys/cpuset.h],,,[[#include <sys/param.h>]])
+    AC_CHECK_FUNCS([cpuset_setaffinity])
     AC_SEARCH_LIBS([pthread_getthrds_np], [pthread],
       AC_DEFINE([HWLOC_HAVE_PTHREAD_GETTHRDS_NP], 1, `Define to 1 if you have pthread_getthrds_np')
     )

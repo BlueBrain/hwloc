@@ -992,6 +992,10 @@ HWLOC_DECLSPEC const struct hwloc_topology_support *hwloc_topology_get_support(h
  * This file may be loaded later through hwloc_topology_set_xml().
  *
  * \return -1 if a failure occured.
+ *
+ * \note Only printable characters may be exported to XML string attributes.
+ * Any other character, especially any non-ASCII character, will be silently
+ * dropped.
  */
 HWLOC_DECLSPEC int hwloc_topology_export_xml(hwloc_topology_t topology, const char *xmlpath);
 
@@ -1003,6 +1007,10 @@ HWLOC_DECLSPEC int hwloc_topology_export_xml(hwloc_topology_t topology, const ch
  * This memory buffer may be loaded later through hwloc_topology_set_xmlbuffer().
  *
  * \return -1 if a failure occured.
+ *
+ * \note Only printable characters may be exported to XML string attributes.
+ * Any other character, especially any non-ASCII character, will be silently
+ * dropped.
  */
 HWLOC_DECLSPEC int hwloc_topology_export_xmlbuffer(hwloc_topology_t topology, char **xmlbuffer, int *buflen);
 
@@ -1019,6 +1027,9 @@ HWLOC_DECLSPEC void hwloc_free_xmlbuffer(hwloc_topology_t topology, char *xmlbuf
  *
  * \return the newly-created object.
  * \return \c NULL if the insertion conflicts with the existing topology tree.
+ *
+ * \note If \p name contains some non-printable characters, they will
+ * be dropped when exporting to XML, see hwloc_topology_export_xml().
  */
 HWLOC_DECLSPEC hwloc_obj_t hwloc_topology_insert_misc_object_by_cpuset(hwloc_topology_t topology, hwloc_const_cpuset_t cpuset, const char *name);
 
@@ -1033,6 +1044,9 @@ HWLOC_DECLSPEC hwloc_obj_t hwloc_topology_insert_misc_object_by_cpuset(hwloc_top
  * However, the new leaf object will not have any \p cpuset.
  *
  * \return the newly-created object
+ *
+ * \note If \p name contains some non-printable characters, they will
+ * be dropped when exporting to XML, see hwloc_topology_export_xml().
  */
 HWLOC_DECLSPEC hwloc_obj_t hwloc_topology_insert_misc_object_by_parent(hwloc_topology_t topology, hwloc_obj_t parent, const char *name);
 
@@ -1293,6 +1307,9 @@ hwloc_obj_get_info_by_name(hwloc_obj_t obj, const char *name)
  * with the same name already exists.
  *
  * The input strings are copied before being added in the object infos.
+ *
+ * \note If \p value contains some non-printable characters, they will
+ * be dropped when exporting to XML, see hwloc_topology_export_xml().
  */
 HWLOC_DECLSPEC void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value);
 
@@ -1310,6 +1327,9 @@ HWLOC_DECLSPEC void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const 
  * The input data is copied before being added to the object.
  *
  * \return 0 on success.
+ *
+ * \note If \p name contains some non-printable characters, they will
+ * be dropped when exporting to XML, see hwloc_topology_export_xml().
  */
 HWLOC_DECLSPEC int hwloc_obj_add_valarray(hwloc_obj_t obj, const char *name, unsigned nb, const float *values, const unsigned *idx);
 
@@ -1521,10 +1541,18 @@ HWLOC_DECLSPEC int hwloc_get_proc_last_cpu_location(hwloc_topology_t topology, h
 
 /** \defgroup hwlocality_membinding Memory binding
  *
- * \note Not all operating systems support all ways to bind existing
- * allocated memory (e.g., migration), future memory allocation,
- * explicit memory allocation, etc.  Using a binding flag or policy
- * that is not supported by the underlying OS will cause hwloc's
+ * Memory binding can be done three ways:
+ *
+ * - explicit memory allocation thanks to hwloc_alloc_membind and friends: the
+ *   binding will have effect on the memory allocated by these functions.
+ * - implicit memory binding through binding policy: hwloc_set_membind and
+ *   friends only define the current policy of the process, which will be
+ *   applied to the subsequent calls to malloc() and friends.
+ * - migration of existing memory ranges, thanks to hwloc_set_area_membind()
+ *   and friends, which move already-allocated data.
+ *
+ * \note Not all operating systems support all three ways Using a binding flag
+ * or policy that is not supported by the underlying OS will cause hwloc's
  * binding functions to fail and return -1.  errno will be set to
  * ENOSYS when the system does support the specified action or policy
  * (e.g., some systems only allow binding memory on a per-thread

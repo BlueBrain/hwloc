@@ -444,6 +444,8 @@ extern "C" {
 #define hwloc_set_linuxfs_hooks HWLOC_NAME(set_linuxfs_hooks)
 #define hwloc_backend_linuxfs_init HWLOC_NAME(backend_linuxfs_init)
 #define hwloc_backend_linuxfs_exit HWLOC_NAME(backend_linuxfs_exit)
+#define hwloc_linuxfs_pci_lookup_osdevices HWLOC_NAME(linuxfs_pci_lookup_osdevices)
+#define hwloc_linuxfs_get_pcidev_cpuset HWLOC_NAME(linuxfs_get_pcidev_cpuset)
 
 #define hwloc_backend_xml_init HWLOC_NAME(backend_xml_init)
 #define hwloc_look_xml HWLOC_NAME(look_xml)
@@ -488,7 +490,6 @@ extern "C" {
 #define hwloc_bitmap_printf_value HWLOC_NAME(bitmap_printf_value)
 #define hwloc_alloc_setup_object HWLOC_NAME(alloc_setup_object)
 #define hwloc_free_unlinked_object HWLOC_NAME(free_unlinked_object)
-#define hwloc_setup_level HWLOC_NAME(setup_level)
 
 #define hwloc_alloc_heap HWLOC_NAME(alloc_heap)
 #define hwloc_alloc_mmap HWLOC_NAME(alloc_mmap)
