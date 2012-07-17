@@ -8,7 +8,7 @@
 #include <regex.h>
 #include <string.h>
 
-char* prefix;
+static char* prefix;
 int backends_filter(const struct dirent* backend);
 struct hwloc_backends_loaded* load(char* path);
 
@@ -73,8 +73,6 @@ load(char* path)
 	return backend_loaded;
 }
 
-
-
 struct hwloc_backends_loaded* 
 hwloc_backend_load(char* path, char* backend_prefix)
 {
@@ -86,7 +84,6 @@ hwloc_backend_load(char* path, char* backend_prefix)
 	struct hwloc_backends_loaded* buff = NULL;
 	int i;
 
-	prefix = malloc(sizeof(backend_prefix));
 	prefix = backend_prefix;
 
 	fprintf(stderr, "**backend.c: prefix = %s\n", prefix); 
@@ -116,9 +113,10 @@ hwloc_backend_load(char* path, char* backend_prefix)
 				buff = backend;
 			}
 		}
+		free(backend_path);
 	}
 
-	free(backend_path);
+	prefix=NULL;
 
 	return backends_loaded;
 }
@@ -143,6 +141,4 @@ hwloc_backend_unload(struct hwloc_backends_loaded* backends_loaded)
 			free(old);
 		} while (buff != NULL);
 	}
-
-	free(prefix);
 }

@@ -17,6 +17,7 @@
 #include <private/autogen/config.h>
 #include <hwloc.h>
 #include <private/private.h>
+#include <hwloc/topology.h>
 #include <private/debug.h>
 #include <private/misc.h>
 

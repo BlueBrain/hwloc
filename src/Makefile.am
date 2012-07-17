@@ -74,7 +74,7 @@ sources += topology-darwin.c
 endif HWLOC_HAVE_DARWIN
 
 if HWLOC_HAVE_FREEBSD
-sources += topology-freebsd.c
+#sources += topology-freebsd.c
 endif HWLOC_HAVE_FREEBSD
 
 if HWLOC_HAVE_GCC

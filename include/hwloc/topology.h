@@ -277,5 +277,6 @@ hwloc_alloc_or_fail(hwloc_topology_t topology, size_t len, int flags)
 }
 
 HWLOC_DECLSPEC void alloc_cpusets(hwloc_obj_t obj);
-
+HWLOC_DECLSPEC void hwloc_look_x86(struct hwloc_topology* topology, unsigned nbprocs 
+__hwloc_attribute_unused);
 #endif /* HWLOC_TOPOLOGY_H */

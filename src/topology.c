@@ -2244,13 +2244,13 @@ hwloc_discover(struct hwloc_topology *topology)
 /* #    endif */  /* Unsupported OS */
 
 
-/* TODO in non linux backends
-#    ifndef HWLOC_LINUX_SYS
-    if (topology->is_thissystem) { */
+
+# ifndef HWLOC_LINUX_SYS
+    if (topology->is_thissystem) {
       /* gather uname info, except for Linux, which does it internally depending on load options */
-/*      hwloc_add_uname_info(topology);
+      hwloc_add_uname_info(topology);
     }
-#    endif*/
+# endif
 
   }
 
@@ -2633,7 +2633,8 @@ hwloc_backend_exit(struct hwloc_topology *topology)
 	temp = topology->used_backends;
 
 	while (topology->used_backends != NULL){
-		temp->backend->hwloc_backend_exit(topology);
+		if(temp->backend->hwloc_backend_exit)
+			temp->backend->hwloc_backend_exit(topology);
 		
 		temp = topology->used_backends->next;
 		if (temp != NULL){
@@ -2899,6 +2900,9 @@ hwloc_topology_destroy (struct hwloc_topology *topology)
   hwloc_backend_exit(topology);
   hwloc_topology_clear(topology);
   hwloc_distances_destroy(topology);
+  hwloc_backend_unload(topology->base_backends);
+  hwloc_backend_unload(topology->global_backends);
+  hwloc_backend_unload(topology->io_backends);
   free(topology->support.discovery);
   free(topology->support.cpubind);
   free(topology->support.membind);
