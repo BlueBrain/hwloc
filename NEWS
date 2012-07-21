@@ -16,6 +16,7 @@ bug fixes (and other actions) for each version of hwloc since version
 0.9 (as initially released as "libtopology", then re-branded to "hwloc"
 in v0.9.1).
 
+  + Add NVIDIA CUDA device detection.
 
 Version 1.5.0
 -------------
@@ -119,7 +120,6 @@ Version 1.4.0 (does not contain all v1.3.2 changes)
   + Add "custom" interface and "assembler" tools to build multi-node
     topology. See the Multi-node Topologies section in the documentation
     for details.
-  + Add NVIDIA CUDA device detection.
 * Interface improvements
   + Add symmetric_subtree object attribute to ease assumptions when consulting
     regular symmetric topologies.
