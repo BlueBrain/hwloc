@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -89,13 +89,14 @@ hwloc_calc_get_obj_inside_cpuset_by_depth(hwloc_topology_t topology, hwloc_const
  * only looks at the beginning of the string to allow truncated type names.
  */
 static __hwloc_inline int
-hwloc_obj_type_sscanf(const char *string, hwloc_obj_type_t *typep, int *depthattrp)
+hwloc_obj_type_sscanf(const char *string, hwloc_obj_type_t *typep, int *depthattrp, hwloc_obj_cache_type_t *cachetypeattrp)
 {
   hwloc_obj_type_t type = (hwloc_obj_type_t) -1;
   int depthattr = -1;
+  hwloc_obj_cache_type_t cachetypeattr = (hwloc_obj_cache_type_t) -1; /* unspecified */
 
   /* types without depthattr */
-  if (!strncasecmp(string, "system", 2)) {
+  if (!hwloc_strncasecmp(string, "system", 2)) {
     type = HWLOC_OBJ_SYSTEM;
   } else if (!hwloc_strncasecmp(string, "machine", 2)) {
     type = HWLOC_OBJ_MACHINE;
@@ -105,7 +106,7 @@ hwloc_obj_type_sscanf(const char *string, hwloc_obj_type_t *typep, int *depthatt
     type = HWLOC_OBJ_SOCKET;
   } else if (!hwloc_strncasecmp(string, "core", 2)) {
     type = HWLOC_OBJ_CORE;
-  } else if (!hwloc_strncasecmp(string, "pu", 2) || !hwloc_strncasecmp(string, "proc", 2) /* backward compat with 0.9 */) {
+  } else if (!hwloc_strncasecmp(string, "pu", 2)) {
     type = HWLOC_OBJ_PU;
   } else if (!hwloc_strncasecmp(string, "misc", 2)) {
     type = HWLOC_OBJ_MISC;
@@ -120,6 +121,10 @@ hwloc_obj_type_sscanf(const char *string, hwloc_obj_type_t *typep, int *depthatt
   } else if ((string[0] == 'l' || string[0] == 'L') && string[1] >= '0' && string[1] <= '9') {
     type = HWLOC_OBJ_CACHE;
     depthattr = atoi(string+1);
+    if (string[2] == 'd')
+      cachetypeattr = HWLOC_OBJ_CACHE_DATA;
+    else if (string[2] == 'i')
+      cachetypeattr = HWLOC_OBJ_CACHE_INSTRUCTION;
   } else if (!hwloc_strncasecmp(string, "group", 1)) {
     int length;
     type = HWLOC_OBJ_GROUP;
@@ -132,12 +137,16 @@ hwloc_obj_type_sscanf(const char *string, hwloc_obj_type_t *typep, int *depthatt
   *typep = type;
   if (depthattrp)
     *depthattrp = depthattr;
+  if (cachetypeattrp)
+    *cachetypeattrp = cachetypeattr;
 
   return 0;
 }
 
 static __hwloc_inline int
-hwloc_calc_depth_of_type(hwloc_topology_t topology, hwloc_obj_type_t type, int depthattr, int verbose)
+hwloc_calc_depth_of_type(hwloc_topology_t topology, hwloc_obj_type_t type,
+			 int depthattr, hwloc_obj_cache_type_t cachetype /* -1 if not specified */,
+			 int verbose)
 {
   int depth;
   int i;
@@ -163,19 +172,27 @@ hwloc_calc_depth_of_type(hwloc_topology_t topology, hwloc_obj_type_t type, int d
 
   } else {
     /* matched a type with a depth attribute, look at the first object of each level to find the depth */
-    assert(type == HWLOC_OBJ_CACHE || type == HWLOC_OBJ_GROUP);
-    for(i=0; ; i++) {
-      hwloc_obj_t obj = hwloc_get_obj_by_depth(topology, i, 0);
-      if (!obj) {
-	fprintf(stderr, "type %s with custom depth %d does not exists\n", hwloc_obj_type_string(type), depthattr);
-	return -1;
+    if (type == HWLOC_OBJ_GROUP)
+      for(i=0; ; i++) {
+	hwloc_obj_t obj = hwloc_get_obj_by_depth(topology, i, 0);
+	if (!obj) {
+	  fprintf(stderr, "Group with custom depth %d does not exist\n",
+		  depthattr);
+	  return -1;
+	}
+	if (obj->type == type
+	    && (unsigned) depthattr == obj->attr->group.depth)
+	  return i;
       }
-      if (obj->type == type
-	  && ((type == HWLOC_OBJ_CACHE && (unsigned) depthattr == obj->attr->cache.depth)
-	      || (type == HWLOC_OBJ_GROUP && (unsigned) depthattr == obj->attr->group.depth))) {
-	return i;
-      }
-    }
+    else if (type == HWLOC_OBJ_CACHE) {
+      depth = hwloc_get_cache_type_depth(topology, depthattr, cachetype);
+      if (depth == HWLOC_TYPE_DEPTH_UNKNOWN)
+	fprintf(stderr, "Cache with custom depth %d and type %d does not exist\n", depthattr, cachetype);
+      else if (depth == HWLOC_TYPE_DEPTH_MULTIPLE)
+	fprintf(stderr, "Cache with custom depth %d and type %d has multiple possible depths\n", depthattr, cachetype);
+      return depth;
+    } else
+      assert(0);
   }
 
   /* cannot come here, we'll exit above first */
@@ -190,6 +207,7 @@ hwloc_calc_parse_depth_prefix(hwloc_topology_t topology, unsigned topodepth,
 {
   char typestring[20+1]; /* large enough to store all type names, even with a depth attribute */
   hwloc_obj_type_t type;
+  hwloc_obj_cache_type_t cachetypeattr;
   int depthattr;
   int depth;
   char *end;
@@ -203,10 +221,10 @@ hwloc_calc_parse_depth_prefix(hwloc_topology_t topology, unsigned topodepth,
   typestring[typelen] = '\0';
 
   /* try to match a type name */
-  err = hwloc_obj_type_sscanf(typestring, &type, &depthattr);
+  err = hwloc_obj_type_sscanf(typestring, &type, &depthattr, &cachetypeattr);
   if (!err) {
     *typep = type;
-    return hwloc_calc_depth_of_type(topology, type, depthattr, verbose);
+    return hwloc_calc_depth_of_type(topology, type, depthattr, cachetypeattr, verbose);
   }
 
   /* try to match a numeric depth */
@@ -291,10 +309,11 @@ hwloc_calc_append_object_range(hwloc_topology_t topology, unsigned topodepth,
 {
   hwloc_obj_t obj;
   unsigned width;
-  const char *dot, *nextsep;
-  int nextdepth;
+  const char *dot, *nextsep = NULL;
+  int nextdepth = -1;
   int first, wrap, amount, step;
-  unsigned i,j,err;
+  unsigned i,j;
+  int err;
 
   err = hwloc_calc_parse_range(string,
 			       &first, &amount, &step, &wrap,
@@ -488,7 +507,7 @@ hwloc_calc_process_arg(hwloc_topology_t topology, unsigned topodepth,
   typelen = strspn(arg, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
   if (typelen && (arg[typelen] == ':' || arg[typelen] == '=')) {
     const char *sep = &arg[typelen];
-    hwloc_obj_type_t type;
+    hwloc_obj_type_t type = (hwloc_obj_type_t) -1;
     int depth;
     hwloc_bitmap_t newset;
 
@@ -542,7 +561,7 @@ hwloc_calc_process_arg(hwloc_topology_t topology, unsigned topodepth,
     int taskset = ( strchr(tmp, ',') == NULL );
 
     /* check the infinite prefix */
-    if (strncasecmp(tmp, "0xf...f,", 7+!taskset) == 0) {
+    if (hwloc_strncasecmp(tmp, "0xf...f,", 7+!taskset) == 0) {
       tmp += 7+!taskset;
       if (0 == *tmp) {
         err = -1;
@@ -552,7 +571,7 @@ hwloc_calc_process_arg(hwloc_topology_t topology, unsigned topodepth,
 
     if (taskset) {
       /* check that the remaining is 0x followed by a huge hexadecimal number */
-      if (strncasecmp(tmp, "0x", 2) != 0) {
+      if (hwloc_strncasecmp(tmp, "0x", 2) != 0) {
         err = -1;
         goto out;
       }
@@ -571,7 +590,7 @@ hwloc_calc_process_arg(hwloc_topology_t topology, unsigned topodepth,
       while (1) {
 	char *next = strchr(tmp, ',');
 	size_t len;
-	if (strncasecmp(tmp, "0x", 2) == 0) {
+        if (hwloc_strncasecmp(tmp, "0x", 2) == 0) {
 	  tmp += 2;
 	  if (',' == *tmp || 0 == *tmp) {
 	    err = -1;

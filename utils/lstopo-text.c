@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2010 inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -165,14 +165,28 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
   }
 
   if (verbose_mode > 1 || !verbose_mode) {
-    unsigned depth;
+    unsigned depth, nbobjs;
     for (depth = 0; depth < topodepth; depth++) {
-      hwloc_obj_type_t type = hwloc_get_depth_type (topology, depth);
-      unsigned nbobjs = hwloc_get_nbobjs_by_depth (topology, depth);
+      hwloc_obj_t obj = hwloc_get_obj_by_depth(topology, depth, 0);
+      char type[64];
+      nbobjs = hwloc_get_nbobjs_by_depth (topology, depth);
       indent(output, depth);
-      fprintf (output, "depth %u:\t%u %s%s (type #%u)\n",
-	       depth, nbobjs, hwloc_obj_type_string (type), nbobjs>1?"s":"", type);
+      hwloc_obj_type_snprintf(type, sizeof(type), obj, 1);
+      fprintf (output, "depth %u:\t%u %s (type #%u)\n",
+	       depth, nbobjs, type, obj->type);
     }
+    nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_BRIDGE);
+    if (nbobjs)
+      fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
+	       HWLOC_TYPE_DEPTH_BRIDGE, nbobjs, "Bridge", HWLOC_OBJ_BRIDGE);
+    nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_PCI_DEVICE);
+    if (nbobjs)
+      fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
+	       HWLOC_TYPE_DEPTH_PCI_DEVICE, nbobjs, "PCI Device", HWLOC_OBJ_PCI_DEVICE);
+    nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_OS_DEVICE);
+    if (nbobjs)
+      fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
+	       HWLOC_TYPE_DEPTH_OS_DEVICE, nbobjs, "OS Device", HWLOC_OBJ_OS_DEVICE);
   }
 
   if (verbose_mode > 1) {
@@ -653,7 +667,7 @@ text_text(void *output, int r, int g, int b, int size __hwloc_attribute_unused, 
   x /= (gridsize/2);
   y /= gridsize;
 
-#ifdef HAVE_PUTWC
+#if defined(HAVE_PUTWC) && !defined(__MINGW32__)
   {
     size_t len = strlen(text) + 1;
     wchar_t *wbuf = malloc(len * sizeof(wchar_t)), *wtext;

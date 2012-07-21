@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -25,13 +25,16 @@ and even I/O devices.
 hwloc also gathers various attributes such as
 cache and memory information, and is portable across a variety of
 different operating systems and platforms.
+Additionally it may assemble the topologies of multiple machines
+into a single one so as to let applications consult the topology
+of an entire fabric or cluster at once.
 
 hwloc primarily aims at helping high-performance computing (HPC)
 applications, but is also applicable to any project seeking to exploit
 code and/or data locality on modern computing platforms.
 
 *** Note that the hwloc project represents the merger of the
-libtopology project from INRIA and the Portable Linux Processor
+libtopology project from inria and the Portable Linux Processor
 Affinity (PLPA) sub-project from Open MPI.  <em>Both of these prior
 projects are now deprecated.</em> The first hwloc release was
 essentially a "re-branding" of the libtopology code base, but with
@@ -63,8 +66,8 @@ not support topology information, and hwloc thus uses an x86-only CPUID-based
 backend (which could be used for other OSes too).
 
 To check whether hwloc works on a particular machine, just try to build it
-and run <tt>lstopo</tt>. If some things do not look right (e.g. bogus or missing
-cache information), see \ref bugs below.
+and run <tt>lstopo</tt> or <tt>lstopo-no-graphics</tt>. If some things do not look right
+(e.g. bogus or missing cache information), see \ref bugs below.
 
 hwloc only reports the number of processors on unsupported operating
 systems; no topology information is available.
@@ -91,8 +94,8 @@ onto certain cores or memory nodes. Several utility programs are also
 provided to ease command-line manipulation of topology objects,
 binding of processes, and so on.
 
-Perl bindings are available from Bernd Kallies
-<a href=http://search.cpan.org/~bka/Sys-Hwloc-0.10/>on CPAN:</a>
+Perl bindings are available from Bernd Kallies on
+<a href=http://search.cpan.org/~bka/Sys-Hwloc-0.10/>CPAN</a>.
 
 Python bindings are available from Guy Streeter:
 <ul>
@@ -116,28 +119,28 @@ of the overall Open MPI project.
 Nightly development snapshots are available on the web site.
 Additionally, the code can be directly checked out of Subversion:
 
-\code
+\verbatim
 shell$ svn checkout http://svn.open-mpi.org/svn/hwloc/trunk hwloc-trunk
 shell$ cd hwloc-trunk
 shell$ ./autogen.sh
-\endcode
+\endverbatim
 
 Note that GNU Autoconf >=2.63, Automake >=1.10 and Libtool >=2.2.6 are
 required when building from a Subversion checkout.
 
 Installation by itself is the fairly common GNU-based process:
 
-\code
+\verbatim
 shell$ ./configure --prefix=...
 shell$ make
 shell$ make install
-\endcode
+\endverbatim
 
 The hwloc command-line tool "lstopo" produces human-readable topology
 maps, as mentioned above.  It can also export maps to the "fig" file
 format.  Support for PDF, Postscript, and PNG exporting is provided if
-the "Cairo" development package can be found when hwloc is configured
-and build.
+the "Cairo" development package can be found in "lstopo" when hwloc
+is configured and build.
 
 The hwloc core may also benefit from the following development packages:
 <ul>
@@ -203,55 +206,39 @@ tag is on a single line), and only socket #0 is shown for brevity:
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE topology SYSTEM "hwloc.dtd">
 <topology>
-  <object type="Machine" os_level="-1" os_index="0" cpuset="0x0000ffff" 
+  <object type="Machine" os_index="0" cpuset="0x0000ffff" 
       complete_cpuset="0x0000ffff" online_cpuset="0x0000ffff" 
       allowed_cpuset="0x0000ffff" 
       dmi_board_vendor="Dell Computer Corporation" dmi_board_name="0RD318" 
       local_memory="16648183808">
     <page_type size="4096" count="4064498"/>
     <page_type size="2097152" count="0"/>
-    <object type="Socket" os_level="-1" os_index="0" cpuset="0x00001111" 
-        complete_cpuset="0x00001111" online_cpuset="0x00001111" 
-        allowed_cpuset="0x00001111">
-      <object type="Cache" os_level="-1" cpuset="0x00001111" 
-          complete_cpuset="0x00001111" online_cpuset="0x00001111" 
-          allowed_cpuset="0x00001111" cache_size="4194304" depth="3" 
-          cache_linesize="64">
-        <object type="Cache" os_level="-1" cpuset="0x00000101" 
-            complete_cpuset="0x00000101" online_cpuset="0x00000101" 
-            allowed_cpuset="0x00000101" cache_size="1048576" depth="2" 
-            cache_linesize="64">
-          <object type="Cache" os_level="-1" cpuset="0x00000101" 
-              complete_cpuset="0x00000101" online_cpuset="0x00000101" 
-              allowed_cpuset="0x00000101" cache_size="16384" depth="1" 
-              cache_linesize="64">
-            <object type="Core" os_level="-1" os_index="0" cpuset="0x00000101" 
-                complete_cpuset="0x00000101" online_cpuset="0x00000101" 
-                allowed_cpuset="0x00000101">
-              <object type="PU" os_level="-1" os_index="0" cpuset="0x00000001" 
+    <object type="Socket" os_index="0" cpuset="0x00001111" ... >
+      <object type="Cache" cpuset="0x00001111" ...
+          cache_size="4194304" depth="3" cache_linesize="64">
+        <object type="Cache" cpuset="0x00000101" ...
+            cache_size="1048576" depth="2" cache_linesize="64">
+          <object type="Cache" cpuset="0x00000101" ...
+              cache_size="16384" depth="1" cache_linesize="64">
+            <object type="Core" os_index="0" ... >
+              <object type="PU" os_index="0" cpuset="0x00000001" 
                   complete_cpuset="0x00000001" online_cpuset="0x00000001" 
                   allowed_cpuset="0x00000001"/>
-              <object type="PU" os_level="-1" os_index="8" cpuset="0x00000100" 
+              <object type="PU" os_index="8" cpuset="0x00000100"
                   complete_cpuset="0x00000100" online_cpuset="0x00000100" 
                   allowed_cpuset="0x00000100"/>
             </object>
           </object>
         </object>
-        <object type="Cache" os_level="-1" cpuset="0x00001010" 
-            complete_cpuset="0x00001010" online_cpuset="0x00001010" 
-            allowed_cpuset="0x00001010" cache_size="1048576" depth="2" 
-            cache_linesize="64">
-          <object type="Cache" os_level="-1" cpuset="0x00001010" 
-              complete_cpuset="0x00001010" online_cpuset="0x00001010" 
-              allowed_cpuset="0x00001010" cache_size="16384" depth="1" 
-              cache_linesize="64">
-            <object type="Core" os_level="-1" os_index="1" cpuset="0x00001010" 
-                complete_cpuset="0x00001010" online_cpuset="0x00001010" 
-                allowed_cpuset="0x00001010">
-              <object type="PU" os_level="-1" os_index="4" cpuset="0x00000010" 
+        <object type="Cache" cpuset="0x00001010" ...
+            cache_size="1048576" depth="2" cache_linesize="64">
+          <object type="Cache" cpuset="0x00001010" 
+              cache_size="16384" depth="1" cache_linesize="64">
+            <object type="Core" os_index="1" cpuset="0x00001010" ... >
+              <object type="PU" os_index="4" cpuset="0x00000010" 
                   complete_cpuset="0x00000010" online_cpuset="0x00000010" 
                   allowed_cpuset="0x00000010"/>
-              <object type="PU" os_level="-1" os_index="12" cpuset="0x00001000" 
+              <object type="PU" os_index="12" cpuset="0x00001000" 
                   complete_cpuset="0x00001000" online_cpuset="0x00001000" 
                   allowed_cpuset="0x00001000"/>
             </object>
@@ -268,7 +255,7 @@ On a 4-socket 2-core Opteron NUMA machine, the \c lstopo tool may show
 the following graphical output:
 
 \image html hagrid.png
-\image latex hagrid.png width=\textwidth
+\image latex hagrid.png "" width=\textwidth
 
 Here's the equivalent output in textual form:
 
@@ -295,40 +282,24 @@ breaks were added and only PU #0 is shown for brevity:
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE topology SYSTEM "hwloc.dtd">
 <topology>
-  <object type="Machine" os_level="-1" os_index="0" cpuset="0x000000ff" 
+  <object type="Machine" os_index="0" cpuset="0x000000ff" 
       complete_cpuset="0x000000ff" online_cpuset="0x000000ff" 
       allowed_cpuset="0x000000ff" nodeset="0x000000ff" 
       complete_nodeset="0x000000ff" allowed_nodeset="0x000000ff" 
       dmi_board_vendor="TYAN Computer Corp" dmi_board_name="S4881 ">
     <page_type size="4096" count="0"/>
     <page_type size="2097152" count="0"/>
-    <object type="NUMANode" os_level="-1" os_index="0" cpuset="0x00000003" 
-        complete_cpuset="0x00000003" online_cpuset="0x00000003" 
-        allowed_cpuset="0x00000003" nodeset="0x00000001" 
-        complete_nodeset="0x00000001" allowed_nodeset="0x00000001" 
-        local_memory="7514177536">
+    <object type="NUMANode" os_index="0" cpuset="0x00000003" ...
+        nodeset="0x00000001" ... local_memory="7514177536">
       <page_type size="4096" count="1834516"/>
       <page_type size="2097152" count="0"/>
-      <object type="Socket" os_level="-1" os_index="0" cpuset="0x00000003" 
-          complete_cpuset="0x00000003" online_cpuset="0x00000003" 
-          allowed_cpuset="0x00000003" nodeset="0x00000001" 
-          complete_nodeset="0x00000001" allowed_nodeset="0x00000001">
-        <object type="Cache" os_level="-1" cpuset="0x00000001" 
-            complete_cpuset="0x00000001" online_cpuset="0x00000001" 
-            allowed_cpuset="0x00000001" nodeset="0x00000001" 
-            complete_nodeset="0x00000001" allowed_nodeset="0x00000001" 
+      <object type="Socket" os_index="0" cpuset="0x00000003" ... >
+        <object type="Cache" cpuset="0x00000001" ...
             cache_size="1048576" depth="2" cache_linesize="64">
-          <object type="Cache" os_level="-1" cpuset="0x00000001" 
-              complete_cpuset="0x00000001" online_cpuset="0x00000001" 
-              allowed_cpuset="0x00000001" nodeset="0x00000001" 
-              complete_nodeset="0x00000001" allowed_nodeset="0x00000001" 
+          <object type="Cache" cpuset="0x00000001" ...
               cache_size="65536" depth="1" cache_linesize="64">
-            <object type="Core" os_level="-1" os_index="0" 
-                cpuset="0x00000001" complete_cpuset="0x00000001" 
-                online_cpuset="0x00000001" allowed_cpuset="0x00000001" 
-                nodeset="0x00000001" complete_nodeset="0x00000001" 
-                allowed_nodeset="0x00000001">
-              <object type="PU" os_level="-1" os_index="0" cpuset="0x00000001" 
+            <object type="Core" os_index="0" ... >
+              <object type="PU" os_index="0" cpuset="0x00000001" 
                   complete_cpuset="0x00000001" online_cpuset="0x00000001" 
                   allowed_cpuset="0x00000001" nodeset="0x00000001" 
                   complete_nodeset="0x00000001" allowed_nodeset="0x00000001"/>
@@ -371,39 +342,27 @@ And the same output in XML (line breaks added, only PU #0 shown):
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE topology SYSTEM "hwloc.dtd">
 <topology>
-  <object type="Machine" os_level="-1" os_index="0" cpuset="0x000000ff" 
+  <object type="Machine" os_index="0" cpuset="0x000000ff" 
       complete_cpuset="0x000000ff" online_cpuset="0x000000ff" 
       allowed_cpuset="0x000000ff" dmi_board_vendor="Dell Inc." 
       dmi_board_name="0NR282" local_memory="16865292288">
     <page_type size="4096" count="4117503"/>
     <page_type size="2097152" count="0"/>
-    <object type="Socket" os_level="-1" os_index="0" cpuset="0x00000055" 
-        complete_cpuset="0x00000055" online_cpuset="0x00000055" 
-        allowed_cpuset="0x00000055">
-      <object type="Cache" os_level="-1" cpuset="0x00000011" 
-          complete_cpuset="0x00000011" online_cpuset="0x00000011" 
-          allowed_cpuset="0x00000011" cache_size="4194304" depth="2" 
-          cache_linesize="64">
-        <object type="Cache" os_level="-1" cpuset="0x00000001" 
-            complete_cpuset="0x00000001" online_cpuset="0x00000001" 
-            allowed_cpuset="0x00000001" cache_size="32768" depth="1" 
-            cache_linesize="64">
-          <object type="Core" os_level="-1" os_index="0" cpuset="0x00000001" 
-              complete_cpuset="0x00000001" online_cpuset="0x00000001" 
-              allowed_cpuset="0x00000001">
-            <object type="PU" os_level="-1" os_index="0" cpuset="0x00000001" 
+    <object type="Socket" os_index="0" cpuset="0x00000055" ... >
+      <object type="Cache" cpuset="0x00000011" ...
+          cache_size="4194304" depth="2" cache_linesize="64">
+        <object type="Cache" cpuset="0x00000001" ...
+            cache_size="32768" depth="1" cache_linesize="64">
+          <object type="Core" os_index="0" ... >
+            <object type="PU" os_index="0" cpuset="0x00000001" 
                 complete_cpuset="0x00000001" online_cpuset="0x00000001" 
                 allowed_cpuset="0x00000001"/>
           </object>
         </object>
-        <object type="Cache" os_level="-1" cpuset="0x00000010" 
-            complete_cpuset="0x00000010" online_cpuset="0x00000010" 
-            allowed_cpuset="0x00000010" cache_size="32768" depth="1" 
-            cache_linesize="64">
-          <object type="Core" os_level="-1" os_index="1" cpuset="0x00000010" 
-              complete_cpuset="0x00000010" online_cpuset="0x00000010" 
-              allowed_cpuset="0x00000010">
-            <object type="PU" os_level="-1" os_index="4" cpuset="0x00000010" 
+        <object type="Cache" cpuset="0x00000010" ...
+            cache_size="32768" depth="1" cache_linesize="64">
+          <object type="Core" os_index="1" ... >
+            <object type="PU" os_index="4" cpuset="0x00000010" ...
                 complete_cpuset="0x00000010" online_cpuset="0x00000010" 
                 allowed_cpuset="0x00000010"/>
           </object>
@@ -592,7 +551,7 @@ the most recent version of the BIOS for your machine.
 
 If those things fail, contact us on the mailing list for additional
 help.  Please attach the output of lstopo after having given the
---enable-debug option to ./configure and rebuilt completely, to get
+<tt>--enable-debug</tt> option to ./configure and rebuilt completely, to get
 debugging output. Also attach the <tt>/proc</tt> + <tt>/sys</tt> tarball
 generated by the installed script <tt>hwloc-gather-topology.sh</tt>
 when submitting problems about Linux, or send the
@@ -611,7 +570,7 @@ project. Because of functional and ideological overlap, these two code bases
 and ideas were merged and released under the name "hwloc" as an Open MPI
 sub-project.
 
-libtopology was initially developed by the INRIA Runtime Team-Project
+libtopology was initially developed by the inria Runtime Team-Project
 (http://runtime.bordeaux.inria.fr/) (headed by Raymond Namyst
 (http://dept-info.labri.fr/~namyst/). PLPA was initially developed by
 the Open MPI development team as a sub-project. Both are now deprecated
@@ -764,7 +723,7 @@ fields (depth, logical_index, etc.), and arrows show to which other hwloc_obj_t
 pointers point to (first_child, parent, etc.). The L2 cache of the last core is intentionally missing to show how asymmetric topologies are handled.
 
 \image html diagram.png
-\image latex diagram.eps width=\textwidth
+\image latex diagram.eps "" width=\textwidth
 
 It should be noted that for PU objects, the logical index -- as
 computed linearly by hwloc -- is not the same as the OS index.
@@ -779,15 +738,20 @@ command line utilities. Each of them is fully documented in its own
 manual page; the following is a summary of the available command line
 tools.
 
-\section cli_lstopo lstopo
+\section cli_lstopo lstopo and lstopo-no-graphics
 
 lstopo (also known as hwloc-info and hwloc-ls) displays the
 hierarchical topology map of the current system.  The output may be
 graphical or textual, and can also be exported to numerous file
 formats such as PDF, PNG, XML, and others.
 
+lstopo and lstopo-no-graphics accept the same command-line options.
+However graphical outputs are only available in lstopo.
+Textual outputs (those that do not depend on heavy external libraries
+such as Cairo) are supported in both lstopo and lstopo-no-graphics.
+
 This command can also display the processes currently bound to a part
-of the machine (via the --ps option).
+of the machine (via the <tt>--ps</tt> option).
 
 Note that lstopo can read XML files and/or alternate chroot
 filesystems and display topological maps representing those systems
@@ -912,7 +876,8 @@ following environment variables.
   </dd>
 
 <dt>HWLOC_THISSYSTEM=1</dt>
-  <dd>enforces the return value of hwloc_topology_is_thissystem().
+  <dd>enforces the return value of hwloc_topology_is_thissystem(), as if
+  HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM was set with hwloc_topology_set_flags().
   It means that it makes hwloc assume that the selected backend provides the
   topology for the system on which we are running, even if it is not the
   OS-specific backend but the XML backend for instance.
@@ -981,7 +946,8 @@ following environment variables.
   <li>If <tt>X*Y*Z</tt> is given, X groups of Y groups of Z close objects are specified.</li>
   <li>Otherwise, the comma-separated list of distances should be given.
   If N objects are considered, the i*N+j-th value gives the
-  distance from the i-th object to the j-th object.</li>
+  distance from the i-th object to the j-th object.
+  These distance values must use a dot as a decimal separator.</li>
   </ul>
 
   Note that distances are ignored in multi-node topologies.
@@ -1077,7 +1043,7 @@ hwloc's API functions regarding CPU and memory binding, respectively.
 
 \page iodevices I/O Devices
 
-hwloc usually manipulates processing units and memory but it can actually
+hwloc usually manipulates processing units and memory but it can also
 discover I/O devices and report their locality as well.
 This is useful for placing I/O intensive applications on cores near the
 I/O devices they use.
@@ -1243,9 +1209,9 @@ Machine (24GB)
 hwloc is usually used for consulting and manipulating single machine
 topologies. This includes large systems as long as a single instance of
 the operating system manages the entire system. However it is sometimes
-desirable to have multiple independent nodes inside the same topology,
-for instance when applying algorithm to an entire cluster topology.
-hwloc therefore offers the ability to agregate multiple node topologies
+desirable to have multiple independent hosts inside the same topology,
+for instance when applying algorithms to an entire cluster topology.
+hwloc therefore offers the ability to agregate multiple host topologies
 into a single global one.
 
 \section multinode_cpusets Multi-node Objects Specifities
@@ -1292,20 +1258,20 @@ It is important to keep this in mind before binding using multi-node
 topologies.
 To make sure binding on an object is possible, one should first check
 that its cpuset or nodeset pointer is not NULL.
-Then, it should check whether the object is indeed local.
+Then, one should check whether the object is indeed local.
 
 To find out which machine a given object correspond too, one may look
 at the info attributes of the parent Machine object. The <tt>HostName</tt>
 info is usually available in Machine objects, it may be retrieved with the
 following code:
-<pre>
+\verbatim
   hwloc_obj_t machine_obj;
   obj = hwloc_get_ancestor_obj_by_type(topology, HWLOC_OBJ_MACHINE, obj);
   if (machine_obj)
     return hwloc_obj_get_info_by_name(machine_obj, "HostName");
   else
     return NULL;
-</pre>
+\endverbatim
 The hwloc assembler scripts (see below) also add <tt>AssemblerName</tt>
 and <tt>AssemblerIndex</tt> info attributes to the Machine objects to
 identify the corresponding host name and index during assembly.
@@ -1315,8 +1281,8 @@ identify the corresponding host name and index during assembly.
 One way to manipulate multinode topologies is to retrieve
 other nodes' topologies as XML files and combine them as a
 global XML topology.
-It may then be loaded with hwloc_topolohy_set_xml() or with
-the HWLOCXMLFILE environment variable.
+It may then be loaded with hwloc_topology_set_xml() or with
+the HWLOC_XMLFILE environment variable.
 
 The hwloc-assembler and hwloc-assembler-remote utilities
 offer the ability to combine XML topologies or remote
@@ -1348,6 +1314,58 @@ to find such an object because most links between objects
 (children, siblings, cousins) are not setup until hwloc_topology_load()
 is invoked.
 
+\section multinode_example Example of assembly with the programming interface
+
+If the topologies of two hosts have been previously gathered in XML
+files <tt>host1.xml</tt> and <tt>host2.xml</tt>, the global topology
+may be assembled with the following code.
+
+\verbatim
+hwloc_topology_t host1, host2, global;
+
+/* initialize global topology */
+hwloc_topology_init(&global);
+hwloc_topology_set_custom(global);
+
+/* insert host1 entire topology below the global topology root */
+hwloc_topology_init(&host1);
+hwloc_topology_load(host1);
+hwloc_custom_insert_topology(global, hwloc_get_root_obj(global),
+                             host1, NULL);
+hwloc_topology_destroy(host1);
+
+/* insert host2 entire topology below the global topology root */
+hwloc_topology_init(&host2);
+hwloc_topology_load(host2);
+hwloc_custom_insert_topology(global, hwloc_get_root_obj(global),
+                             host2, NULL);
+hwloc_topology_destroy(host2);
+
+/* load and play with the global topology */
+hwloc_topology_load(global);
+...
+\endverbatim
+
+If a intermediate object such as a switch should be inserted
+above one of the host topologies:
+\verbatim
+...
+/* insert a switch object below the global topology root */
+hwloc_obj_t sw =
+   hwloc_custom_insert_group_object_by_parent(global,
+                              hwloc_get_root_obj(global), 0);
+
+/* insert host2 entire topology below the switch */
+hwloc_topology_init(&host2);
+hwloc_topology_load(host2);
+hwloc_custom_insert_topology(global, switch, host2, NULL);
+hwloc_topology_destroy(host2);
+
+/* load and play with the global topology */
+hwloc_topology_load(global);
+...
+\endverbatim
+
 
 
 
@@ -1366,6 +1384,17 @@ XML topologies may then be reloaded later with hwloc_topology_set_xml()
 and hwloc_topology_set_xmlbuffer().
 The XMLFILE environment variable also tells hwloc to load the topology
 from the given XML file.
+
+\note Loading XML topologies disables binding because the loaded
+topology may not correspond to the physical machine that loads it.
+This behavior may be reverted by asserting that loaded file really
+matches the underlying system with the HWLOC_THISSYSTEM environment
+variable or the HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM topology flag.
+
+\note XML topology files are not localized. They use a dot as a
+decimal separator. Therefore any exported topology can be
+reloaded on any other machine without requiring to change the
+locale.
 
 \section xml_backends libxml2 and minimalistic XML backends
 
@@ -1421,6 +1450,12 @@ application uses or otherwise depends on such a library, it may
 optionally include the corresponding hwloc helper to extend the hwloc
 interface with dedicated helpers.
 
+Most of these helpers use structures that are specific to these external
+libraries and only meaningful on the local machine. If so, the helper
+requires the input topology to match the current machine.
+Some helpers also require I/O device discovery to be supported and
+enabled for the current topology.
+
 <dl>
 
 <dt>Linux specific features</dt>
@@ -1433,7 +1468,7 @@ interface with dedicated helpers.
 <dt>Linux libnuma</dt>
  <dd>
   hwloc/linux-libnuma.h provides conversion helpers between hwloc CPU
-  sets and libnuma-specific types, such as nodemasks and bitmasks.  It
+  sets and libnuma-specific types, such as  bitmasks.  It
   helps you use libnuma memory-binding functions with hwloc CPU sets.
  </dd>
 
@@ -1479,7 +1514,7 @@ interface with dedicated helpers.
   string in fixed-size subsets and separates them with commas).
   To ease interoperability, hwloc offers routines to convert
   hwloc CPU sets from/to taskset-specific string format.
-  Most hwloc command-line tools also support the --taskset
+  Most hwloc command-line tools also support the <tt>--taskset</tt>
   option to manipulate taskset-specific strings.
  </dd>
 
@@ -1733,6 +1768,9 @@ Thus rediscovering the whole topology again and again may look useless.
 For this purpose, hwloc offers XML import/export features. It lets you
 save the discovered topology to a file (for instance with the lstopo program)
 and reload it later by setting the HWLOC_XMLFILE environment variable.
+The HWLOC_THISSYSTEM environment variable should also be set to 1 to
+assert that loaded file is really the underlying system.
+
 Loading a XML topology is usually much faster than querying multiple
 files or calling multiple functions of the operating system.
 It is also possible to manipulate such XML files with the C programming
@@ -1853,11 +1891,12 @@ To understand how hwloc manages such cases, one should first remember
 the meaning of levels and cousin objects. All objects of the same type
 are gathered as horizontal levels with a given depth. They are also
 connected through the cousin pointers of the hwloc_obj structure.
-Some types, such as Caches or Groups, are usually annotated with a
-depth or level attribute (for instance L2 cache). In this case, this
-attribute is also taken in account when gathering objects as
-horizontal levels.  To be clear: there will be one level for L1
-caches, another level for L2 caches, etc.
+Some types, such as Caches or Groups, are annotated with a depth or
+level attribute (for instance L2 cache or Group1). Moreover caches
+have a type attribute (for instance L1i or L1d). Such
+attributes are also taken in account when gathering objects as
+horizontal levels.  To be clear: there will be one level for L1i
+caches, another level for L1d caches, another one for L2, etc.
 
 If the topology is asymmetric (e.g., if a cache is missing in one of
 the processors), a given horizontal level will still exist if there
@@ -1895,6 +1934,29 @@ in the topology (<tt>hwloc_topology_insert_misc_object_by_cpuset()</tt>)
 or as a leaf of the topology (<tt>hwloc_topology_insert_misc_object_by_parent()</tt>).
 
 
+\section faq_valgrind Why does Valgrind complain about hwloc memory leaks?
+
+If you are debugging your application with Valgrind, you want to
+avoid memory leak reports that are caused by hwloc and not by your
+program.
+
+hwloc itself is often checked with Valgrind to make sure it does
+not leak memory.
+However some global variables in hwloc dependencies are never freed.
+For instance libz allocates its global state once at startup and
+never frees it so that it may be reused later.
+Some libxml2 global state is also never freed because hwloc does not
+know whether it can safely ask libxml2 to free it (the application may
+also be using libxml2 outside of hwloc).
+
+These unfreed variables cause leak reports in Valgrind.
+hwloc installs a Valgrind <em>suppressions</em> file to hide them.
+You should pass the following command-line option to Valgrind to use it:
+\verbatim
+  --suppressions=/path/to/hwloc-valgrind.supp
+\endverbatim
+
+
 \section faq_upgrade How do I handle API upgrades?
 
 The hwloc interface is extended with every new major release.
@@ -1902,30 +1964,25 @@ Any application using the hwloc API should be prepared to check at
 compile-time whether some features are available in the currently
 installed hwloc distribution.
 
-To check whether hwloc is at least 1.2, you should use:
+To check whether the hwloc version is at least 1.5, you should use:
 \verbatim
 #include <hwloc.h>
-#if HWLOC_API_VERSION >= 0x00010200
+#if HWLOC_API_VERSION >= 0x00010500
 ...
 #endif
 \endverbatim
 
-One of the major changes in hwloc 1.1 was the addition of the bitmap
-API. It supersedes the now deprecated cpuset API which will be removed
-in a future hwloc release. It is strongly recommended to switch existing
-codes to the bitmap API. Keeping support for older hwloc versions is easy.
-For instance, if your code uses <tt>hwloc_cpuset_alloc</tt>, you should use
-<tt>hwloc_bitmap_alloc</tt> instead and add the following code to one of your
-common headers:
+One important change in hwloc 1.5 is the removal of the deprecated
+cpuset API, which was superseded by the new bitmap API since hwloc 1.1.
+If your code must work with very old hwloc releases, you should use
+the latest bitmap API anyway. Then, use something similar to the
+following code to support old cpuset-only hwloc versions:
 \verbatim
 #include <hwloc.h>
 #if HWLOC_API_VERSION < 0x00010100
 #define hwloc_bitmap_alloc hwloc_cpuset_alloc
 #endif
 \endverbatim
-
-Similarly, the hwloc 1.0 interface may be detected by comparing
-<tt>HWLOC_API_VERSION</tt> with <tt>0x00010000</tt>.
 
 hwloc 0.9 did not define any <tt>HWLOC_API_VERSION</tt> but this very old
 release probably does not deserve support from your application anymore.

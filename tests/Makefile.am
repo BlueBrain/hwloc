@@ -1,5 +1,5 @@
-# Copyright © 2009-2011 INRIA.  All rights reserved.
-# Copyright © 2009-2011 Université Bordeaux 1
+# Copyright © 2009-2011 inria.  All rights reserved.
+# Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
@@ -82,16 +82,17 @@ endif
 
 LDADD += $(HWLOC_top_builddir)/src/$(hwloc_lib)
 
-linux_libnuma_LDFLAGS = -lnuma
-openfabrics_verbs_LDFLAGS = -libverbs
-myriexpress_LDFLAGS = -lmyriexpress
-cuda_LDFLAGS = -lcuda
-cudart_LDFLAGS = -lcuda -lcudart
-xmlbuffer_LDFLAGS = $(HWLOC_LIBXML2_LIBS)
-hwloc_backends_LDFLAGS = $(HWLOC_LIBXML2_LIBS)
-if !HWLOC_HAVE_WINDOWS
-hwloc_bind_LDFLAGS = -lpthread
-endif !HWLOC_HAVE_WINDOWS
+linux_libnuma_LDADD = $(LDADD) -lnuma
+openfabrics_verbs_LDADD = $(LDADD) -libverbs
+myriexpress_LDADD = $(LDADD) -lmyriexpress
+cuda_LDADD = $(LDADD) -lcuda
+cudart_LDADD = $(LDADD) -lcuda -lcudart
+xmlbuffer_LDADD = $(LDADD) $(HWLOC_LIBXML2_LIBS)
+hwloc_backends_LDADD = $(LDADD) $(HWLOC_LIBXML2_LIBS)
+hwloc_bind_LDADD = $(LDADD)
+if HWLOC_HAVE_PTHREAD
+hwloc_bind_LDADD += -lpthread
+endif
 
 endif HWLOC_BUILD_TESTS
 

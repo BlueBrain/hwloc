@@ -8,10 +8,12 @@
  * $HEADER$
  */
 
+#include <private/autogen/config.h>
 #include <private/solaris-chiptype.h>
-
 #include <stdlib.h>
 #include <strings.h>
+
+#ifdef HAVE_PICL_H
 #include <sys/systeminfo.h>
 #include <picl.h>
 
@@ -152,7 +154,7 @@ static void assign_string_value(int index, char* string_val) {
 Gets called by probe_cpu.  Cycles through the table values until we find
 what we are looking for.
 *****************************************************************************/
-static int search_table(int index, picl_prophdl_t table_hdl) {
+static void search_table(int index, picl_prophdl_t table_hdl) {
 
   picl_prophdl_t  col_hdl;
   picl_prophdl_t  row_hdl;
@@ -319,3 +321,11 @@ char *hwloc_solaris_get_chip_model(void) {
     return(dss_chip_model);
 }
 
+#else
+char* hwloc_solaris_get_chip_type(void) {
+  return NULL;
+}
+char *hwloc_solaris_get_chip_model(void) {
+  return NULL;
+}
+#endif

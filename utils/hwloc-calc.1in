@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2010 INRIA.  All rights reserved.
+.\" Copyright © 2010 inria.  All rights reserved.
 .\" Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
 .TH HWLOC-CALC "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
@@ -36,7 +36,7 @@ Use logical indexes instead of physical/OS indexes for input (default).
 Use OS/physical indexes instead of logical indexes for output.
 .TP
 \fB\-\-lo\fR \fB\-\-logical\-output\fR
-Use logical indexes instead of physical/OS indexes for output (default).
+Use logical indexes instead of physical/OS indexes for output (default, except for cpusets which are always physical).
 .TP
 \fB\-N \-\-number-of <type|depth>\fR
 Report the number of objects of the given type or depth that intersect the CPU set.
@@ -236,6 +236,10 @@ To synthetize a set of cores into largest objects on a 2-node 2-socket 2-core ma
     Socket:2
     $ hwloc-calc socket:2-3 --largest
     NUMANode:1
+
+To get the set of first threads of all cores:
+
+    $ hwloc-calc core:all.pu:0
 
 .
 .\" **************************

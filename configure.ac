@@ -1,8 +1,8 @@
 # -*- shell-script -*-
 #
 # Copyright © 2009      CNRS
-# Copyright © 2009-2010 INRIA.  All rights reserved.
-# Copyright © 2009, 2011      Université Bordeaux 1
+# Copyright © 2009-2010 inria.  All rights reserved.
+# Copyright © 2009, 2011-2012      Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 #
 # See COPYING in top-level directory.
@@ -14,7 +14,7 @@
 
 AC_INIT([hwloc], 
         [m4_normalize(esyscmd([config/hwloc_get_version.sh VERSION --base]))],
-        [http://www.open-mpi.org/community/help/], [hwloc])
+        [http://www.open-mpi.org/projects/hwloc/], [hwloc])
 AC_PREREQ(2.63)
 AC_CONFIG_AUX_DIR(./config)
 # Note that this directory must *exactly* match what was specified via
@@ -42,6 +42,7 @@ m4_ifdef([LT_PREREQ], [],
 LT_PREREQ([2.2.6])
 
 AC_LANG([C])
+AC_USE_SYSTEM_EXTENSIONS
 
 # Make configure depend on the VERSION file, since it's used in AC_INIT
 AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/VERSION'])
@@ -85,7 +86,7 @@ AC_SUBST([libhwloc_so_version])
 # Setup the header file
 AH_TOP([/* -*- c -*-
  *
- * Copyright © 2009, 2011 CNRS, INRIA., Université Bordeaux 1  All rights reserved.
+ * Copyright © 2009, 2011, 2012 CNRS, inria., Université Bordeaux 1  All rights reserved.
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * $COPYRIGHT$
  * 
@@ -108,8 +109,17 @@ AH_BOTTOM([
 
 CFLAGS_save="$CFLAGS"
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_CC_C_O
 CFLAGS="$CFLAGS_save"
+# This did not exist pre AM 1.11.x (where x is somewhere >0 and <3),
+# but it is necessary in AM 1.12.x.
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
+AC_ARG_VAR(CC_FOR_BUILD,[build system C compiler])
+AS_IF([test -z "$CC_FOR_BUILD"],[
+    AC_SUBST([CC_FOR_BUILD], [$CC])
+])
 
 # Define hwloc's configure arguments
 HWLOC_DEFINE_ARGS

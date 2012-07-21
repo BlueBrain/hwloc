@@ -1,4 +1,4 @@
-# Copyright © 2009-2010 INRIA.  All rights reserved.
+# Copyright © 2009-2010 inria.  All rights reserved.
 # Copyright © 2009-2010 Université Bordeaux 1
 # Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 # Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
@@ -12,7 +12,6 @@ include_HEADERS = hwloc.h
 include_hwlocdir = $(includedir)/hwloc
 include_hwloc_HEADERS = \
         hwloc/bitmap.h \
-        hwloc/cpuset.h \
         hwloc/helper.h \
         hwloc/myriexpress.h \
         hwloc/openfabrics-verbs.h \
@@ -26,6 +25,7 @@ noinst_HEADERS = \
         private/private.h \
         private/debug.h \
         private/misc.h \
+        private/xml.h \
         private/cpuid.h
 
 if HWLOC_HAVE_LINUX

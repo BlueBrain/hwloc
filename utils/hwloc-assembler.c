@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011 INRIA.  All rights reserved.
+ * Copyright © 2011 inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   for(i=0, j=0; i<argc; i++, j++) {
     hwloc_topology_t input;
     hwloc_obj_t root;
-    char index[10];
+    char idx[10];
     char *name = NULL;
 
     if (!strcmp(argv[i], "-n") || !strcmp(argv[i], "--name")) {
@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
 
     root = hwloc_get_root_obj(input);
     hwloc_obj_add_info(root, "AssemblerName", name ? name : argv[i]);
-    snprintf(index, sizeof(index), "%d", j);
-    hwloc_obj_add_info(root, "AssemblerIndex", index);
+    snprintf(idx, sizeof(idx), "%d", j);
+    hwloc_obj_add_info(root, "AssemblerIndex", idx);
 
     hwloc_custom_insert_topology(topology, hwloc_get_root_obj(topology), input, NULL);
     hwloc_topology_destroy(input);

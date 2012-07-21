@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010 INRIA.  All rights reserved.
+ * Copyright © 2010-2012 inria.  All rights reserved.
  * Copyright © 2010-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -71,6 +71,8 @@ hwloc_cuda_get_device_pci_ids(hwloc_topology_t topology __hwloc_attribute_unused
  * kernel-provided cpumap file and return the corresponding CPU set.
  * This function is currently only implemented in a meaningful way for
  * Linux; other systems will simply get a full cpuset.
+ *
+ * Topology \p topology must match the current machine.
  */
 static __hwloc_inline int
 hwloc_cuda_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
@@ -86,12 +88,19 @@ hwloc_cuda_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
   if (hwloc_cuda_get_device_pci_ids(topology, cudevice, &domainid, &busid, &deviceid))
     return -1;
 
+  if (!hwloc_topology_is_thissystem(topology)) {
+    errno = EINVAL;
+    return -1;
+  }
+
   sprintf(path, "/sys/bus/pci/devices/%04x:%02x:%02x.0/local_cpus", domainid, busid, deviceid);
   sysfile = fopen(path, "r");
   if (!sysfile)
     return -1;
 
   hwloc_linux_parse_cpumap_file(sysfile, set);
+  if (hwloc_bitmap_iszero(set))
+    hwloc_bitmap_copy(set, hwloc_topology_get_complete_cpuset(topology));
 
   fclose(sysfile);
 #else
@@ -106,6 +115,8 @@ hwloc_cuda_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
  *
  * For the given CUDA Runtime API device \p cudevice, return the hwloc PCI
  * object containing the device. Returns NULL if there is none.
+ *
+ * IO devices detection must be enabled in topology \p topology.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_cuda_get_device_pcidev(hwloc_topology_t topology, CUdevice cudevice)
