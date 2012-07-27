@@ -2238,7 +2238,7 @@ hwloc_discover(struct hwloc_topology *topology)
 	hwloc_debug("%s", "\nLooking for base backend\n");
 	topology->base_backends->backend->hwloc_look(topology);
 
-/* TODO do default os backend 
+/* FIXME do default os backend 
 #    ifndef HAVE_OS_SUPPORT
     hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology)); */
 /* #    endif */  /* Unsupported OS */
@@ -2529,6 +2529,9 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
 {
   struct hwloc_topology *topology;
   int i;
+  char* hwloc_plugin_dir; /* HWLOC_PLUGINS_DIR */
+
+  hwloc_plugin_dir = getenv("HWLOC_PLUGINS_DIR");
 
   topology = malloc (sizeof (struct hwloc_topology));
   if(!topology)
@@ -2552,12 +2555,12 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
 
   fprintf(stderr, "**topology.c: Before backends loading\n");
 
+  /* FIXME AC_DEFINE_UNQUOTED desn't work => harcoded path*/
   /* Load backends */
-  /* FIXME : Hard coded for test, it should be interesting to install backends in the system */
-  topology->base_backends = hwloc_backend_load("/home/antoine/hwloc/hwloc-backends/src/backends/.libs", "libhwlocbackendsbase");
-  topology->io_backends = hwloc_backend_load("/home/antoine/hwloc/hwloc-backends/src/backends/.libs", "libhwlocbackendsio");
-  topology->global_backends = hwloc_backend_load("/home/antoine/hwloc/hwloc-backends/src/backends/.libs", "libhwlocbackendsglobal");
-  
+  topology->base_backends = hwloc_backend_load("/usr/lib/i386-linux-gnu/", hwloc_plugin_dir, "libhwlocbackendsbase");
+  topology->io_backends = hwloc_backend_load("/usr/lib/i386-linux-gnu/", hwloc_plugin_dir, "libhwlocbackendsio");
+  topology->global_backends = hwloc_backend_load("/usr/lib/i386-linux-gnu/", hwloc_plugin_dir, "libhwlocbackendsglobal");
+
   fprintf(stderr, "**topology.c: After backends loading\n");
 
   hwloc_distances_init(topology);

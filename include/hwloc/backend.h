@@ -49,7 +49,7 @@ struct hwloc_backends_loaded{
 HWLOC_DECLSPEC struct hwloc_backend_st* hwloc_get_backend(void); 
 
 /* Use by hwloc */
-extern struct hwloc_backends_loaded* hwloc_backend_load(char* path, char* backend_prefix);
+extern struct hwloc_backends_loaded* hwloc_backend_load(char* path, char* hwloc_plugin_dir, char* backend_prefix);
 extern void hwloc_backend_unload(struct hwloc_backends_loaded* backends_loaded);
 
 #ifdef __cplusplus

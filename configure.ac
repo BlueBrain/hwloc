@@ -77,6 +77,11 @@ PACKAGE_VERSION="$HWLOC_VERSION"
 PACKAGE_STRING="${PACKAGE_NAME} ${PACKAGE_VERSION}"
 VERSION="${PACKAGE_VERSION}"
 
+# Backends path
+#backendsdir=`eval echo $libdir/hwloc`
+#AC_DEFINE_UNQUOTED([HWLOC_BACKENDS_DIR], ["$backendsdir"],
+    #[Backends path])
+
 # For standalone configurations, we also include a .so version number.
 
 . $srcdir/VERSION

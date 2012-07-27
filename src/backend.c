@@ -73,8 +73,8 @@ load(char* path)
 	return backend_loaded;
 }
 
-struct hwloc_backends_loaded* 
-hwloc_backend_load(char* path, char* backend_prefix)
+static struct hwloc_backends_loaded*
+browse_and_load(char* path, char* backend_prefix)
 {
 	struct dirent** namelist;
 	int n_backends = 0; /* # of corresponding backends found */
@@ -83,17 +83,13 @@ hwloc_backend_load(char* path, char* backend_prefix)
 	struct hwloc_backends_loaded* backend = NULL;
 	struct hwloc_backends_loaded* buff = NULL;
 	int i;
-
-	prefix = backend_prefix;
-
-	fprintf(stderr, "**backend.c: prefix = %s\n", prefix); 
-
+	
 	/* backends_filter returns non-zero if backend name matches with backend_prefix */
 	n_backends = scandir(path, &namelist, backends_filter, 0);
 
 	for (i = 0 ; i < n_backends ; i++)
 	{
-		backend_path = malloc(strlen(path)*sizeof(char)+sizeof(namelist[i]->d_name)+1);
+		backend_path = malloc(strlen(path)*sizeof(char)+sizeof(namelist[i]->d_name)+sizeof(char));
 		strcpy(backend_path, path);
 		strcat(backend_path, "/");
 		strcat(backend_path, namelist[i]->d_name);
@@ -114,10 +110,44 @@ hwloc_backend_load(char* path, char* backend_prefix)
 			}
 		}
 		free(backend_path);
+		backend_path = NULL;
+	}
+
+	return backends_loaded;
+}
+
+struct hwloc_backends_loaded* 
+hwloc_backend_load(char* path, char* hwloc_plugin_dir, char* backend_prefix)
+{
+	struct hwloc_backends_loaded* backends_loaded = NULL;
+	struct hwloc_backends_loaded* plugin = NULL;
+	struct hwloc_backends_loaded* buff = NULL;
+	
+	prefix = backend_prefix;
+
+	fprintf(stderr, "**backend.c: prefix = %s\n", prefix); 
+
+	backends_loaded = browse_and_load(path, backend_prefix);
+	if(hwloc_plugin_dir)
+	{
+		plugin = browse_and_load(hwloc_plugin_dir, backend_prefix);
+
+		if(backends_loaded)
+		{
+			buff = backends_loaded;
+			while(buff->next)
+				buff = buff->next;
+
+			buff->next = plugin;
+
+			backends_loaded = buff;
+		}
+		else
+			backends_loaded = plugin;
 	}
 
 	prefix=NULL;
-
+	
 	return backends_loaded;
 }
 

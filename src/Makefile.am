@@ -42,8 +42,8 @@ if HWLOC_HAVE_LIBPCI
 endif HWLOC_HAVE_LIBPCI
 
 if HWLOC_HAVE_SOLARIS
-sources += topology-solaris.c
-sources += topology-solaris-chiptype.c
+#sources += topology-solaris.c
+#sources += topology-solaris-chiptype.c
 endif HWLOC_HAVE_SOLARIS
 
 if HWLOC_HAVE_LINUX
