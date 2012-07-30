@@ -125,7 +125,7 @@ static void add_process_objects(hwloc_topology_t topology)
 
     proc_cpubind = hwloc_get_proc_cpubind(topology, local_pid, cpuset, 0) != -1;
 
-/* FIXME Discuter afin de trouver une solution #ifdef HWLOC_LINUX_SYS */
+/* FIXME #ifdef HWLOC_LINUX_SYS */
 #if 0
     {
       /* Get the process name */
