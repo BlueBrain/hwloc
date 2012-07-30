@@ -2741,8 +2741,6 @@ hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *descri
 	  if (backend->hwloc_backend_init(topology, backend_params) == 0){
 		  free(backend_params);
 		  add_to_used_backends(topology, backend);
-
-		  free(backend_params);
 		  return 0;
 	  }
   }
@@ -2755,43 +2753,17 @@ hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
                        const char *xmlpath __hwloc_attribute_unused)
 {
   struct hwloc_backend_st* backend;
-  struct hwloc_backend_params_st* backend_params; /* First parameter */
-  struct hwloc_backend_params_st* param2;
-  struct hwloc_backend_params_st* param3;
-  int p3; /* Value of the third parameter */
   
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
 
-  /* Prepare parameters for hwloc_backend_init */
-
-  backend_params = malloc(sizeof (struct hwloc_backend_params_st));
-  backend_params->param = (void *)xmlpath;
-
-  param2 = malloc(sizeof (struct hwloc_backend_params_st));
-  param2->param = NULL;
-  backend_params->next_param = param2;
-
-  param3 = malloc(sizeof (struct hwloc_backend_params_st));
-  p3 = 0;
-  param3->param = (void *)p3;
-  param3->next_param = NULL;
-  param2->next_param = param3;
-
   if ((backend = browse_global_backends(topology, "xml")) != NULL){
-	  if (backend->hwloc_backend_init(topology, backend_params) == 0){
-	  	add_to_used_backends(topology, backend);
-
-		free(backend_params);
-		free(param2);
-		free(param3);
+	 /*FIXME use backend_params_st
+	  	if (backend->hwloc_backend_init(topology, xmlpath, NULL, 0) == 0){
+	  	add_to_used_backends(topology, backend);*/
 	  	return 0;
-	  }
+	  /*}*/
   }
-  
-  free(backend_params);
-  free(param2);
-  free(param3);
   return -1;
 }
 
