@@ -2235,13 +2235,16 @@ hwloc_discover(struct hwloc_topology *topology)
    * set_cpubind one
    */
 
-	hwloc_debug("%s", "\nLooking for base backend\n");
-	topology->base_backends->backend->hwloc_look(topology);
+	  hwloc_debug("%s", "\nLooking for base backend\n");
+	  if(topology->base_backends){
+		  topology->base_backends->backend->hwloc_look(topology);
+	  }
+	  else{
+		  hwloc_debug("%s", "\nNo OS support\n");
+		  alloc_cpusets(topology->levels[0][0]);
+		  hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
+	  }
 
-/* FIXME do default os backend 
-#    ifndef HAVE_OS_SUPPORT
-    hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology)); */
-/* #    endif */  /* Unsupported OS */
 
 
 
@@ -2920,7 +2923,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
   int err;
   struct hwloc_backend_params_st* backend_params; 
   
-  if (topology->base_backends == NULL || topology->global_backends == NULL) {
+  if (/*topology->base_backends == NULL || */topology->global_backends == NULL) {
 	  /* ERROR */
 	  return -1;
   }
