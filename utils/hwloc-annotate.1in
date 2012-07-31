@@ -45,11 +45,11 @@ The input and output files may be the same.
 The annotation may be either string info attributes, or arrays of values.
 This is specified by the \fImode\fR:
 .TP
-.B info infoname infovalue
-Specifies a new string info attribute whose name is \fIinfoname\fR and
-value is \fIinfovalue\fR.
+.B info <name> <value>
+Specifies a new string info attribute whose name is \fIname\fR and
+value is \fIvalue\fR.
 .TP
-.B valarray name nb index1=value1 index2=value2 ...
+.B valarray <name> <nb> <index1>=<value1> <index2>=<value2> ...
 Specifies a valarray attribute whose name is \fIname\fR and which contains
 \fInb\fR values.
 Each value is given as the following \fIindex=value\fR argument.
@@ -79,7 +79,7 @@ The index is logical.
 .B NOTE:
 It is highly recommended that you read the hwloc(7) overview page
 before reading this man page.  Most of the concepts described in
-hwloc(7) directly apply to the hwloc-bind utility.
+hwloc(7) directly apply to the hwloc-annotate utility.
 .
 .\" **************************
 .\"    Examples Section
