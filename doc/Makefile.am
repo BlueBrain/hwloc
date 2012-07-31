@@ -14,6 +14,7 @@ DOX_MAN_DIR = $(DOX_DIR)/man
 DOX_LATEX_DIR = $(DOX_DIR)/latex
 DOX_A4PDF = doxygen-doc/$(PACKAGE)-a4.pdf
 DOX_LETTERPDF = doxygen-doc/$(PACKAGE)-letter.pdf
+DOX_HTML_README = $(DOX_HTML_DIR)/readme.tmp.html
 DOX_TAG = $(DOX_DIR)/$(PACKAGE).tag
 
 #
@@ -34,6 +35,7 @@ BUILT_IMAGES = images/diagram.png images/diagram.eps
 
 EXTRA_DIST = \
         hwloc.doxy \
+        README.sed \
         doxygen.css \
         doxygen.cfg \
         images/diagram.fig \
@@ -82,7 +84,6 @@ dox_inputs = $(DOX_CONFIG) \
 # building standalone.
 #
 
-if HWLOC_BUILD_DOXYGEN
 BUILT_SOURCES = $(BUILT_IMAGES)
 
 images/diagram.png: $(srcdir)/images/diagram.fig
@@ -100,7 +101,6 @@ images/diagram.eps: $(srcdir)/images/diagram.fig
 	    exit 1; \
 	fi
 	$(FIG2DEV) -L eps $< $@
-endif
 
 #
 # Rules for running doxygen.  It depends on the built images and the
@@ -109,7 +109,6 @@ endif
 # of nested structurre/union declarations.
 #
 
-if HWLOC_BUILD_DOXYGEN
 $(DOX_TAG): $(BUILT_SOURCES) $(dox_inputs) $(PREBUILT_IMAGES)
 	rm -fr $(DOX_DIR)
 	$(DOXYGEN) $(DOX_CONFIG)
@@ -140,13 +139,10 @@ $(DOX_TAG): $(BUILT_SOURCES) $(dox_inputs) $(PREBUILT_IMAGES)
 	@mv $(DOX_MAN_DIR)/man3/hwloc* $(DOX_MAN_DIR)/man3/HWLOC* $(DOX_DIR)/man.tmp/
 	@rm -rf $(DOX_MAN_DIR)/man3
 	@mv $(DOX_DIR)/man.tmp $(DOX_MAN_DIR)/man3
-endif
 
 #
 # Rules for building the PDF
 #
-
-if HWLOC_BUILD_DOXYGEN
 
 # The Doxygen config is set to generate a4 latex -- no transformation
 # is necessary.
@@ -187,7 +183,6 @@ $(DOX_LETTERPDF): $(DOX_TAG)
 	   fi; \
 	done; \
 	mv letter-refman.pdf $(DOCDIR)/$(DOX_LETTERPDF)
-endif
 
 #
 # Note that we want to use our own doxygen.css file; not the one that
@@ -200,12 +195,10 @@ endif
 # pre-bundled in a tarball).
 #
 
-if HWLOC_BUILD_DOXYGEN
 all-local: $(DOX_TAG)
 	if test -d $(DOX_HTML_DIR) -a -f $(DOX_HTML_DIR)/doxygen.css; then \
 	    cp -f $(srcdir)/doxygen.css $(DOX_HTML_DIR); \
 	fi
-endif
 
 #
 # Un/install the generated PDF and man pages (just like BUILD_DOXYGEN,
@@ -657,10 +650,8 @@ man3_openfabrics_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev_by_name.3
 
-# end of manpages(3) if HWLOC_BUILD_DOXYGEN
+# end of manpages(3) if HWLOC_INSTALL_DOXYGEN
 endif
-
-if HWLOC_BUILD_DOXYGEN
 
 # Put in these rules to force the generation of the man pages and get
 # all the dependencies right.  Additionally, this forces a
@@ -713,19 +704,16 @@ $(DOX_MAN_DIR): $(DOX_TAG)
 # built at the same time during a parallel build (e.g., "make -j X").
 # So arbitrarily make the A4 PDF dependent upon the Letter PDF.
 $(DOX_A4PDF): $(DOX_TAG) $(DOX_LETTERPDF)
-endif
 
 #
 # Make sure that the documentation example works
 #
 
-if HWLOC_BUILD_TESTS
 TESTS = hwloc-hello hwloc-hello-cpp
 check_PROGRAMS = $(TESTS)
-endif HWLOC_BUILD_TESTS
 
 hwloc-hello-cpp.cpp: $(srcdir)/hwloc-hello.c
-	cp -f $< $@
+	cp -f $(srcdir)/hwloc-hello.c $@
 
 clean-local:
 	rm -f hwloc-hello-cpp.cpp
@@ -747,7 +735,8 @@ MAINTAINERCLEANFILES = $(DOX_TAG) \
     $(DOX_MAN_DIR) \
     $(DOX_LATEX_DIR) \
     $(DOX_A4PDF) \
-    $(DOX_LETTERPDF)
+    $(DOX_LETTERPDF) \
+    $(DOX_HTML_README)
 
 #
 # Rules for creating the top-level README file.  There does not appear
@@ -761,8 +750,12 @@ MAINTAINERCLEANFILES = $(DOX_TAG) \
 
 if HWLOC_BUILD_README
 doc readme: all $(HWLOC_top_srcdir)/README
-$(HWLOC_top_srcdir)/README: $(DOX_HTML_DIR)
-	LC_ALL=C $(HWLOC_W3_GENERATOR) $(DOX_HTML_DIR)/index.html | $(SED) -n -e 's/^   //' -e '/^Introduction$$/,$$p' > $@
+$(HWLOC_top_srcdir)/README: $(DOX_HTML_README)
+	LC_ALL=C $(HWLOC_W3_GENERATOR) $(DOX_HTML_README) | $(SED) -n -e 's/^   //' -e '/^Introduction$$/,$$p' > $@
+	rm -f $(DOX_HTML_README)
+$(DOX_HTML_README): $(DOX_HTML_DIR)
+	rm -f $@
+	sed -n -f $(srcdir)/README.sed $(DOX_HTML_DIR)/index.html > $@
 else
 doc readme: no-build-readme
 $(HWLOC_top_srcdir)/README: no-build-readme

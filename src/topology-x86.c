@@ -178,9 +178,9 @@ static void look_proc(struct procinfo *infos, unsigned highest_cpuid, unsigned h
       if (type == 0)
 	break;
       infos->numcaches++;
-
-      cache = infos->cache = malloc(infos->numcaches * sizeof(*infos->cache));
     }
+
+    cache = infos->cache = malloc(infos->numcaches * sizeof(*infos->cache));
 
     for (cachenum = 0; ; cachenum++) {
       unsigned linesize, linepart, ways, sets;
@@ -351,8 +351,10 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
       one = i;
     }
 
-  if (one == -1)
+  if (one == -1) {
+    hwloc_bitmap_free(complete_cpuset);
     return;
+  }
 
   /* Look for sockets */
   {
@@ -601,6 +603,8 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
     if (infos[i].otherids)
       free(infos[i].otherids);
   }
+
+  hwloc_bitmap_free(complete_cpuset);
 }
 
 #define INTEL_EBX ('G' | ('e'<<8) | ('n'<<16) | ('u'<<24))
@@ -705,6 +709,7 @@ void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs __hwloc_at
       goto free;
     }
   }
+  hwloc_bitmap_free(orig_cpuset);
 #endif
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "x86");

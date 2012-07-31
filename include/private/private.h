@@ -17,6 +17,9 @@
 #include <hwloc/bitmap.h>
 #include <private/debug.h>
 #include <sys/types.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -55,6 +58,8 @@ typedef enum hwloc_backend_e {
      a comma (thereby preventing compiler warnings) */
   HWLOC_BACKEND_MAX
 } hwloc_backend_t;
+
+struct hwloc__xml_import_state_s;
 
 struct hwloc_topology {
   unsigned nb_levels;					/* Number of horizontal levels */
@@ -145,10 +150,10 @@ struct hwloc_topology {
 #endif /* HWLOC_OSF_SYS */
     struct hwloc_backend_params_xml_s {
       /* xml backend parameters */
-#ifdef HWLOC_HAVE_LIBXML2
-      void *doc;
-#endif /* HWLOC_HAVE_LIBXML2 */
-      char *buffer; /* only used when not using libxml2 */
+      int (*look)(struct hwloc_topology *topology, struct hwloc__xml_import_state_s *state);
+      void (*look_failed)(struct hwloc_topology *topology);
+      void (*backend_exit)(struct hwloc_topology *topology);
+      void *data; /* libxml2 doc, or nolibxml buffer */
       struct hwloc_xml_imported_distances_s {
 	hwloc_obj_t root;
 	struct hwloc_distances_s distances;
@@ -347,7 +352,7 @@ extern void hwloc_group_by_distances(struct hwloc_topology *topology);
 #ifdef HAVE_XLOCALE_H
 #include "xlocale.h"
 #endif
-#define hwloc_localeswitch_declare locale_t __old_locale, __new_locale
+#define hwloc_localeswitch_declare locale_t __old_locale = (locale_t)0, __new_locale
 #define hwloc_localeswitch_init() do {                     \
   __new_locale = newlocale(LC_ALL_MASK, "C", (locale_t)0); \
   if (__new_locale != (locale_t)0)                         \
@@ -367,6 +372,16 @@ extern void hwloc_group_by_distances(struct hwloc_topology *topology);
 
 #if !HAVE_DECL_FABSF
 #define fabsf(f) fabs((double)(f))
+#endif
+
+#if HAVE_DECL__SC_PAGE_SIZE
+#define hwloc_getpagesize() sysconf(_SC_PAGE_SIZE)
+#elif HAVE_DECL__SC_PAGESIZE
+#define hwloc_getpagesize() sysconf(_SC_PAGESIZE)
+#elif defined HAVE_GETPAGESIZE
+#define hwloc_getpagesize() getpagesize()
+#else
+#undef hwloc_getpagesize
 #endif
 
 #endif /* HWLOC_PRIVATE_H */

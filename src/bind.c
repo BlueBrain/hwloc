@@ -16,8 +16,9 @@
 #ifdef HAVE_MALLOC_H
 #  include <malloc.h>
 #endif
-
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <errno.h>
 
@@ -446,12 +447,12 @@ void *
 hwloc_alloc_heap(hwloc_topology_t topology __hwloc_attribute_unused, size_t len)
 {
   void *p;
-#if defined(HAVE_GETPAGESIZE) && defined(HAVE_POSIX_MEMALIGN)
-  errno = posix_memalign(&p, getpagesize(), len);
+#if defined(hwloc_getpagesize) && defined(HAVE_POSIX_MEMALIGN)
+  errno = posix_memalign(&p, hwloc_getpagesize(), len);
   if (errno)
     p = NULL;
-#elif defined(HAVE_GETPAGESIZE) && defined(HAVE_MEMALIGN)
-  p = memalign(getpagesize(), len);
+#elif defined(hwloc_getpagesize) && defined(HAVE_MEMALIGN)
+  p = memalign(hwloc_getpagesize(), len);
 #else
   p = malloc(len);
 #endif

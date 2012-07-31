@@ -316,6 +316,10 @@ EOF])
     #
     # Now detect support
     #
+
+    AC_CHECK_HEADERS([unistd.h])
+    AC_CHECK_HEADERS([dirent.h])
+    AC_CHECK_HEADERS([strings.h])
     
     hwloc_strncasecmp=strncmp
     AC_CHECK_FUNCS([strncasecmp], [
@@ -384,6 +388,8 @@ EOF])
     		_SC_NPROCESSORS_CONF,
     		_SC_NPROC_ONLN,
     		_SC_NPROC_CONF,
+    		_SC_PAGESIZE,
+    		_SC_PAGE_SIZE,
     		_SC_LARGE_PAGESIZE],,[:],[[#include <unistd.h>]])
     
     AC_HAVE_HEADERS([mach/mach_host.h])
@@ -816,6 +822,7 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
 		       [test "x$hwloc_have_myriexpress" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_CUDART],
 		       [test "x$hwloc_have_cudart" = "xyes"])
+        AM_CONDITIONAL([HWLOC_HAVE_LIBXML2], [test "$hwloc_libxml2_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_CAIRO], [test "$hwloc_cairo_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_LIBPCI], [test "$hwloc_pci_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_SET_MEMPOLICY], [test "x$enable_set_mempolicy" != "xno"])
@@ -843,8 +850,6 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_CPUID], [test "x$hwloc_have_cpuid" = "xyes"])
-        AM_CONDITIONAL([HWLOC_BUILD_UTILS], [test "$hwloc_build_utils" = "yes"])
-        AM_CONDITIONAL([HWLOC_BUILD_TESTS], [test "$hwloc_build_tests" = "yes"])
     ])
     hwloc_did_am_conditionals=yes
 ])dnl

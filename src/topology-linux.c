@@ -21,8 +21,12 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sched.h>
@@ -475,7 +479,7 @@ hwloc_linux_foreach_proc_tid(hwloc_topology_t topology,
   char taskdir_path[128];
   DIR *taskdir;
   pid_t *tids, *newtids;
-  unsigned i, nr, newnr, failed, failed_errno;
+  unsigned i, nr, newnr, failed = 0, failed_errno = 0;
   unsigned retrynr = 0;
   int err;
 
@@ -1305,11 +1309,11 @@ hwloc_linux_get_area_membind(hwloc_topology_t topology, const void *addr, size_t
 {
   unsigned max_os_index;
   unsigned long *linuxmask, *globallinuxmask;
-  int linuxpolicy, globallinuxpolicy;
+  int linuxpolicy, globallinuxpolicy = 0;
   int mixed = 0;
   int full = 0;
   int first = 1;
-  int pagesize = getpagesize();
+  int pagesize = hwloc_getpagesize();
   char *tmpaddr;
   int err;
   unsigned i;
@@ -1910,7 +1914,7 @@ hwloc_get_kerrighed_node_meminfo_info(struct hwloc_topology *topology, unsigned 
 #ifdef HAVE__SC_LARGE_PAGESIZE
     memory->page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
-    memory->page_types[0].size = getpagesize();
+    memory->page_types[0].size = hwloc_getpagesize();
   }
 
   snprintf(path, sizeof(path), "/proc/nodes/node%lu/meminfo", node);
@@ -1961,7 +1965,7 @@ hwloc_get_procfs_meminfo_info(struct hwloc_topology *topology, struct hwloc_obj_
 #ifdef HAVE__SC_LARGE_PAGESIZE
     memory->page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
-    memory->page_types[0].size = getpagesize(); /* might be overwritten later by /proc/meminfo or sysfs */
+    memory->page_types[0].size = hwloc_getpagesize(); /* might be overwritten later by /proc/meminfo or sysfs */
   }
 
   hwloc_parse_meminfo_info(topology, "/proc/meminfo", 0 /* no prefix */,
@@ -2053,7 +2057,7 @@ hwloc_sysfs_node_meminfo_info(struct hwloc_topology *topology,
       }
     }
     /* update what's remaining as normal pages */
-    memory->page_types[0].size = getpagesize();
+    memory->page_types[0].size = hwloc_getpagesize();
     memory->page_types[0].count = remaining_local_memory / memory->page_types[0].size;
   }
 }
@@ -3656,8 +3660,10 @@ hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc
   char pcidevpath[256];
 
   /* this should not be called if the backend isn't the real OS one */
-  assert(!topology->backend_params.linuxfs.root_path
-	 || !strcmp(topology->backend_params.linuxfs.root_path, "/"));
+  if (topology->backend_params.linuxfs.root_path) {
+    assert(strlen(topology->backend_params.linuxfs.root_path) == 1);
+    assert(topology->backend_params.linuxfs.root_path[0] == '/');
+  }
 
   snprintf(pcidevpath, sizeof(pcidevpath), "/sys/bus/pci/devices/%04x:%02x:%02x.%01x/",
 	   pcidev->attr->pcidev.domain, pcidev->attr->pcidev.bus,
@@ -3679,8 +3685,10 @@ hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology __hwloc_attribut
   int err;
 
   /* this should not be called if the backend isn't the real OS one */
-  assert(!topology->backend_params.linuxfs.root_path
-	 || !strcmp(topology->backend_params.linuxfs.root_path, "/"));
+  if (topology->backend_params.linuxfs.root_path) {
+    assert(strlen(topology->backend_params.linuxfs.root_path) == 1);
+    assert(topology->backend_params.linuxfs.root_path[0] == '/');
+  }
 
   snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%01x/local_cpus",
 	   pcidev->attr->pcidev.domain, pcidev->attr->pcidev.bus,

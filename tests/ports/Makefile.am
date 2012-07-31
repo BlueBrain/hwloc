@@ -9,11 +9,9 @@ AM_LDFLAGS = $(HWLOC_LDFLAGS)
 
 SRC = $(HWLOC_top_srcdir)/src
 
-if HWLOC_BUILD_TESTS
 if HWLOC_HAVE_LINUX
 check_LTLIBRARIES = libhwloc-ports.la
 endif HWLOC_HAVE_LINUX
-endif HWLOC_BUILD_TESTS
 
 # Note that AC_CONFIG_LINKS sets up the sym links for the files in
 # this directory (back to the $top_srcdir/src directory).  So if you
@@ -23,9 +21,6 @@ endif HWLOC_BUILD_TESTS
 # dependencies issues when using the Automake option "subdir-objects".
 # We nodist these because they're created by configure.
 nodist_libhwloc_ports_la_SOURCES = \
-        topology.c \
-        traversal.c \
-        topology-synthetic.c \
         topology-solaris.c \
         topology-solaris-chiptype.c \
         topology-aix.c \
@@ -52,6 +47,7 @@ libhwloc_ports_la_SOURCES = \
         include/radset.h \
         include/cpuset.h \
         include/numa.h \
+        include/procinfo.h \
         include/pthread_np.h
 
 libhwloc_ports_la_CPPFLAGS = \
