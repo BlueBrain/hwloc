@@ -2235,10 +2235,7 @@ hwloc_discover(struct hwloc_topology *topology)
 #    endif /* HWLOC_HPUX_SYS */
 
 #    ifndef HAVE_OS_SUPPORT
-    hwloc_alloc_obj_cpusets(topology->levels[0][0]);
-    hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
-    if (topology->is_thissystem)
-      hwloc_add_uname_info(topology);
+    hwloc_look_noos(topology);
 #    endif /* Unsupported OS */
   }
 

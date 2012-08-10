@@ -502,6 +502,8 @@ extern "C" {
 #define hwloc_backend_synthetic_exit HWLOC_NAME(backend_synthetic_exit)
 #define hwloc_look_synthetic  HWLOC_NAME(look_synthetic )
 
+#define hwloc_look_noos HWLOC_NAME(look_noos)
+
 #define hwloc_insert_object_by_cpuset HWLOC_NAME(insert_object_by_cpuset)
 #define hwloc_report_error_t HWLOC_NAME(report_error_t)
 #define hwloc_report_os_error HWLOC_NAME(report_os_error)
