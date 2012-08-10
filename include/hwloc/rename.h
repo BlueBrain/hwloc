@@ -448,6 +448,7 @@ extern "C" {
 #define hwloc_component_register HWLOC_NAME(component_register)
 #define hwloc_components_register_all HWLOC_NAME(components_register_all)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
+#define hwloc_find_component HWLOC_NAME(find_component)
 
 #define hwloc_linux_component_register HWLOC_NAME(linux_component_register)
 #define hwloc_xml_component_register HWLOC_NAME(xml_component_register)
@@ -490,12 +491,10 @@ extern "C" {
 
 #define hwloc_look_linuxfs HWLOC_NAME(look_linuxfs)
 #define hwloc_set_linuxfs_hooks HWLOC_NAME(set_linuxfs_hooks)
-#define hwloc_backend_linuxfs_init HWLOC_NAME(backend_linuxfs_init)
 #define hwloc_backend_linuxfs_exit HWLOC_NAME(backend_linuxfs_exit)
 #define hwloc_linuxfs_pci_lookup_osdevices HWLOC_NAME(linuxfs_pci_lookup_osdevices)
 #define hwloc_linuxfs_get_pcidev_cpuset HWLOC_NAME(linuxfs_get_pcidev_cpuset)
 
-#define hwloc_backend_xml_init HWLOC_NAME(backend_xml_init)
 #define hwloc_look_xml HWLOC_NAME(look_xml)
 #define hwloc_backend_xml_exit HWLOC_NAME(backend_xml_exit)
 
@@ -524,7 +523,6 @@ extern "C" {
 
 #define hwloc_look_x86 HWLOC_NAME(look_x86)
 
-#define hwloc_backend_synthetic_init HWLOC_NAME(backend_synthetic_init)
 #define hwloc_backend_synthetic_exit HWLOC_NAME(backend_synthetic_exit)
 #define hwloc_look_synthetic  HWLOC_NAME(look_synthetic )
 

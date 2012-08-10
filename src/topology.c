@@ -2608,45 +2608,58 @@ hwloc_backend_exit(struct hwloc_topology *topology)
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
 {
-  /* cleanup existing backend */
+  struct hwloc_component *comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, "linux");
+  if (!comp) {
+    errno = ENOSYS;
+    return -1;
+  }
+
   hwloc_backend_exit(topology);
 
-#ifdef HWLOC_LINUX_SYS
-  if (hwloc_backend_linuxfs_init(topology, fsroot_path) < 0)
-    return -1;
-  return 0;
-#else /* HWLOC_LINUX_SYS */
-  errno = ENOSYS;
-  return -1;
-#endif /* HWLOC_LINUX_SYS */
+  return comp->instantiate(topology, comp, fsroot_path, NULL, NULL);
 }
 
 int
 hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *description)
 {
-  /* cleanup existing backend */
+  struct hwloc_component *comp = hwloc_find_component(topology, -1, "synthetic");
+  if (!comp) {
+    errno = ENOSYS;
+    return -1;
+  }
+
   hwloc_backend_exit(topology);
 
-  return hwloc_backend_synthetic_init(topology, description);
+  return comp->instantiate(topology, comp, description, NULL, NULL);
 }
 
 int
 hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
                        const char *xmlpath __hwloc_attribute_unused)
 {
-  /* cleanup existing backend */
+  struct hwloc_component *comp = hwloc_find_component(topology, -1, "xml");
+  if (!comp) {
+    errno = ENOSYS;
+    return -1;
+  }
+
   hwloc_backend_exit(topology);
 
-  return hwloc_backend_xml_init(topology, xmlpath, NULL, 0);
+  return comp->instantiate(topology, comp, xmlpath, NULL, NULL);
 }
 
 int
 hwloc_topology_set_custom(struct hwloc_topology *topology)
 {
-  /* cleanup existing backend */
+  struct hwloc_component *comp = hwloc_find_component(topology, -1, "custom");
+  if (!comp) {
+    errno = ENOSYS;
+    return -1;
+  }
+
   hwloc_backend_exit(topology);
 
-  return hwloc_backend_custom_init(topology);
+  return comp->instantiate(topology, comp, NULL, NULL, NULL);
 }
 
 int
@@ -2654,10 +2667,15 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
                              const char *xmlbuffer __hwloc_attribute_unused,
                              int size __hwloc_attribute_unused)
 {
-  /* cleanup existing backend */
+  struct hwloc_component *comp = hwloc_find_component(topology, -1, "xml");
+  if (!comp) {
+    errno = ENOSYS;
+    return -1;
+  }
+
   hwloc_backend_exit(topology);
 
-  return hwloc_backend_xml_init(topology, NULL, xmlbuffer, size);
+  return comp->instantiate(topology, comp, NULL, xmlbuffer, (void*) (uintptr_t) size);
 }
 
 int
@@ -2781,35 +2799,27 @@ hwloc_topology_load (struct hwloc_topology *topology)
   }
 
   /* enforce backend anyway if a FORCE variable was given */
-#ifdef HWLOC_LINUX_SYS
   {
     char *fsroot_path_env = getenv("HWLOC_FORCE_FSROOT");
-    if (fsroot_path_env) {
-      hwloc_backend_exit(topology);
-      hwloc_backend_linuxfs_init(topology, fsroot_path_env);
-    }
+    if (fsroot_path_env)
+      hwloc_topology_set_fsroot(topology, fsroot_path_env);
   }
-#endif
   {
     char *xmlpath_env = getenv("HWLOC_FORCE_XMLFILE");
-    if (xmlpath_env) {
-      hwloc_backend_exit(topology);
-      hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
-    }
+    if (xmlpath_env)
+      hwloc_topology_set_xml(topology, xmlpath_env);
   }
 
   /* only apply non-FORCE variables if we have not changed the backend yet */
-#ifdef HWLOC_LINUX_SYS
   if (topology->backend_type == HWLOC_BACKEND_NONE) {
     char *fsroot_path_env = getenv("HWLOC_FSROOT");
     if (fsroot_path_env)
-      hwloc_backend_linuxfs_init(topology, fsroot_path_env);
+      hwloc_topology_set_fsroot(topology, fsroot_path_env);
   }
-#endif
   if (topology->backend_type == HWLOC_BACKEND_NONE) {
     char *xmlpath_env = getenv("HWLOC_XMLFILE");
     if (xmlpath_env)
-      hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
+      hwloc_topology_set_xml(topology, xmlpath_env);
   }
 
   /* always apply non-FORCE THISSYSTEM since it was explicitly designed to override setups from other backends */
@@ -2819,10 +2829,11 @@ hwloc_topology_load (struct hwloc_topology *topology)
 
   /* if we haven't chosen the backend, set the OS-specific one if needed */
   if (topology->backend_type == HWLOC_BACKEND_NONE) {
-#ifdef HWLOC_LINUX_SYS
-    if (hwloc_backend_linuxfs_init(topology, "/") < 0)
-      return -1;
-#endif
+    struct hwloc_component *comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
+    assert(comp);
+    err = comp->instantiate(topology, comp, NULL, NULL, NULL);
+    if (err < 0)
+      return err;
   }
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.

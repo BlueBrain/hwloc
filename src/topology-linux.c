@@ -1382,7 +1382,7 @@ hwloc_linux_get_area_membind(hwloc_topology_t topology, const void *addr, size_t
 
 #endif /* HWLOC_HAVE_SET_MEMPOLICY */
 
-int
+static int
 hwloc_backend_linuxfs_init(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
 {
   int root = -1;
@@ -3706,13 +3706,13 @@ hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology __hwloc_attribut
 }
 
 static int
-hwloc_linux_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+hwloc_linux_component_instantiate(struct hwloc_topology *topology,
 				  struct hwloc_component *component __hwloc_attribute_unused,
-				  const void *_data1 __hwloc_attribute_unused,
+				  const void *_data1,
 				  const void *_data2 __hwloc_attribute_unused,
 				  const void *_data3 __hwloc_attribute_unused)
 {
-  return 0;
+  return hwloc_backend_linuxfs_init(topology, (const char *) _data1);
 }
 
 static struct hwloc_component hwloc_linux_component = {

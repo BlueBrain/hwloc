@@ -62,13 +62,13 @@ hwloc_backend_custom_exit(struct hwloc_topology *topology)
 }
 
 static int
-hwloc_custom_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 				   struct hwloc_component *component __hwloc_attribute_unused,
 				   const void *_data1 __hwloc_attribute_unused,
 				   const void *_data2 __hwloc_attribute_unused,
 				   const void *_data3 __hwloc_attribute_unused)
 {
-  return 0;
+  return hwloc_backend_custom_init(topology);
 }
 
 static struct hwloc_component hwloc_custom_component = {

@@ -70,6 +70,7 @@ struct hwloc_component {
 extern int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
 extern void hwloc_components_register_all(struct hwloc_topology *topology);
 extern void hwloc_components_destroy_all(struct hwloc_topology *topology);
+extern struct hwloc_component * hwloc_find_component(struct hwloc_topology *topology, int type, const char *name);
 
 typedef enum hwloc_backend_e {
   HWLOC_BACKEND_NONE,
@@ -213,14 +214,12 @@ extern int hwloc_connect_levels(hwloc_topology_t topology);
 extern void hwloc_linux_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_linuxfs(struct hwloc_topology *topology);
 extern void hwloc_set_linuxfs_hooks(struct hwloc_topology *topology);
-extern int hwloc_backend_linuxfs_init(struct hwloc_topology *topology, const char *fsroot_path);
 extern void hwloc_backend_linuxfs_exit(struct hwloc_topology *topology);
 extern void hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc_obj *pcidev);
 extern int hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology, struct hwloc_obj *pcidev, hwloc_bitmap_t cpuset);
 #endif /* HWLOC_LINUX_SYS */
 
 extern void hwloc_xml_component_register(struct hwloc_topology *topology);
-extern int hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int buflen);
 extern int hwloc_look_xml(struct hwloc_topology *topology);
 extern void hwloc_backend_xml_exit(struct hwloc_topology *topology);
 
@@ -273,7 +272,6 @@ extern void hwloc_look_libpci(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_LIBPCI */
 
 extern void hwloc_synthetic_component_register(struct hwloc_topology *topology);
-extern int hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *description);
 extern void hwloc_backend_synthetic_exit(struct hwloc_topology *topology);
 extern void hwloc_look_synthetic (struct hwloc_topology *topology);
 

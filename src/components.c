@@ -72,6 +72,22 @@ hwloc_components_register_all(struct hwloc_topology *topology)
   hwloc_custom_component_register(topology);
 }
 
+struct hwloc_component *
+hwloc_find_component(struct hwloc_topology *topology,
+		     int type /* hwloc_component_type_t or -1 if any */,
+		     const char *name /* name of NULL if any */)
+{
+  struct hwloc_component *comp;
+  comp = topology->components;
+  while (NULL != comp) {
+    if ((-1 == type || type == (int) comp->type)
+       && (NULL == name || !strcmp(name, comp->name)))
+      return comp;
+    comp = comp->next;
+  }
+  return NULL;
+}
+
 void
 hwloc_components_destroy_all(struct hwloc_topology *topology)
 {

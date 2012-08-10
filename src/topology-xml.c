@@ -32,7 +32,7 @@ hwloc__xml_verbose(void)
  ***********************************/
 
 /* this can be the first XML call */
-int
+static int
 hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
   int ret;
@@ -919,13 +919,16 @@ void hwloc_free_xmlbuffer(hwloc_topology_t topology __hwloc_attribute_unused, ch
  ***************************************/
 
 static int
-hwloc_xml_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 				struct hwloc_component *component __hwloc_attribute_unused,
-				const void *_data1 __hwloc_attribute_unused,
-				const void *_data2 __hwloc_attribute_unused,
-				const void *_data3 __hwloc_attribute_unused)
+				const void *_data1,
+				const void *_data2,
+				const void *_data3)
 {
-  return 0;
+  return hwloc_backend_xml_init(topology,
+				(const char *) _data1 /* xmlpath */,
+				(const char *) _data2 /* xmlbuffer */,
+				(int)(uintptr_t) _data3 /* xmlbuflen */);
 }
 
 static struct hwloc_component hwloc_xml_component = {
