@@ -3214,7 +3214,7 @@ hwloc_linux_fallback_pu_level(struct hwloc_topology *topology)
     hwloc_setup_pu_level(topology, 1);
 }
 
-void
+static int
 hwloc_look_linuxfs(struct hwloc_topology *topology)
 {
   struct hwloc_linux_backend_data_s *data = topology->backend->private_data;
@@ -3337,6 +3337,8 @@ hwloc_look_linuxfs(struct hwloc_topology *topology)
   if (topology->is_thissystem)
      /* FIXME: reuse data->utsname */
      hwloc_add_uname_info(topology);
+
+  return 0;
 }
 
 void
@@ -3716,6 +3718,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
     goto out_with_backend;
 
   backend->private_data = data;
+  backend->discover = hwloc_look_linuxfs;
   backend->disable = hwloc_linux_backend_disable;
 
   if (!fsroot_path)

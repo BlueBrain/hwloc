@@ -571,7 +571,7 @@ hwloc_xml__handle_distances(struct hwloc_topology *topology)
 }
 
 /* this canNOT be the first XML call */
-int
+static int
 hwloc_look_xml(struct hwloc_topology *topology)
 {
   struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
@@ -919,6 +919,7 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
     goto out_with_backend;
 
   backend->private_data = data;
+  backend->discover = hwloc_look_xml;
   backend->disable = hwloc_xml_backend_disable;
 
 #ifdef HWLOC_HAVE_LIBXML2

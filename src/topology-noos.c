@@ -10,7 +10,7 @@
 #include <hwloc.h>
 #include <private/private.h>
 
-int
+static int
 hwloc_look_noos(struct hwloc_topology *topology)
 {
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
@@ -31,6 +31,7 @@ hwloc_noos_component_instantiate(struct hwloc_topology *topology,
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     return -1;
+  backend->discover = hwloc_look_noos;
   hwloc_backend_enable(topology, backend);
   return 0;
 }

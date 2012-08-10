@@ -674,7 +674,7 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
   rs_free(rad);
 }
 
-void
+static int
 hwloc_look_aix(struct hwloc_topology *topology)
 {
   int i;
@@ -744,6 +744,7 @@ hwloc_look_aix(struct hwloc_topology *topology)
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "AIX");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
+  return 0;
 }
 
 void
@@ -803,6 +804,7 @@ hwloc_aix_component_instantiate(struct hwloc_topology *topology __hwloc_attribut
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     return -1;
+  backend->discover = hwloc_look_aix;
   hwloc_backend_enable(topology, backend);
   return 0;
 }

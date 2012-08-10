@@ -708,7 +708,7 @@ hwloc_look_kstat(struct hwloc_topology *topology)
 }
 #endif /* LIBKSTAT */
 
-void
+static int
 hwloc_look_solaris(struct hwloc_topology *topology)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors (topology);
@@ -720,14 +720,15 @@ hwloc_look_solaris(struct hwloc_topology *topology)
 #endif /* HAVE_LIBLGRP */
 #ifdef HAVE_LIBKSTAT
   nbprocs = 0;
-  if (hwloc_look_kstat(topology))
-    return;
+  if (hwloc_look_kstat(topology) > 0)
+    return 0;
 #endif /* HAVE_LIBKSTAT */
   hwloc_setup_pu_level(topology, nbprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Solaris");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
+  return 0;
 }
 
 void
@@ -767,6 +768,7 @@ hwloc_solaris_component_instantiate(struct hwloc_topology *topology __hwloc_attr
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     return -1;
+  backend->discover = hwloc_look_solaris;
   hwloc_backend_enable(topology, backend);
   return 0;
 }

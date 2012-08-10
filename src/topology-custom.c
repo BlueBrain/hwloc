@@ -48,6 +48,13 @@ hwloc_custom_backend_disable(struct hwloc_topology *topology,
 }
 
 static int
+hwloc_look_custom(struct hwloc_topology *topology __hwloc_attribute_unused)
+{
+  /* nothing to do */
+  return 0;
+}
+
+static int
 hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 				   struct hwloc_component *component __hwloc_attribute_unused,
 				   const void *_data1 __hwloc_attribute_unused,
@@ -64,6 +71,7 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
   topology->is_thissystem = 0;
   topology->backend_type = HWLOC_BACKEND_CUSTOM;
 
+  backend->discover = hwloc_look_custom;
   backend->disable = hwloc_custom_backend_disable;
   hwloc_backend_enable(topology, backend);
   return 0;

@@ -110,6 +110,7 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
     return NULL;
   }
   backend->component = component;
+  backend->discover = NULL;
   backend->disable = NULL;
   backend->next = NULL;
   return backend;

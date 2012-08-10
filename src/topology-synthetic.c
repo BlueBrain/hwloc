@@ -345,7 +345,7 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
   return first_cpu;
 }
 
-void
+static int
 hwloc_look_synthetic(struct hwloc_topology *topology)
 {
   struct hwloc_synthetic_backend_data_s *data = topology->backend->private_data;
@@ -372,6 +372,7 @@ hwloc_look_synthetic(struct hwloc_topology *topology)
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Synthetic");
   hwloc_obj_add_info(topology->levels[0][0], "SyntheticDescription", data->string);
+  return 0;
 }
 
 static void
@@ -407,6 +408,7 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
     goto out_with_data;
 
   backend->private_data = data;
+  backend->discover = hwloc_look_synthetic;
   backend->disable = hwloc_synthetic_backend_disable;
   hwloc_backend_enable(topology, backend);
   return 0;

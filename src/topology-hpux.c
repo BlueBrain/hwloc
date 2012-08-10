@@ -161,7 +161,7 @@ hwloc_hpux_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_node
 }
 #endif /* MAP_MEM_FIRST_TOUCH */
 
-void
+static int
 hwloc_look_hpux(struct hwloc_topology *topology)
 {
   int has_numa = sysconf(_SC_CCNUMA_SUPPORT) == 1;
@@ -246,6 +246,7 @@ hwloc_look_hpux(struct hwloc_topology *topology)
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "HP-UX");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
+  return 0;
 }
 
 void
@@ -278,6 +279,7 @@ hwloc_hpux_component_instantiate(struct hwloc_topology *topology __hwloc_attribu
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     return -1;
+  backend->discover = hwloc_look_hpux;
   hwloc_backend_enable(topology, backend);
   return 0;
 }

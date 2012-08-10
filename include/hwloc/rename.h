@@ -492,41 +492,27 @@ extern "C" {
 #define hwloc_topology_setup_defaults HWLOC_NAME(topology_setup_defaults)
 #define hwloc_topology_clear HWLOC_NAME(topology_clear)
 
-#define hwloc_look_linuxfs HWLOC_NAME(look_linuxfs)
 #define hwloc_set_linuxfs_hooks HWLOC_NAME(set_linuxfs_hooks)
 #define hwloc_linuxfs_pci_lookup_osdevices HWLOC_NAME(linuxfs_pci_lookup_osdevices)
 #define hwloc_linuxfs_get_pcidev_cpuset HWLOC_NAME(linuxfs_get_pcidev_cpuset)
 
-#define hwloc_look_xml HWLOC_NAME(look_xml)
-
-#define hwloc_look_solaris HWLOC_NAME(look_solaris)
 #define hwloc_set_solaris_hooks HWLOC_NAME(set_solaris_hooks)
 
-#define hwloc_look_aix HWLOC_NAME(look_aix)
 #define hwloc_set_aix_hooks HWLOC_NAME(set_aix_hooks)
 
-#define hwloc_look_osf HWLOC_NAME(look_osf)
 #define hwloc_set_osf_hooks HWLOC_NAME(set_osf_hooks)
 
-#define hwloc_look_windows HWLOC_NAME(look_windows)
 #define hwloc_set_windows_hooks HWLOC_NAME(set_windows_hooks)
 
-#define hwloc_look_darwin HWLOC_NAME(look_darwin)
 #define hwloc_set_darwin_hooks HWLOC_NAME(set_darwin_hooks)
 
-#define hwloc_look_freebsd HWLOC_NAME(look_freebsd)
 #define hwloc_set_freebsd_hooks HWLOC_NAME(set_freebsd_hooks)
 
-#define hwloc_look_hpux HWLOC_NAME(look_hpux)
 #define hwloc_set_hpux_hooks HWLOC_NAME(set_hpux_hooks)
 
 #define hwloc_look_libpci HWLOC_NAME(look_libpci)
 
 #define hwloc_look_x86 HWLOC_NAME(look_x86)
-
-#define hwloc_look_synthetic  HWLOC_NAME(look_synthetic )
-
-#define hwloc_look_noos HWLOC_NAME(look_noos)
 
 #define hwloc_insert_object_by_cpuset HWLOC_NAME(insert_object_by_cpuset)
 #define hwloc_report_error_t HWLOC_NAME(report_error_t)

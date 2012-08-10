@@ -241,7 +241,7 @@ hwloc_osf_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nodes
   return ptr;
 }
 
-void
+static int
 hwloc_look_osf(struct hwloc_topology *topology)
 {
   struct hwloc_osf_backend_data_s *data = topology->backend->private_data;
@@ -337,6 +337,7 @@ hwloc_look_osf(struct hwloc_topology *topology)
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "OSF");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
+  return 0;
 }
 
 void
@@ -383,6 +384,7 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology __hwloc_attribut
     goto out_with_data;
 
   backend->private_data = data;
+  backend->discover = hwloc_look_osf;
   backend->disable = hwloc_osf_backend_disable;
   hwloc_backend_enable(topology, backend);
   return 0;

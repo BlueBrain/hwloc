@@ -2115,17 +2115,6 @@ hwloc_discover(struct hwloc_topology *topology)
 {
   int gotsomeio = 0;
 
-  if (topology->backend_type == HWLOC_BACKEND_SYNTHETIC) {
-    hwloc_look_synthetic(topology);
-  } else if (topology->backend_type == HWLOC_BACKEND_CUSTOM) {
-    /* nothing to do, just connect levels below */
-  } else if (topology->backend_type == HWLOC_BACKEND_XML) {
-    if (hwloc_look_xml(topology) < 0) {
-      hwloc_topology_clear(topology);
-      return -1;
-    }
-  } else {
-
   /* Raw detection, from coarser levels to finer levels for more efficiency.  */
 
   /* hwloc_look_* functions should use hwloc_obj_add to add objects initialized
@@ -2172,49 +2161,12 @@ hwloc_discover(struct hwloc_topology *topology)
    * set_cpubind one
    */
 
-#    ifdef HWLOC_LINUX_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_linuxfs(topology);
-#    endif /* HWLOC_LINUX_SYS */
+  assert(topology->backend);
+  assert(topology->backend->discover);
 
-#    ifdef HWLOC_AIX_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_aix(topology);
-#    endif /* HWLOC_AIX_SYS */
-
-#    ifdef HWLOC_OSF_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_osf(topology);
-#    endif /* HWLOC_OSF_SYS */
-
-#    ifdef HWLOC_SOLARIS_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_solaris(topology);
-#    endif /* HWLOC_SOLARIS_SYS */
-
-#    ifdef HWLOC_WIN_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_windows(topology);
-#    endif /* HWLOC_WIN_SYS */
-
-#    ifdef HWLOC_DARWIN_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_darwin(topology);
-#    endif /* HWLOC_DARWIN_SYS */
-
-#    ifdef HWLOC_FREEBSD_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_freebsd(topology);
-#    endif /* HWLOC_FREEBSD_SYS */
-
-#    ifdef HWLOC_HPUX_SYS
-#      define HAVE_OS_SUPPORT
-    hwloc_look_hpux(topology);
-#    endif /* HWLOC_HPUX_SYS */
-
-#    ifndef HAVE_OS_SUPPORT
-    hwloc_look_noos(topology);
-#    endif /* Unsupported OS */
+  if (topology->backend->discover(topology) < 0) {
+    hwloc_topology_clear(topology);
+    return -1;
   }
 
   /*
