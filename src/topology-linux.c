@@ -3341,7 +3341,7 @@ hwloc_look_linuxfs(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_linuxfs_hooks(struct hwloc_topology *topology)
 {
   topology->set_thisthread_cpubind = hwloc_linux_set_thisthread_cpubind;
@@ -3758,6 +3758,7 @@ static struct hwloc_component hwloc_linux_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "linux",
   hwloc_linux_component_instantiate,
+  hwloc_set_linuxfs_hooks,
   NULL
 };
 

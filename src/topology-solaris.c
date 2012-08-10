@@ -731,7 +731,7 @@ hwloc_look_solaris(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_solaris_hooks(struct hwloc_topology *topology)
 {
   topology->set_proc_cpubind = hwloc_solaris_set_proc_cpubind;
@@ -777,6 +777,7 @@ static struct hwloc_component hwloc_solaris_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "solaris",
   hwloc_solaris_component_instantiate,
+  hwloc_set_solaris_hooks,
   NULL
 };
 

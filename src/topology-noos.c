@@ -36,10 +36,16 @@ hwloc_noos_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
+static void
+hwloc_set_noos_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
+{
+}
+
 static struct hwloc_component hwloc_noos_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "none",
   hwloc_noos_component_instantiate,
+  hwloc_set_noos_hooks,
   NULL
 };
 

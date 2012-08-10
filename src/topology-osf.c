@@ -340,7 +340,7 @@ hwloc_look_osf(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_osf_hooks(struct hwloc_topology *topology)
 {
   topology->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
@@ -399,6 +399,7 @@ static struct hwloc_component hwloc_osf_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "osf",
   hwloc_osf_component_instantiate,
+  hwloc_set_osf_hooks,
   NULL
 };
 

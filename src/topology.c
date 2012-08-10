@@ -2307,38 +2307,13 @@ hwloc_discover(struct hwloc_topology *topology)
     topology->is_thissystem = 1;
 
   if (topology->is_thissystem) {
-#    ifdef HWLOC_LINUX_SYS
-    hwloc_set_linuxfs_hooks(topology);
-#    endif /* HWLOC_LINUX_SYS */
-
-#    ifdef HWLOC_AIX_SYS
-    hwloc_set_aix_hooks(topology);
-#    endif /* HWLOC_AIX_SYS */
-
-#    ifdef HWLOC_OSF_SYS
-    hwloc_set_osf_hooks(topology);
-#    endif /* HWLOC_OSF_SYS */
-
-#    ifdef HWLOC_SOLARIS_SYS
-    hwloc_set_solaris_hooks(topology);
-#    endif /* HWLOC_SOLARIS_SYS */
-
-#    ifdef HWLOC_WIN_SYS
-    hwloc_set_windows_hooks(topology);
-#    endif /* HWLOC_WIN_SYS */
-
-#    ifdef HWLOC_DARWIN_SYS
-    hwloc_set_darwin_hooks(topology);
-#    endif /* HWLOC_DARWIN_SYS */
-
-#    ifdef HWLOC_FREEBSD_SYS
-    hwloc_set_freebsd_hooks(topology);
-#    endif /* HWLOC_FREEBSD_SYS */
-
-#    ifdef HWLOC_HPUX_SYS
-    hwloc_set_hpux_hooks(topology);
-#    endif /* HWLOC_HPUX_SYS */
+    /* use the OS component set_hooks if thissystem, without caring about the used backend */
+    struct hwloc_component * comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
+    assert(comp);
+    assert(comp->set_hooks);
+    comp->set_hooks(topology);
   } else {
+    /* not this system, use dummy binding hooks that do nothing (but don't return ENOSYS) */
     topology->set_thisproc_cpubind = dontset_thisproc_cpubind;
     topology->get_thisproc_cpubind = dontget_thisproc_cpubind;
     topology->set_thisthread_cpubind = dontset_thisthread_cpubind;

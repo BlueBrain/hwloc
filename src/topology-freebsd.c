@@ -174,6 +174,9 @@ hwloc_freebsd_node_meminfo_info(struct hwloc_topology *topology)
 }
 #endif
 
+static void
+hwloc_set_freebsd_hooks(struct hwloc_topology *topology);
+
 static int
 hwloc_look_freebsd(struct hwloc_topology *topology)
 {
@@ -199,7 +202,7 @@ hwloc_look_freebsd(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_freebsd_hooks(struct hwloc_topology *topology)
 {
 #if defined(HAVE_SYS_CPUSET_H) && defined(HAVE_CPUSET_SETAFFINITY)
@@ -241,6 +244,7 @@ static struct hwloc_component hwloc_freebsd_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "freebsd",
   hwloc_freebsd_component_instantiate,
+  hwloc_set_freebsd_hooks,
   NULL
 };
 

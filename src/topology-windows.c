@@ -745,7 +745,7 @@ hwloc_look_windows(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_windows_hooks(struct hwloc_topology *topology)
 {
   topology->set_proc_cpubind = hwloc_win_set_proc_cpubind;
@@ -793,6 +793,7 @@ static struct hwloc_component hwloc_windows_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "windows",
   hwloc_windows_component_instantiate,
+  hwloc_set_windows_hooks,
   NULL
 };
 

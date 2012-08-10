@@ -747,7 +747,7 @@ hwloc_look_aix(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_aix_hooks(struct hwloc_topology *topology)
 {
   topology->set_proc_cpubind = hwloc_aix_set_proc_cpubind;
@@ -813,6 +813,7 @@ static struct hwloc_component hwloc_aix_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "aix",
   hwloc_aix_component_instantiate,
+  hwloc_set_aix_hooks,
   NULL
 };
 

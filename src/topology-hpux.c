@@ -249,7 +249,7 @@ hwloc_look_hpux(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_hpux_hooks(struct hwloc_topology *topology)
 {
   topology->set_proc_cpubind = hwloc_hpux_set_proc_cpubind;
@@ -288,6 +288,7 @@ static struct hwloc_component hwloc_hpux_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "hpux",
   hwloc_hpux_component_instantiate,
+  hwloc_set_hpux_hooks,
   NULL
 };
 

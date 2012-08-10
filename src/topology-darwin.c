@@ -252,7 +252,7 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   return 0;
 }
 
-void
+static void
 hwloc_set_darwin_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
 }
@@ -277,6 +277,7 @@ static struct hwloc_component hwloc_darwin_component = {
   HWLOC_COMPONENT_TYPE_OS,
   "darwin",
   hwloc_darwin_component_instantiate,
+  hwloc_set_darwin_hooks,
   NULL
 };
 
