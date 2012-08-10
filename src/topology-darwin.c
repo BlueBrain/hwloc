@@ -247,6 +247,8 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   hwloc_setup_pu_level(topology, nprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Darwin");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
 }
 
 void

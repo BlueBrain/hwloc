@@ -740,6 +740,8 @@ hwloc_look_windows(struct hwloc_topology *topology)
   hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Windows");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
 }
 
 void
