@@ -469,16 +469,6 @@ extern "C" {
 #define hwloc_custom_component_register HWLOC_NAME(custom_component_register)
 #define hwloc_noos_component_register HWLOC_NAME(noos_component_register)
 
-#define hwloc_backend_e HWLOC_NAME(backend_e)
-#define hwloc_backend_t HWLOC_NAME(backend_t)
-
-#define HWLOC_BACKEND_NONE HWLOC_NAME_CAPS(BACKEND_NONE)
-#define HWLOC_BACKEND_SYNTHETIC HWLOC_NAME_CAPS(BACKEND_SYNTHETIC)
-#define HWLOC_BACKEND_LINUXFS HWLOC_NAME_CAPS(BACKEND_LINUXFS)
-#define HWLOC_BACKEND_XML HWLOC_NAME_CAPS(BACKEND_XML)
-#define HWLOC_BACKEND_CUSTOM HWLOC_NAME_CAPS(BACKEND_CUSTOM)
-#define HWLOC_BACKEND_MAX HWLOC_NAME_CAPS(BACKEND_MAX)
-
 #define hwloc_xml_imported_distances_s HWLOC_NAME(xml_imported_distances_s)
 
 #define hwloc_alloc_obj_cpusets HWLOC_NAME(alloc_obj_cpusets)

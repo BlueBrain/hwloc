@@ -13,7 +13,7 @@ hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwlo
   hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
   obj->attr->group.depth = groupdepth;
 
-  if (topology->backend_type != HWLOC_BACKEND_CUSTOM || topology->is_loaded) {
+  if (!topology->backend->is_custom || topology->is_loaded) {
     errno = EINVAL;
     return NULL;
   }
@@ -29,7 +29,7 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 			     struct hwloc_topology *oldtopology,
 			     struct hwloc_obj *oldroot)
 {
-  if (newtopology->backend_type != HWLOC_BACKEND_CUSTOM || newtopology->is_loaded || !oldtopology->is_loaded) {
+  if (!newtopology->backend->is_custom || newtopology->is_loaded || !oldtopology->is_loaded) {
     errno = EINVAL;
     return -1;
   }
@@ -69,10 +69,10 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 
   topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
   topology->is_thissystem = 0;
-  topology->backend_type = HWLOC_BACKEND_CUSTOM;
 
   backend->discover = hwloc_look_custom;
   backend->disable = hwloc_custom_backend_disable;
+  backend->is_custom = 1;
   hwloc_backend_enable(topology, backend);
   return 0;
 

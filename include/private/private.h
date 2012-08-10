@@ -79,25 +79,13 @@ struct hwloc_backend {
   int (*discover)(struct hwloc_topology *topology);
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
   void * private_data;
+  int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
   struct hwloc_backend * next;
 };
 
 extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
 extern void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
-
-typedef enum hwloc_backend_e {
-  HWLOC_BACKEND_NONE,
-  HWLOC_BACKEND_SYNTHETIC,
-#ifdef HWLOC_LINUX_SYS
-  HWLOC_BACKEND_LINUXFS,
-#endif
-  HWLOC_BACKEND_XML,
-  HWLOC_BACKEND_CUSTOM,
-  /* This value is only here so that we can end the enum list without
-     a comma (thereby preventing compiler warnings) */
-  HWLOC_BACKEND_MAX
-} hwloc_backend_t;
 
 struct hwloc__xml_import_state_s;
 
@@ -175,8 +163,6 @@ struct hwloc_topology {
 
   struct hwloc_component * components;
   struct hwloc_backend * backend;
-
-  hwloc_backend_t backend_type;
 };
 
 

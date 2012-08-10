@@ -217,7 +217,6 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology,
       data->depth[i] = cache_depth--;
   }
 
-  topology->backend_type = HWLOC_BACKEND_SYNTHETIC;
   data->string = strdup(description);
   data->arity[count-1] = 0;
   topology->is_thissystem = 0;

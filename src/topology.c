@@ -2260,17 +2260,11 @@ hwloc_discover(struct hwloc_topology *topology)
   /* I/O devices */
 
   /* see if the backend already imported some I/O devices */
-  if (topology->backend_type == HWLOC_BACKEND_XML
-      || topology->backend_type == HWLOC_BACKEND_SYNTHETIC
-      || topology->backend_type == HWLOC_BACKEND_CUSTOM)
+  if (topology->backend->component->type == HWLOC_COMPONENT_TYPE_GLOBAL)
     gotsomeio = 1;
   /* import from libpci if needed */
   if (topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)
-      && (topology->backend_type == HWLOC_BACKEND_NONE
-#ifdef HWLOC_LINUX_SYS
-	  || topology->backend_type == HWLOC_BACKEND_LINUXFS
-#endif
-	  )) {
+      && topology->backend->component->type == HWLOC_COMPONENT_TYPE_OS) {
     hwloc_debug("%s", "\nLooking for PCI devices\n");
 #ifdef HWLOC_HAVE_LIBPCI
     if (topology->is_thissystem) {
@@ -2486,7 +2480,6 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
   topology->is_loaded = 0;
   topology->flags = 0;
   topology->is_thissystem = 1;
-  topology->backend_type = HWLOC_BACKEND_NONE; /* backend not specified by default */
   topology->pid = 0;
 
   topology->support.discovery = malloc(sizeof(*topology->support.discovery));
@@ -2717,12 +2710,12 @@ hwloc_topology_load (struct hwloc_topology *topology)
   }
 
   /* only apply non-FORCE variables if we have not changed the backend yet */
-  if (topology->backend_type == HWLOC_BACKEND_NONE) {
+  if (!topology->backend) {
     char *fsroot_path_env = getenv("HWLOC_FSROOT");
     if (fsroot_path_env)
       hwloc_topology_set_fsroot(topology, fsroot_path_env);
   }
-  if (topology->backend_type == HWLOC_BACKEND_NONE) {
+  if (!topology->backend) {
     char *xmlpath_env = getenv("HWLOC_XMLFILE");
     if (xmlpath_env)
       hwloc_topology_set_xml(topology, xmlpath_env);
@@ -2734,7 +2727,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
     topology->is_thissystem = atoi(local_env);
 
   /* if we haven't chosen the backend, set the OS-specific one if needed */
-  if (topology->backend_type == HWLOC_BACKEND_NONE) {
+  if (!topology->backend) {
     struct hwloc_component *comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
     assert(comp);
     err = comp->instantiate(topology, comp, NULL, NULL, NULL);
