@@ -266,3 +266,26 @@ hwloc_set_hpux_hooks(struct hwloc_topology *topology)
   topology->support.membind->interleave_membind = 1;
 #endif /* MAP_MEM_FIRST_TOUCH */
 }
+
+static int
+hwloc_hpux_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+				 struct hwloc_component *component __hwloc_attribute_unused,
+				 const void *_data1 __hwloc_attribute_unused,
+				 const void *_data2 __hwloc_attribute_unused,
+				 const void *_data3 __hwloc_attribute_unused)
+{
+  return 0;
+}
+
+static struct hwloc_component hwloc_hpux_component = {
+  HWLOC_COMPONENT_TYPE_OS,
+  "hpux",
+  hwloc_hpux_component_instantiate,
+  NULL
+};
+
+void
+hwloc_hpux_component_register(struct hwloc_topology *topology)
+{
+  hwloc_component_register(topology, &hwloc_hpux_component);
+}

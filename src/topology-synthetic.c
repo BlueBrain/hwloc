@@ -370,3 +370,25 @@ hwloc_look_synthetic(struct hwloc_topology *topology)
   hwloc_obj_add_info(topology->levels[0][0], "SyntheticDescription", topology->backend_params.synthetic.string);
 }
 
+static int
+hwloc_synthetic_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+				      struct hwloc_component *component __hwloc_attribute_unused,
+				      const void *_data1 __hwloc_attribute_unused,
+				      const void *_data2 __hwloc_attribute_unused,
+				      const void *_data3 __hwloc_attribute_unused)
+{
+  return 0;
+}
+
+static struct hwloc_component hwloc_synthetic_component = {
+  HWLOC_COMPONENT_TYPE_GLOBAL,
+  "synthetic",
+  hwloc_synthetic_component_instantiate,
+  NULL
+};
+
+void
+hwloc_synthetic_component_register(struct hwloc_topology *topology)
+{
+  hwloc_component_register(topology, &hwloc_synthetic_component);
+}

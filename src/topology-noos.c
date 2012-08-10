@@ -19,3 +19,26 @@ hwloc_look_noos(struct hwloc_topology *topology)
     hwloc_add_uname_info(topology);
   return 0;
 }
+
+static int
+hwloc_noos_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+				 struct hwloc_component *component __hwloc_attribute_unused,
+				 const void *_data1 __hwloc_attribute_unused,
+				 const void *_data2 __hwloc_attribute_unused,
+				 const void *_data3 __hwloc_attribute_unused)
+{
+  return 0;
+}
+
+static struct hwloc_component hwloc_noos_component = {
+  HWLOC_COMPONENT_TYPE_OS,
+  "none",
+  hwloc_noos_component_instantiate,
+  NULL
+};
+
+void
+hwloc_noos_component_register(struct hwloc_topology *topology)
+{
+  hwloc_component_register(topology, &hwloc_noos_component);
+}

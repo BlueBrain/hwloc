@@ -913,3 +913,30 @@ void hwloc_free_xmlbuffer(hwloc_topology_t topology __hwloc_attribute_unused, ch
     hwloc_nolibxml_free_buffer(xmlbuffer);
   }
 }
+
+/***************************************
+ ************ XML component ************
+ ***************************************/
+
+static int
+hwloc_xml_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+				struct hwloc_component *component __hwloc_attribute_unused,
+				const void *_data1 __hwloc_attribute_unused,
+				const void *_data2 __hwloc_attribute_unused,
+				const void *_data3 __hwloc_attribute_unused)
+{
+  return 0;
+}
+
+static struct hwloc_component hwloc_xml_component = {
+  HWLOC_COMPONENT_TYPE_GLOBAL,
+  "xml",
+  hwloc_xml_component_instantiate,
+  NULL
+};
+
+void
+hwloc_xml_component_register(struct hwloc_topology *topology)
+{
+  hwloc_component_register(topology, &hwloc_xml_component);
+}

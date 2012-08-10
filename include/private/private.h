@@ -46,6 +46,31 @@ enum hwloc_ignore_type_e {
 
 #define HWLOC_DEPTH_MAX 128
 
+typedef enum hwloc_component_type_e {
+  HWLOC_COMPONENT_TYPE_OS, /* OS backend, and no-OS support.
+		       * that's where we take hooks from when is_this_system=1.
+		       */
+  HWLOC_COMPONENT_TYPE_GLOBAL, /* xml, synthetic or custom.
+			   * no additional backend is used.
+			   */
+  HWLOC_COMPONENT_TYPE_ADDITIONAL, /* pci, etc.
+			       */
+  /* This value is only here so that we can end the enum list without
+     a comma (thereby preventing compiler warnings) */
+  HWLOC_COMPONENT_TYPE_MAX
+} hwloc_component_type_t;
+
+struct hwloc_component {
+  hwloc_component_type_t type;
+  const char *name;
+  int (*instantiate)(struct hwloc_topology *topology, struct hwloc_component *component, const void *data1, const void *data2, const void *data3);
+  struct hwloc_component * next; /* hwloc internal use only */
+};
+
+extern int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
+extern void hwloc_components_register_all(struct hwloc_topology *topology);
+extern void hwloc_components_destroy_all(struct hwloc_topology *topology);
+
 typedef enum hwloc_backend_e {
   HWLOC_BACKEND_NONE,
   HWLOC_BACKEND_SYNTHETIC,
@@ -133,6 +158,8 @@ struct hwloc_topology {
     struct hwloc_os_distances_s *prev, *next;
   } *first_osdist, *last_osdist;
 
+  struct hwloc_component * components;
+
   hwloc_backend_t backend_type;
   union hwloc_backend_params_u {
 #ifdef HWLOC_LINUX_SYS
@@ -183,6 +210,7 @@ extern int hwloc_connect_levels(hwloc_topology_t topology);
 
 
 #if defined(HWLOC_LINUX_SYS)
+extern void hwloc_linux_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_linuxfs(struct hwloc_topology *topology);
 extern void hwloc_set_linuxfs_hooks(struct hwloc_topology *topology);
 extern int hwloc_backend_linuxfs_init(struct hwloc_topology *topology, const char *fsroot_path);
@@ -191,41 +219,49 @@ extern void hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, 
 extern int hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology, struct hwloc_obj *pcidev, hwloc_bitmap_t cpuset);
 #endif /* HWLOC_LINUX_SYS */
 
+extern void hwloc_xml_component_register(struct hwloc_topology *topology);
 extern int hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int buflen);
 extern int hwloc_look_xml(struct hwloc_topology *topology);
 extern void hwloc_backend_xml_exit(struct hwloc_topology *topology);
 
 #ifdef HWLOC_SOLARIS_SYS
+extern void hwloc_solaris_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_solaris(struct hwloc_topology *topology);
 extern void hwloc_set_solaris_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_SOLARIS_SYS */
 
 #ifdef HWLOC_AIX_SYS
+extern void hwloc_aix_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_aix(struct hwloc_topology *topology);
 extern void hwloc_set_aix_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_AIX_SYS */
 
 #ifdef HWLOC_OSF_SYS
+extern void hwloc_osf_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_osf(struct hwloc_topology *topology);
 extern void hwloc_set_osf_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_OSF_SYS */
 
 #ifdef HWLOC_WIN_SYS
+extern void hwloc_windows_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_windows(struct hwloc_topology *topology);
 extern void hwloc_set_windows_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_WIN_SYS */
 
 #ifdef HWLOC_DARWIN_SYS
+extern void hwloc_darwin_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_darwin(struct hwloc_topology *topology);
 extern void hwloc_set_darwin_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_DARWIN_SYS */
 
 #ifdef HWLOC_FREEBSD_SYS
+extern void hwloc_freebsd_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_freebsd(struct hwloc_topology *topology);
 extern void hwloc_set_freebsd_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_FREEBSD_SYS */
 
 #ifdef HWLOC_HPUX_SYS
+extern void hwloc_hpux_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_hpux(struct hwloc_topology *topology);
 extern void hwloc_set_hpux_hooks(struct hwloc_topology *topology);
 #endif /* HWLOC_HPUX_SYS */
@@ -236,12 +272,15 @@ extern void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs);
 extern void hwloc_look_libpci(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_LIBPCI */
 
+extern void hwloc_synthetic_component_register(struct hwloc_topology *topology);
 extern int hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *description);
 extern void hwloc_backend_synthetic_exit(struct hwloc_topology *topology);
 extern void hwloc_look_synthetic (struct hwloc_topology *topology);
 
+extern void hwloc_noos_component_register(struct hwloc_topology *topology);
 extern int hwloc_look_noos(struct hwloc_topology *topology);
 
+extern void hwloc_custom_component_register(struct hwloc_topology *topology);
 extern int hwloc_backend_custom_init(struct hwloc_topology *topology);
 extern void hwloc_backend_custom_exit(struct hwloc_topology *topology);
 

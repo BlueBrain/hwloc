@@ -25,6 +25,7 @@ sources = \
         topology.c \
         traversal.c \
         distances.c \
+        components.c \
         topology-synthetic.c \
         topology-custom.c \
         topology-noos.c \

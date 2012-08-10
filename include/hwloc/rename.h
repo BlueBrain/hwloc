@@ -436,6 +436,32 @@ extern "C" {
 #define HWLOC_IGNORE_TYPE_ALWAYS HWLOC_NAME_CAPS(IGNORE_TYPE_ALWAYS)
 
 #define hwloc_os_distances_s HWLOC_NAME(os_distances_s)
+
+#define HWLOC_COMPONENT_TYPE_OS HWLOC_NAME(COMPONENT_TYPE_OS)
+#define HWLOC_COMPONENT_TYPE_GLOBAL HWLOC_NAME(COMPONENT_TYPE_GLOBAL)
+#define HWLOC_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME(COMPONENT_TYPE_ADDITIONAL)
+#define HWLOC_COMPONENT_TYPE_MAX HWLOC_NAME(COMPONENT_TYPE_MAX)
+
+#define hwloc_component_type_e HWLOC_NAME(component_type_e)
+#define hwloc_component_type_t HWLOC_NAME(component_type_t)
+#define hwloc_component HWLOC_NAME(component)
+#define hwloc_component_register HWLOC_NAME(component_register)
+#define hwloc_components_register_all HWLOC_NAME(components_register_all)
+#define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
+
+#define hwloc_linux_component_register HWLOC_NAME(linux_component_register)
+#define hwloc_xml_component_register HWLOC_NAME(xml_component_register)
+#define hwloc_solaris_component_register HWLOC_NAME(solaris_component_register)
+#define hwloc_aix_component_register HWLOC_NAME(aix_component_register)
+#define hwloc_osf_component_register HWLOC_NAME(osf_component_register)
+#define hwloc_windows_component_register HWLOC_NAME(windows_component_register)
+#define hwloc_darwin_component_register HWLOC_NAME(darwin_component_register)
+#define hwloc_freebsd_component_register HWLOC_NAME(freebsd_component_register)
+#define hwloc_hpux_component_register HWLOC_NAME(hpux_component_register)
+#define hwloc_synthetic_component_register HWLOC_NAME(synthetic_component_register)
+#define hwloc_custom_component_register HWLOC_NAME(custom_component_register)
+#define hwloc_noos_component_register HWLOC_NAME(noos_component_register)
+
 #define hwloc_backend_e HWLOC_NAME(backend_e)
 #define hwloc_backend_t HWLOC_NAME(backend_t)
 

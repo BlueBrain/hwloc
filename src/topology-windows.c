@@ -771,3 +771,26 @@ hwloc_set_windows_hooks(struct hwloc_topology *topology)
   if (!hwloc_win_get_QueryWorkingSetExProc())
     topology->get_area_membind = hwloc_win_get_area_membind;
 }
+
+static int
+hwloc_windows_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
+				    struct hwloc_component *component __hwloc_attribute_unused,
+				    const void *_data1 __hwloc_attribute_unused,
+				    const void *_data2 __hwloc_attribute_unused,
+				    const void *_data3 __hwloc_attribute_unused)
+{
+  return 0;
+}
+
+static struct hwloc_component hwloc_windows_component = {
+  HWLOC_COMPONENT_TYPE_OS,
+  "windows",
+  hwloc_windows_component_instantiate,
+  NULL
+};
+
+void
+hwloc_windows_component_register(struct hwloc_topology *topology)
+{
+  hwloc_component_register(topology, &hwloc_windows_component);
+}
