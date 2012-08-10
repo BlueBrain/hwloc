@@ -483,7 +483,6 @@ extern "C" {
 #define hwloc_topology_clear HWLOC_NAME(topology_clear)
 
 #define hwloc_linuxfs_pci_lookup_osdevices HWLOC_NAME(linuxfs_pci_lookup_osdevices)
-#define hwloc_linuxfs_get_pcidev_cpuset HWLOC_NAME(linuxfs_get_pcidev_cpuset)
 
 #define hwloc_look_libpci HWLOC_NAME(look_libpci)
 

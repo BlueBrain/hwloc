@@ -111,6 +111,7 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
   }
   backend->component = component;
   backend->discover = NULL;
+  backend->get_obj_cpuset = NULL;
   backend->disable = NULL;
   backend->is_custom = 0;
   backend->next = NULL;

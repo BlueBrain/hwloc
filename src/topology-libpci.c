@@ -244,12 +244,13 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_o
     hwloc_debug("Overriding localcpus using %s in the environment\n", envname);
     hwloc_bitmap_sscanf(cpuset, env);
   } else {
-    /* get the hostbridge cpuset. it's not a PCI device, so we use its first child locality info */
-#ifdef HWLOC_LINUX_SYS
-    err = hwloc_linuxfs_get_pcidev_cpuset(topology, hostbridge->first_child, cpuset);
-#else
-    err = -1;
-#endif
+    /* get the hostbridge cpuset by acking the OS backend.
+     * it's not a PCI device, so we use its first child locality info.
+     */
+    if (topology->backend->get_obj_cpuset)
+      err = topology->backend->get_obj_cpuset(topology, hostbridge->first_child, cpuset);
+    else
+      err = -1;
     if (err < 0)
       /* if we got nothing, assume the hostbridge is attached to the top of hierarchy */
       hwloc_bitmap_copy(cpuset, hwloc_topology_get_topology_cpuset(topology));
