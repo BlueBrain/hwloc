@@ -23,15 +23,6 @@ hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwlo
   return obj;
 }
 
-static int
-hwloc_backend_custom_init(struct hwloc_topology *topology)
-{
-  topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
-  topology->is_thissystem = 0;
-  topology->backend_type = HWLOC_BACKEND_CUSTOM;
-  return 0;
-}
-
 int
 hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 			     struct hwloc_obj *newparent,
@@ -64,15 +55,14 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 				   const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
-  int err;
 
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    return -1;
-
-  err = hwloc_backend_custom_init(topology);
-  if (err < 0)
     goto out;
+
+  topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
+  topology->is_thissystem = 0;
+  topology->backend_type = HWLOC_BACKEND_CUSTOM;
 
   backend->disable = hwloc_custom_backend_disable;
   hwloc_backend_enable(topology, backend);
