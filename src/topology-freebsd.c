@@ -179,6 +179,8 @@ hwloc_look_freebsd(struct hwloc_topology *topology)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
 
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
 #ifdef HAVE__SC_LARGE_PAGESIZE
   topology->levels[0][0]->attr->machine.huge_page_size_kB = sysconf(_SC_LARGE_PAGESIZE);
 #endif

@@ -485,6 +485,8 @@ hwloc_look_windows(struct hwloc_topology *topology)
 
   HMODULE kernel32;
 
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
   GetSystemInfo(&SystemInfo);
 
   kernel32 = LoadLibrary("kernel32.dll");

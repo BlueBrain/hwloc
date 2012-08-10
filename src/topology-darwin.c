@@ -37,6 +37,8 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   int64_t cachelinesize;
   int64_t memsize;
 
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
   if (hwloc_get_sysctlbyname("hw.ncpu", &_nprocs) || _nprocs <= 0)
     return;
   nprocs = _nprocs;

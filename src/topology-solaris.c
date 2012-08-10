@@ -712,6 +712,9 @@ void
 hwloc_look_solaris(struct hwloc_topology *topology)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors (topology);
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
 #ifdef HAVE_LIBLGRP
   hwloc_look_lgrp(topology);
 #endif /* HAVE_LIBLGRP */

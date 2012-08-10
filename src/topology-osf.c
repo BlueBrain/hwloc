@@ -248,6 +248,8 @@ hwloc_look_osf(struct hwloc_topology *topology)
   struct hwloc_obj *obj;
   unsigned distance;
 
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
   topology->backend_params.osf.nbnodes = nbnodes = rad_get_num();
 
   cpusetcreate(&cpuset);

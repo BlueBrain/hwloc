@@ -170,6 +170,8 @@ hwloc_look_hpux(struct hwloc_topology *topology)
   ldom_t currentnode;
   int i, nbnodes = 0;
 
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
 #ifdef HAVE__SC_LARGE_PAGESIZE
   topology->levels[0][0]->attr->machine.huge_page_size_kB = sysconf(_SC_LARGE_PAGESIZE);
 #endif

@@ -678,6 +678,9 @@ void
 hwloc_look_aix(struct hwloc_topology *topology)
 {
   int i;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
   /* TODO: R_LGPGDEF/R_LGPGFREE for large pages */
 
   hwloc_debug("Note: SMPSDL is at %d\n", rs_getinfo(NULL, R_SMPSDL, 0));
