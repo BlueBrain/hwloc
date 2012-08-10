@@ -3712,7 +3712,23 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
 				  const void *_data2 __hwloc_attribute_unused,
 				  const void *_data3 __hwloc_attribute_unused)
 {
-  return hwloc_backend_linuxfs_init(topology, (const char *) _data1);
+  struct hwloc_backend *backend;
+  int err;
+
+  backend = hwloc_backend_alloc(topology, component);
+  if (!backend)
+    return -1;
+
+  err = hwloc_backend_linuxfs_init(topology, (const char *) _data1);
+  if (err < 0)
+    goto out;
+
+  hwloc_backend_enable(topology, backend);
+  return 0;
+
+ out:
+  free(backend);
+  return -1;
 }
 
 static struct hwloc_component hwloc_linux_component = {

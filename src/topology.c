@@ -2534,6 +2534,8 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
 
   hwloc_components_register_all(topology);
 
+  topology->backend = NULL;
+
   /* Setup topology context */
   topology->is_loaded = 0;
   topology->flags = 0;
@@ -2778,6 +2780,7 @@ hwloc_topology_destroy (struct hwloc_topology *topology)
   hwloc_topology_clear(topology);
   hwloc_distances_destroy(topology);
 
+  hwloc_backends_disable_all(topology);
   hwloc_components_destroy_all(topology);
 
   free(topology->support.discovery);

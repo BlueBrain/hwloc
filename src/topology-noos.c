@@ -21,12 +21,17 @@ hwloc_look_noos(struct hwloc_topology *topology)
 }
 
 static int
-hwloc_noos_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
-				 struct hwloc_component *component __hwloc_attribute_unused,
+hwloc_noos_component_instantiate(struct hwloc_topology *topology,
+				 struct hwloc_component *component,
 				 const void *_data1 __hwloc_attribute_unused,
 				 const void *_data2 __hwloc_attribute_unused,
 				 const void *_data3 __hwloc_attribute_unused)
 {
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(topology, component);
+  if (!backend)
+    return -1;
+  hwloc_backend_enable(topology, backend);
   return 0;
 }
 

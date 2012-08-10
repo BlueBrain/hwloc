@@ -274,6 +274,11 @@ hwloc_hpux_component_instantiate(struct hwloc_topology *topology __hwloc_attribu
 				 const void *_data2 __hwloc_attribute_unused,
 				 const void *_data3 __hwloc_attribute_unused)
 {
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(topology, component);
+  if (!backend)
+    return -1;
+  hwloc_backend_enable(topology, backend);
   return 0;
 }
 

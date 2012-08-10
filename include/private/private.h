@@ -60,6 +60,8 @@ typedef enum hwloc_component_type_e {
   HWLOC_COMPONENT_TYPE_MAX
 } hwloc_component_type_t;
 
+struct hwloc_backend;
+
 struct hwloc_component {
   hwloc_component_type_t type;
   const char *name;
@@ -71,6 +73,16 @@ extern int hwloc_component_register(struct hwloc_topology *topology, struct hwlo
 extern void hwloc_components_register_all(struct hwloc_topology *topology);
 extern void hwloc_components_destroy_all(struct hwloc_topology *topology);
 extern struct hwloc_component * hwloc_find_component(struct hwloc_topology *topology, int type, const char *name);
+
+struct hwloc_backend {
+  struct hwloc_component * component;
+  void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
+  struct hwloc_backend * next;
+};
+
+extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
+extern void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
+extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 
 typedef enum hwloc_backend_e {
   HWLOC_BACKEND_NONE,
@@ -160,6 +172,7 @@ struct hwloc_topology {
   } *first_osdist, *last_osdist;
 
   struct hwloc_component * components;
+  struct hwloc_backend * backend;
 
   hwloc_backend_t backend_type;
   union hwloc_backend_params_u {

@@ -99,3 +99,39 @@ hwloc_components_destroy_all(struct hwloc_topology *topology)
   }
   topology->components = NULL;
 }
+
+struct hwloc_backend *
+hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
+		    struct hwloc_component *component)
+{
+  struct hwloc_backend * backend = malloc(sizeof(*backend));
+  if (!backend) {
+    errno = ENOMEM;
+    return NULL;
+  }
+  backend->component = component;
+  backend->disable = NULL;
+  backend->next = NULL;
+  return backend;
+}
+
+void
+hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend)
+{
+  if (topology->backend) {
+    if (topology->backend->disable)
+      topology->backend->disable(topology, topology->backend);
+    free(topology->backend);
+  }
+  topology->backend = backend;
+}
+
+void
+hwloc_backends_disable_all(struct hwloc_topology *topology)
+{
+  if (topology->backend) {
+    if (topology->backend->disable)
+      topology->backend->disable(topology, topology->backend);
+    free(topology->backend);
+  }
+}

@@ -450,6 +450,11 @@ extern "C" {
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 #define hwloc_find_component HWLOC_NAME(find_component)
 
+#define hwloc_backend HWLOC_NAME(backend)
+#define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
+#define hwloc_backend_enable HWLOC_NAME(backend_enable)
+#define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
+
 #define hwloc_linux_component_register HWLOC_NAME(linux_component_register)
 #define hwloc_xml_component_register HWLOC_NAME(xml_component_register)
 #define hwloc_solaris_component_register HWLOC_NAME(solaris_component_register)
