@@ -84,12 +84,6 @@ void hwloc_report_os_error(const char *msg, int line)
     }
 }
 
-static void
-hwloc_topology_clear (struct hwloc_topology *topology);
-static void
-hwloc_topology_setup_defaults(struct hwloc_topology *topology);
-
-
 #if defined(HAVE_SYSCTLBYNAME)
 int hwloc_get_sysctlbyname(const char *name, int64_t *ret)
 {
@@ -2463,7 +2457,7 @@ hwloc_discover(struct hwloc_topology *topology)
 /* To be before discovery is actually launched,
  * Resets everything in case a previous load initialized some stuff.
  */
-static void
+void
 hwloc_topology_setup_defaults(struct hwloc_topology *topology)
 {
   struct hwloc_obj *root_obj;
@@ -2575,38 +2569,6 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
 #endif /* HWLOC_LINUX_SYS */
 }
 
-static void
-hwloc_backend_exit(struct hwloc_topology *topology)
-{
-  switch (topology->backend_type) {
-#ifdef HWLOC_LINUX_SYS
-  case HWLOC_BACKEND_LINUXFS:
-    hwloc_backend_linuxfs_exit(topology);
-    break;
-#endif
-  case HWLOC_BACKEND_XML:
-    hwloc_backend_xml_exit(topology);
-    break;
-  case HWLOC_BACKEND_SYNTHETIC:
-    hwloc_backend_synthetic_exit(topology);
-    break;
-  case HWLOC_BACKEND_CUSTOM:
-    hwloc_backend_custom_exit(topology);
-    break;
-  default:
-    break;
-  }
-
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
-
-  if (topology->is_loaded) {
-    hwloc_topology_clear(topology);
-    hwloc_distances_destroy(topology);
-    hwloc_topology_setup_defaults(topology);
-    topology->is_loaded = 0;
-  }
-}
-
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
 {
@@ -2615,8 +2577,6 @@ hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_pa
     errno = ENOSYS;
     return -1;
   }
-
-  hwloc_backend_exit(topology);
 
   return comp->instantiate(topology, comp, fsroot_path, NULL, NULL);
 }
@@ -2629,8 +2589,6 @@ hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *descri
     errno = ENOSYS;
     return -1;
   }
-
-  hwloc_backend_exit(topology);
 
   return comp->instantiate(topology, comp, description, NULL, NULL);
 }
@@ -2645,8 +2603,6 @@ hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
     return -1;
   }
 
-  hwloc_backend_exit(topology);
-
   return comp->instantiate(topology, comp, xmlpath, NULL, NULL);
 }
 
@@ -2658,8 +2614,6 @@ hwloc_topology_set_custom(struct hwloc_topology *topology)
     errno = ENOSYS;
     return -1;
   }
-
-  hwloc_backend_exit(topology);
 
   return comp->instantiate(topology, comp, NULL, NULL, NULL);
 }
@@ -2674,8 +2628,6 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
     errno = ENOSYS;
     return -1;
   }
-
-  hwloc_backend_exit(topology);
 
   return comp->instantiate(topology, comp, NULL, xmlbuffer, (void*) (uintptr_t) size);
 }
@@ -2758,7 +2710,7 @@ hwloc_topology_clear_tree (struct hwloc_topology *topology, struct hwloc_obj *ro
   hwloc_free_unlinked_object (root);
 }
 
-static void
+void
 hwloc_topology_clear (struct hwloc_topology *topology)
 {
   unsigned l;
@@ -2776,12 +2728,11 @@ hwloc_topology_clear (struct hwloc_topology *topology)
 void
 hwloc_topology_destroy (struct hwloc_topology *topology)
 {
-  hwloc_backend_exit(topology);
+  hwloc_backends_disable_all(topology); /* calls distances_clear(), so must stay before distances_destroy() */
+  hwloc_components_destroy_all(topology);
+
   hwloc_topology_clear(topology);
   hwloc_distances_destroy(topology);
-
-  hwloc_backends_disable_all(topology);
-  hwloc_components_destroy_all(topology);
 
   free(topology->support.discovery);
   free(topology->support.cpubind);

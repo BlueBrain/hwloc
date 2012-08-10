@@ -77,6 +77,7 @@ extern struct hwloc_component * hwloc_find_component(struct hwloc_topology *topo
 struct hwloc_backend {
   struct hwloc_component * component;
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
+  void * private_data;
   struct hwloc_backend * next;
 };
 
@@ -175,42 +176,6 @@ struct hwloc_topology {
   struct hwloc_backend * backend;
 
   hwloc_backend_t backend_type;
-  union hwloc_backend_params_u {
-#ifdef HWLOC_LINUX_SYS
-    struct hwloc_backend_params_linuxfs_s {
-      /* FS root parameters */
-      char *root_path; /* The path of the file system root, used when browsing, e.g., Linux' sysfs and procfs. */
-      int root_fd; /* The file descriptor for the file system root, used when browsing, e.g., Linux' sysfs and procfs. */
-      struct utsname utsname; /* cached result of uname, used multiple times */
-    } linuxfs;
-#endif /* HWLOC_LINUX_SYS */
-#if defined(HWLOC_OSF_SYS) || defined(HWLOC_COMPILE_PORTS)
-    struct hwloc_backend_params_osf {
-      int nbnodes;
-    } osf;
-#endif /* HWLOC_OSF_SYS */
-    struct hwloc_backend_params_xml_s {
-      /* xml backend parameters */
-      int (*look)(struct hwloc_topology *topology, struct hwloc__xml_import_state_s *state);
-      void (*look_failed)(struct hwloc_topology *topology);
-      void (*backend_exit)(struct hwloc_topology *topology);
-      void *data; /* libxml2 doc, or nolibxml buffer */
-      struct hwloc_xml_imported_distances_s {
-	hwloc_obj_t root;
-	struct hwloc_distances_s distances;
-	struct hwloc_xml_imported_distances_s *prev, *next;
-      } *first_distances, *last_distances;
-    } xml;
-    struct hwloc_backend_params_synthetic_s {
-      /* synthetic backend parameters */
-      char *string;
-#define HWLOC_SYNTHETIC_MAX_DEPTH 128
-      unsigned arity[HWLOC_SYNTHETIC_MAX_DEPTH];
-      hwloc_obj_type_t type[HWLOC_SYNTHETIC_MAX_DEPTH];
-      unsigned id[HWLOC_SYNTHETIC_MAX_DEPTH];
-      unsigned depth[HWLOC_SYNTHETIC_MAX_DEPTH]; /* For cache/misc */
-    } synthetic;
-  } backend_params;
 };
 
 
@@ -222,19 +187,19 @@ extern unsigned hwloc_fallback_nbprocessors(struct hwloc_topology *topology);
 extern void hwloc_connect_children(hwloc_obj_t obj);
 extern int hwloc_connect_levels(hwloc_topology_t topology);
 
+extern void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
+extern void hwloc_topology_clear(struct hwloc_topology *topology);
 
 #if defined(HWLOC_LINUX_SYS)
 extern void hwloc_linux_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_linuxfs(struct hwloc_topology *topology);
 extern void hwloc_set_linuxfs_hooks(struct hwloc_topology *topology);
-extern void hwloc_backend_linuxfs_exit(struct hwloc_topology *topology);
 extern void hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc_obj *pcidev);
 extern int hwloc_linuxfs_get_pcidev_cpuset(struct hwloc_topology *topology, struct hwloc_obj *pcidev, hwloc_bitmap_t cpuset);
 #endif /* HWLOC_LINUX_SYS */
 
 extern void hwloc_xml_component_register(struct hwloc_topology *topology);
 extern int hwloc_look_xml(struct hwloc_topology *topology);
-extern void hwloc_backend_xml_exit(struct hwloc_topology *topology);
 
 #ifdef HWLOC_SOLARIS_SYS
 extern void hwloc_solaris_component_register(struct hwloc_topology *topology);
@@ -285,15 +250,12 @@ extern void hwloc_look_libpci(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_LIBPCI */
 
 extern void hwloc_synthetic_component_register(struct hwloc_topology *topology);
-extern void hwloc_backend_synthetic_exit(struct hwloc_topology *topology);
 extern void hwloc_look_synthetic (struct hwloc_topology *topology);
 
 extern void hwloc_noos_component_register(struct hwloc_topology *topology);
 extern int hwloc_look_noos(struct hwloc_topology *topology);
 
 extern void hwloc_custom_component_register(struct hwloc_topology *topology);
-extern int hwloc_backend_custom_init(struct hwloc_topology *topology);
-extern void hwloc_backend_custom_exit(struct hwloc_topology *topology);
 
 /*
  * Add an object to the topology.

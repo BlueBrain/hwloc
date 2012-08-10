@@ -197,8 +197,9 @@ static int
 hwloc_nolibxml_look(struct hwloc_topology *topology,
 		    struct hwloc__xml_import_state_s *state)
 {
+  struct hwloc_xml_backend_data_s *bdata = topology->backend->private_data;
   hwloc__nolibxml_import_state_data_t nstate = (void*) state->data;
-  char *buffer = topology->backend_params.xml.data;
+  char *buffer = bdata->data;
 
   assert(sizeof(*nstate) <= sizeof(state->data));
 
@@ -244,15 +245,19 @@ hwloc_nolibxml_look_failed(struct hwloc_topology *topology __hwloc_attribute_unu
 static void
 hwloc_nolibxml_backend_exit(struct hwloc_topology *topology)
 {
-  free(topology->backend_params.xml.data);
+  struct hwloc_xml_backend_data_s *bdata = topology->backend->private_data;
+  free(bdata->data);
 }
 
 int
-hwloc_nolibxml_backend_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
+hwloc_nolibxml_backend_init(struct hwloc_topology *topology __hwloc_attribute_unused,
+			    struct hwloc_backend *backend,
+			    const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
+  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   if (xmlbuffer) {
-    topology->backend_params.xml.data = malloc(xmlbuflen);
-    memcpy(topology->backend_params.xml.data, xmlbuffer, xmlbuflen);
+    bdata->data = malloc(xmlbuflen);
+    memcpy(bdata->data, xmlbuffer, xmlbuflen);
   } else {
     FILE * file;
     size_t buflen = 4096, offset, readlen;
@@ -283,13 +288,13 @@ hwloc_nolibxml_backend_init(struct hwloc_topology *topology, const char *xmlpath
 
     fclose(file);
 
-    topology->backend_params.xml.data = buffer;
+    bdata->data = buffer;
     /* buflen = offset+1; */
   }
 
-  topology->backend_params.xml.look = hwloc_nolibxml_look;
-  topology->backend_params.xml.look_failed = hwloc_nolibxml_look_failed;
-  topology->backend_params.xml.backend_exit = hwloc_nolibxml_backend_exit;
+  bdata->look = hwloc_nolibxml_look;
+  bdata->look_failed = hwloc_nolibxml_look_failed;
+  bdata->backend_exit = hwloc_nolibxml_backend_exit;
   return 0;
 }
 

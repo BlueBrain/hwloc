@@ -31,6 +31,10 @@
 #include <cpuset.h>
 #include <sys/mman.h>
 
+struct hwloc_osf_backend_data_s {
+  int nbnodes;
+};
+
 /*
  * TODO
  *
@@ -43,6 +47,7 @@
 static int
 prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t hwloc_set)
 {
+  struct hwloc_osf_backend_data_s *data = topology->backend->private_data;
   unsigned cpu;
   cpuset_t target_cpuset;
   cpuset_t cpuset, xor_cpuset;
@@ -58,7 +63,7 @@ prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t
 
   cpusetcreate(&cpuset);
   cpusetcreate(&xor_cpuset);
-  for (radid = 0; radid < topology->backend_params.osf.nbnodes; radid++) {
+  for (radid = 0; radid < data->nbnodes; radid++) {
     cpuemptyset(cpuset);
     if (rad_get_cpus(radid, cpuset)==-1) {
       fprintf(stderr,"rad_get_cpus(%d) failed: %s\n",radid,strerror(errno));
@@ -239,6 +244,7 @@ hwloc_osf_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nodes
 void
 hwloc_look_osf(struct hwloc_topology *topology)
 {
+  struct hwloc_osf_backend_data_s *data = topology->backend->private_data;
   cpu_cursor_t cursor;
   unsigned nbnodes;
   radid_t radid, radid2;
@@ -250,7 +256,7 @@ hwloc_look_osf(struct hwloc_topology *topology)
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
-  topology->backend_params.osf.nbnodes = nbnodes = rad_get_num();
+  data->nbnodes = nbnodes = rad_get_num();
 
   cpusetcreate(&cpuset);
   radsetcreate(&radset);
@@ -350,6 +356,14 @@ hwloc_set_osf_hooks(struct hwloc_topology *topology)
   topology->support.membind->replicate_membind = 1;
 }
 
+static void
+hwloc_osf_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unused,
+			  struct hwloc_backend *backend)
+{
+  struct hwloc_osf_backend_data_s *data = backend->private_data;
+  free(data);
+}
+
 static int
 hwloc_osf_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
 				struct hwloc_component *component __hwloc_attribute_unused,
@@ -358,11 +372,25 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology __hwloc_attribut
 				const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
+  struct hwloc_osf_backend_data_s *data;
+
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    return -1;
+    goto out;
+
+  data = malloc(sizeof(*data));
+  if (!data)
+    goto out_with_data;
+
+  backend->private_data = data;
+  backend->disable = hwloc_osf_backend_disable;
   hwloc_backend_enable(topology, backend);
   return 0;
+
+ out_with_data:
+  free(backend);
+ out:
+  return -1;
 }
 
 static struct hwloc_component hwloc_osf_component = {

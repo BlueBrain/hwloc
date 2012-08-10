@@ -122,6 +122,12 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
     if (topology->backend->disable)
       topology->backend->disable(topology, topology->backend);
     free(topology->backend);
+    if (topology->is_loaded) {
+      hwloc_topology_clear(topology);
+      hwloc_distances_destroy(topology);
+      hwloc_topology_setup_defaults(topology);
+      topology->is_loaded = 0;
+    }
   }
   topology->backend = backend;
 }

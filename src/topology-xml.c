@@ -27,43 +27,6 @@ hwloc__xml_verbose(void)
   return verbose;
 }
 
-/***********************************
- ******** Backend Init/Exit ********
- ***********************************/
-
-/* this can be the first XML call */
-static int
-hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
-{
-  int ret;
-#ifdef HWLOC_HAVE_LIBXML2
-  char *env = getenv("HWLOC_NO_LIBXML_IMPORT");
-  if (!env || !atoi(env)) {
-    ret = hwloc_libxml_backend_init(topology, xmlpath, xmlbuffer, xmlbuflen);
-  } else
-#endif /* HWLOC_HAVE_LIBXML2 */
-  {
-    ret = hwloc_nolibxml_backend_init(topology, xmlpath, xmlbuffer, xmlbuflen);
-  }
-  if (ret < 0)
-    return ret;
-
-  topology->is_thissystem = 0;
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
-  topology->backend_type = HWLOC_BACKEND_XML;
-
-  return 0;
-}
-
-/* this canNOT be the first XML call */
-void
-hwloc_backend_xml_exit(struct hwloc_topology *topology)
-{
-  assert(topology->backend_type == HWLOC_BACKEND_XML);
-  topology->backend_params.xml.backend_exit(topology);
-  topology->backend_type = HWLOC_BACKEND_NONE;
-}
-
 /************************************************
  ********* XML import (common routines) *********
  ************************************************/
@@ -424,9 +387,10 @@ hwloc__xml_import_pagetype(hwloc_topology_t topology __hwloc_attribute_unused, h
 }
 
 static int
-hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj,
+hwloc__xml_import_distances(hwloc_topology_t topology, hwloc_obj_t obj,
 			    hwloc__xml_import_state_t state)
 {
+  struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
   unsigned long reldepth = 0, nbobjs = 0;
   float latbase = 0;
   char *tag;
@@ -492,11 +456,11 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
 
     distances->distances.latency_max = latmax;
 
-    if (topology->backend_params.xml.last_distances)
-      topology->backend_params.xml.last_distances->next = distances;
+    if (data->last_distances)
+      data->last_distances->next = distances;
     else
-      topology->backend_params.xml.first_distances = distances;
-    distances->prev = topology->backend_params.xml.last_distances;
+      data->first_distances = distances;
+    distances->prev = data->last_distances;
     distances->next = NULL;
   }
 
@@ -565,7 +529,8 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
 static void
 hwloc_xml__handle_distances(struct hwloc_topology *topology)
 {
-  struct hwloc_xml_imported_distances_s *xmldist, *next = topology->backend_params.xml.first_distances;
+  struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_xml_imported_distances_s *xmldist, *next = data->first_distances;
 
   if (!next)
     return;
@@ -609,6 +574,7 @@ hwloc_xml__handle_distances(struct hwloc_topology *topology)
 int
 hwloc_look_xml(struct hwloc_topology *topology)
 {
+  struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
   struct hwloc__xml_import_state_s state, childstate;
   char *tag;
   hwloc_localeswitch_declare;
@@ -616,9 +582,9 @@ hwloc_look_xml(struct hwloc_topology *topology)
 
   hwloc_localeswitch_init();
 
-  topology->backend_params.xml.first_distances = topology->backend_params.xml.last_distances = NULL;
+  data->first_distances = data->last_distances = NULL;
 
-  ret = topology->backend_params.xml.look(topology, &state);
+  ret = data->look(topology, &state);
   if (ret < 0)
     goto failed;
 
@@ -639,15 +605,15 @@ hwloc_look_xml(struct hwloc_topology *topology)
 
   /* if we added some distances, we must check them, and make them groupable */
   hwloc_xml__handle_distances(topology);
-  topology->backend_params.xml.first_distances = topology->backend_params.xml.last_distances = NULL;
+  data->first_distances = data->last_distances = NULL;
   topology->support.discovery->pu = 1;
 
   hwloc_localeswitch_fini();
   return 0;
 
  failed:
-  if (topology->backend_params.xml.look_failed)
-    topology->backend_params.xml.look_failed(topology);
+  if (data->look_failed)
+    data->look_failed(topology);
   hwloc_localeswitch_fini();
   return -1;
 }
@@ -918,6 +884,15 @@ void hwloc_free_xmlbuffer(hwloc_topology_t topology __hwloc_attribute_unused, ch
  ************ XML component ************
  ***************************************/
 
+static void
+hwloc_xml_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unused,
+			  struct hwloc_backend *backend)
+{
+  struct hwloc_xml_backend_data_s *data = backend->private_data;
+  data->backend_exit(topology);
+  free(data);
+}
+
 static int
 hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 				struct hwloc_component *component __hwloc_attribute_unused,
@@ -925,25 +900,49 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 				const void *_data2,
 				const void *_data3)
 {
+  struct hwloc_xml_backend_data_s *data;
   struct hwloc_backend *backend;
+#ifdef HWLOC_HAVE_LIBXML2
+  char *env = getenv("HWLOC_NO_LIBXML_IMPORT");
+#endif
+  const char * xmlpath = (const char *) _data1;
+  const char * xmlbuffer = (const char *) _data2;
+  int xmlbuflen = (int)(uintptr_t) _data3;
   int err;
 
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    return -1;
-
-  err = hwloc_backend_xml_init(topology,
-			       (const char *) _data1 /* xmlpath */,
-			       (const char *) _data2 /* xmlbuffer */,
-			       (int)(uintptr_t) _data3 /* xmlbuflen */);
-  if (err < 0)
     goto out;
+
+  data = malloc(sizeof(*data));
+  if (!data)
+    goto out_with_backend;
+
+  backend->private_data = data;
+  backend->disable = hwloc_xml_backend_disable;
+
+#ifdef HWLOC_HAVE_LIBXML2
+  if (!env || !atoi(env)) {
+    err = hwloc_libxml_backend_init(topology, backend, xmlpath, xmlbuffer, xmlbuflen);
+  } else
+#endif /* HWLOC_HAVE_LIBXML2 */
+  {
+    err = hwloc_nolibxml_backend_init(topology, backend, xmlpath, xmlbuffer, xmlbuflen);
+  }
+  if (err < 0)
+    goto out_with_data;
+
+  topology->is_thissystem = 0;
+  topology->backend_type = HWLOC_BACKEND_XML;
 
   hwloc_backend_enable(topology, backend);
   return 0;
 
- out:
+ out_with_data:
+  free(data);
+ out_with_backend:
   free(backend);
+ out:
   return -1;
 }
 

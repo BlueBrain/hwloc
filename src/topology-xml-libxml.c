@@ -127,13 +127,14 @@ static int
 hwloc_libxml_look(struct hwloc_topology *topology,
 		  struct hwloc__xml_import_state_s *state)
 {
+  struct hwloc_xml_backend_data_s *bdata = topology->backend->private_data;
   hwloc__libxml_import_state_data_t lstate = (void*) state->data;
   xmlNode* root_node;
   xmlDtd *dtd;
 
   assert(sizeof(*lstate) <= sizeof(state->data));
 
-  dtd = xmlGetIntSubset((xmlDoc*) topology->backend_params.xml.data);
+  dtd = xmlGetIntSubset((xmlDoc*) bdata->data);
   if (!dtd) {
     if (hwloc__xml_verbose())
       fprintf(stderr, "Loading XML topology without DTD\n");
@@ -143,7 +144,7 @@ hwloc_libxml_look(struct hwloc_topology *topology,
 	      (char *) dtd->SystemID, "hwloc.dtd");
   }
 
-  root_node = xmlDocGetRootElement((xmlDoc*) topology->backend_params.xml.data);
+  root_node = xmlDocGetRootElement((xmlDoc*) bdata->data);
 
   if (strcmp((const char *) root_node->name, "topology") && strcmp((const char *) root_node->name, "root")) {
     /* root node should be in "topology" class (or "root" if importing from < 1.0) */
@@ -173,12 +174,16 @@ hwloc_libxml_look(struct hwloc_topology *topology,
 static void
 hwloc_libxml_backend_exit(struct hwloc_topology *topology)
 {
-  xmlFreeDoc((xmlDoc*)topology->backend_params.xml.data);
+  struct hwloc_xml_backend_data_s *bdata = topology->backend->private_data;
+  xmlFreeDoc((xmlDoc*)bdata->data);
 }
 
 int
-hwloc_libxml_backend_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
+hwloc_libxml_backend_init(struct hwloc_topology *topology __hwloc_attribute_unused,
+			  struct hwloc_backend *backend,
+			  const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
+  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   xmlDoc *doc = NULL;
 
   LIBXML_TEST_VERSION;
@@ -198,10 +203,10 @@ hwloc_libxml_backend_init(struct hwloc_topology *topology, const char *xmlpath, 
     return -1;
   }
 
-  topology->backend_params.xml.look = hwloc_libxml_look;
-  topology->backend_params.xml.look_failed = NULL;
-  topology->backend_params.xml.backend_exit = hwloc_libxml_backend_exit;
-  topology->backend_params.xml.data = doc;
+  bdata->look = hwloc_libxml_look;
+  bdata->look_failed = NULL;
+  bdata->backend_exit = hwloc_libxml_backend_exit;
+  bdata->data = doc;
   return 0;
 }
 
