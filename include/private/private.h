@@ -242,6 +242,9 @@ extern void hwloc_look_synthetic (struct hwloc_topology *topology);
 
 extern int hwloc_look_noos(struct hwloc_topology *topology);
 
+extern int hwloc_backend_custom_init(struct hwloc_topology *topology);
+extern void hwloc_backend_custom_exit(struct hwloc_topology *topology);
+
 /*
  * Add an object to the topology.
  * It is sorted along the tree of other objects according to the inclusion of
@@ -312,6 +315,9 @@ hwloc_alloc_setup_object(hwloc_obj_type_t type, signed idx)
 
 /* Free obj and its attributes assuming it doesn't have any children/parent anymore */
 extern void hwloc_free_unlinked_object(hwloc_obj_t obj);
+
+/* Duplicate src and its children under newparent in newtopology */
+extern void hwloc__duplicate_objects(struct hwloc_topology *newtopology, struct hwloc_obj *newparent, struct hwloc_obj *src);
 
 /* This can be used for the alloc field to get allocated data that can be freed by free() */
 void *hwloc_alloc_heap(hwloc_topology_t topology, size_t len);

@@ -301,7 +301,7 @@ hwloc_free_unlinked_object(hwloc_obj_t obj)
   free(obj);
 }
 
-static void
+void
 hwloc__duplicate_objects(struct hwloc_topology *newtopology,
 			 struct hwloc_obj *newparent,
 			 struct hwloc_obj *src)
@@ -929,22 +929,6 @@ hwloc_topology_insert_misc_object_by_parent(struct hwloc_topology *topology, hwl
 
   hwloc_connect_children(topology->levels[0][0]);
   /* no need to hwloc_connect_levels() since misc object are not in levels */
-
-  return obj;
-}
-
-hwloc_obj_t
-hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, int groupdepth)
-{
-  hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
-  obj->attr->group.depth = groupdepth;
-
-  if (topology->backend_type != HWLOC_BACKEND_CUSTOM || topology->is_loaded) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  hwloc_insert_object_by_parent(topology, parent, obj);
 
   return obj;
 }
@@ -2585,43 +2569,6 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
   errno = ENOSYS;
   return -1;
 #endif /* HWLOC_LINUX_SYS */
-}
-
-static int
-hwloc_backend_custom_init(struct hwloc_topology *topology)
-{
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
-
-  topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
-  topology->is_thissystem = 0;
-  topology->backend_type = HWLOC_BACKEND_CUSTOM;
-  return 0;
-}
-
-int
-hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
-			     struct hwloc_obj *newparent,
-			     struct hwloc_topology *oldtopology,
-			     struct hwloc_obj *oldroot)
-{
-  if (newtopology->backend_type != HWLOC_BACKEND_CUSTOM || newtopology->is_loaded || !oldtopology->is_loaded) {
-    errno = EINVAL;
-    return -1;
-  }
-
-  hwloc__duplicate_objects(newtopology, newparent, oldroot ? oldroot : oldtopology->levels[0][0]);
-  return 0;
-}
-
-static void
-hwloc_backend_custom_exit(struct hwloc_topology *topology)
-{
-  assert(topology->backend_type == HWLOC_BACKEND_CUSTOM);
-
-  hwloc_topology_clear(topology);
-  hwloc_topology_setup_defaults(topology);
-
-  topology->backend_type = HWLOC_BACKEND_NONE;
 }
 
 static void
