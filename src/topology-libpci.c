@@ -21,8 +21,6 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <setjmp.h>
-#ifdef HWLOC_LINUX_SYS
-#endif
 
 #define CONFIG_SPACE_CACHESIZE 256
 
@@ -61,9 +59,8 @@ hwloc_pci_traverse_lookuposdevices_cb(struct hwloc_topology *topology, struct hw
   if (pcidev->type == HWLOC_OBJ_BRIDGE)
     return;
 
-#ifdef HWLOC_LINUX_SYS
-  hwloc_linuxfs_pci_lookup_osdevices(topology, pcidev);
-#endif
+  if (topology->backend->notify_new_object)
+    topology->backend->notify_new_object(topology, pcidev);
 }
 
 static void

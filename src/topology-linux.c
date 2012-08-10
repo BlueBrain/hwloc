@@ -3633,11 +3633,14 @@ hwloc_linux_lookup_block_class(struct hwloc_topology *topology, struct hwloc_obj
   closedir(devicedir);
 }
 
-void
-hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc_obj *pcidev)
+static void
+hwloc_linux_backend_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj)
 {
   struct hwloc_linux_backend_data_s *data = topology->backend->private_data;
   char pcidevpath[256];
+
+  /* this callback is only used in the libpci backend for now */
+  assert(obj->type == HWLOC_OBJ_PCI_DEVICE);
 
   /* this should not be called if the backend isn't the real OS one */
   if (data->root_path) {
@@ -3646,14 +3649,14 @@ hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc
   }
 
   snprintf(pcidevpath, sizeof(pcidevpath), "/sys/bus/pci/devices/%04x:%02x:%02x.%01x/",
-	   pcidev->attr->pcidev.domain, pcidev->attr->pcidev.bus,
-	   pcidev->attr->pcidev.dev, pcidev->attr->pcidev.func);
+	   obj->attr->pcidev.domain, obj->attr->pcidev.bus,
+	   obj->attr->pcidev.dev, obj->attr->pcidev.func);
 
-  hwloc_linux_lookup_net_class(topology, pcidev, pcidevpath);
-  hwloc_linux_lookup_openfabrics_class(topology, pcidev, pcidevpath);
-  hwloc_linux_lookup_dma_class(topology, pcidev, pcidevpath);
-  hwloc_linux_lookup_drm_class(topology, pcidev, pcidevpath);
-  hwloc_linux_lookup_block_class(topology, pcidev, pcidevpath);
+  hwloc_linux_lookup_net_class(topology, obj, pcidevpath);
+  hwloc_linux_lookup_openfabrics_class(topology, obj, pcidevpath);
+  hwloc_linux_lookup_dma_class(topology, obj, pcidevpath);
+  hwloc_linux_lookup_drm_class(topology, obj, pcidevpath);
+  hwloc_linux_lookup_block_class(topology, obj, pcidevpath);
 }
 
 static int
@@ -3724,6 +3727,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
   backend->private_data = data;
   backend->discover = hwloc_look_linuxfs;
   backend->get_obj_cpuset = hwloc_linux_backend_get_obj_cpuset;
+  backend->notify_new_object = hwloc_linux_backend_notify_new_object;
   backend->disable = hwloc_linux_backend_disable;
 
   if (!fsroot_path)

@@ -82,6 +82,9 @@ struct hwloc_backend {
   /* used by the libpci backend to retrieve pci device locality from the OS backend */
   int (*get_obj_cpuset)(struct hwloc_topology *topology, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */
 
+  /* used by additional backends to notify other backend when new objects are added */
+  void (*notify_new_object)(struct hwloc_topology *topology, struct hwloc_obj *obj); /* may be NULL */
+
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
@@ -184,7 +187,6 @@ extern void hwloc_topology_clear(struct hwloc_topology *topology);
 
 #if defined(HWLOC_LINUX_SYS)
 extern void hwloc_linux_component_register(struct hwloc_topology *topology);
-extern void hwloc_linuxfs_pci_lookup_osdevices(struct hwloc_topology *topology, struct hwloc_obj *pcidev);
 #endif /* HWLOC_LINUX_SYS */
 
 extern void hwloc_xml_component_register(struct hwloc_topology *topology);

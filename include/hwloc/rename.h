@@ -482,8 +482,6 @@ extern "C" {
 #define hwloc_topology_setup_defaults HWLOC_NAME(topology_setup_defaults)
 #define hwloc_topology_clear HWLOC_NAME(topology_clear)
 
-#define hwloc_linuxfs_pci_lookup_osdevices HWLOC_NAME(linuxfs_pci_lookup_osdevices)
-
 #define hwloc_look_libpci HWLOC_NAME(look_libpci)
 
 #define hwloc_look_x86 HWLOC_NAME(look_x86)
