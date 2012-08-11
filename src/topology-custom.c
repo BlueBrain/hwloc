@@ -38,19 +38,11 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
   return 0;
 }
 
-static void
-hwloc_custom_backend_disable(struct hwloc_topology *topology,
-			     struct hwloc_backend *backend __hwloc_attribute_unused)
-{
-  /* undo what we did in instantiate */
-  topology->levels[0][0]->type = HWLOC_OBJ_MACHINE;
-  topology->is_thissystem = 1;
-}
-
 static int
 hwloc_look_custom(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
-  /* nothing to do */
+  topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
+  topology->is_thissystem = 0;
   return 0;
 }
 
@@ -67,11 +59,7 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     goto out;
 
-  topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
-  topology->is_thissystem = 0;
-
   backend->discover = hwloc_look_custom;
-  backend->disable = hwloc_custom_backend_disable;
   backend->is_custom = 1;
   hwloc_backend_enable(topology, backend);
   return 0;
