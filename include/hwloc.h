@@ -587,6 +587,9 @@ HWLOC_DECLSPEC int hwloc_topology_init (hwloc_topology_t *topologyp);
  *
  * \return 0 on success, -1 on error.
  *
+ * \note On failure, the topology is reinitialized. It should be either
+ * destroyed with hwloc_topology_destroy() or configured and loaded again.
+ * 
  * \sa hwlocality_configuration
  */
 HWLOC_DECLSPEC int hwloc_topology_load(hwloc_topology_t topology);
@@ -1069,6 +1072,15 @@ enum hwloc_restrict_flags_e {
  * \note This call may not be reverted by restricting back to a larger
  * cpuset. Once dropped during restriction, objects may not be brought
  * back, except by reloading the entire topology with hwloc_topology_load().
+ *
+ * \return 0 on success.
+ *
+ * \return -1 with errno set to EINVAL if the input cpuset is invalid.
+ * The topology is not modified in this case.
+ *
+ * \return -1 with errno set to ENOMEM on failure to allocate internal data.
+ * The topology is reinitialized in this case. It should be either
+ * destroyed with hwloc_topology_destroy() or configured and loaded again.
  */
 HWLOC_DECLSPEC int hwloc_topology_restrict(hwloc_topology_t __hwloc_restrict topology, hwloc_const_cpuset_t cpuset, unsigned long flags);
 

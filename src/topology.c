@@ -1872,18 +1872,14 @@ hwloc_connect_levels(hwloc_topology_t topology)
   objs = malloc(n_objs * sizeof(objs[0]));
   if (!objs) {
     errno = ENOMEM;
-    hwloc_topology_clear(topology);
     return -1;
   }
   memcpy(objs, topology->levels[0][0]->children, n_objs*sizeof(objs[0]));
 
   /* Filter-out interesting objects */
   err = hwloc_level_filter_objects(topology, &objs, &n_objs);
-  if (err < 0) {
-    errno = ENOMEM;
-    hwloc_topology_clear(topology);
+  if (err < 0)
     return -1;
-  }
 
   /* Keep building levels while there are objects left in OBJS.  */
   while (n_objs) {
@@ -1970,11 +1966,9 @@ hwloc_connect_levels(hwloc_topology_t topology)
 
     /* Switch to new_objs, after filtering-out interesting objects */
     err = hwloc_level_filter_objects(topology, &new_objs, &n_new_objs);
-    if (err < 0) {
-      errno = ENOMEM;
-      hwloc_topology_clear(topology);
+    if (err < 0)
       return -1;
-    }
+
     objs = new_objs;
     n_objs = n_new_objs;
   }
@@ -2164,10 +2158,8 @@ hwloc_discover(struct hwloc_topology *topology)
   assert(topology->backend);
   assert(topology->backend->discover);
 
-  if (topology->backend->discover(topology) < 0) {
-    hwloc_topology_clear(topology);
+  if (topology->backend->discover(topology) < 0)
     return -1;
-  }
 
   /*
    * Now that backends have detected objects, sort them and establish pointers.
@@ -2282,7 +2274,8 @@ hwloc_discover(struct hwloc_topology *topology)
     hwloc_drop_useless_io(topology, topology->levels[0][0]);
     hwloc_debug("%s", "\nNow reconnecting\n");
     hwloc_connect_children(topology->levels[0][0]);
-    hwloc_connect_levels(topology);
+    if (hwloc_connect_levels(topology) < 0)
+      return -1;
     print_objects(topology, 0, topology->levels[0][0]);
     hwloc_propagate_bridge_depth(topology, topology->levels[0][0], 0);
   }
@@ -2634,7 +2627,6 @@ void
 hwloc_topology_clear (struct hwloc_topology *topology)
 {
   unsigned l;
-  hwloc_distances_clear(topology);
   hwloc_topology_clear_tree (topology, topology->levels[0][0]);
   for (l=0; l<topology->nb_levels; l++) {
     free(topology->levels[l]);
@@ -2668,6 +2660,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
 
   if (topology->is_loaded) {
     hwloc_topology_clear(topology);
+    hwloc_distances_clear(topology);
     hwloc_topology_setup_defaults(topology);
     topology->is_loaded = 0;
   }
@@ -2707,7 +2700,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
     assert(comp);
     err = comp->instantiate(topology, comp, NULL, NULL, NULL);
     if (err < 0)
-      return err;
+      goto out;
   }
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.
@@ -2718,7 +2711,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
   /* actual topology discovery */
   err = hwloc_discover(topology);
   if (err < 0)
-    return err;
+    goto out;
 
   /* enforce THISSYSTEM if given in a FORCE variable */
   local_env = getenv("HWLOC_FORCE_THISSYSTEM");
@@ -2732,6 +2725,12 @@ hwloc_topology_load (struct hwloc_topology *topology)
 
   topology->is_loaded = 1;
   return 0;
+
+ out:
+  hwloc_topology_clear(topology);
+  hwloc_distances_destroy(topology);
+  hwloc_topology_setup_defaults(topology);
+  return -1;
 }
 
 int
@@ -2741,7 +2740,7 @@ hwloc_topology_restrict(struct hwloc_topology *topology, hwloc_const_cpuset_t cp
 
   /* make sure we'll keep something in the topology */
   if (!hwloc_bitmap_intersects(cpuset, topology->levels[0][0]->cpuset)) {
-    errno = EINVAL;
+    errno = EINVAL; /* easy failure, just don't touch the topology */
     return -1;
   }
 
@@ -2758,12 +2757,21 @@ hwloc_topology_restrict(struct hwloc_topology *topology, hwloc_const_cpuset_t cp
   hwloc_bitmap_free(droppednodeset);
 
   hwloc_connect_children(topology->levels[0][0]);
-  hwloc_connect_levels(topology);
+  if (hwloc_connect_levels(topology) < 0)
+    goto out;
+
   propagate_total_memory(topology->levels[0][0]);
   hwloc_distances_restrict(topology, flags);
   hwloc_distances_finalize_os(topology);
   hwloc_distances_finalize_logical(topology);
   return 0;
+
+ out:
+  /* unrecoverable failure, re-init the topology */
+   hwloc_topology_clear(topology);
+   hwloc_distances_destroy(topology);
+   hwloc_topology_setup_defaults(topology);
+   return -1;
 }
 
 int
