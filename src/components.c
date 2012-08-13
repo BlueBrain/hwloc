@@ -144,4 +144,5 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
       topology->backend->disable(topology, topology->backend);
     free(topology->backend);
   }
+  topology->backend = NULL;
 }

@@ -2730,6 +2730,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
   hwloc_topology_clear(topology);
   hwloc_distances_destroy(topology);
   hwloc_topology_setup_defaults(topology);
+  hwloc_backends_disable_all(topology);
   return -1;
 }
 
