@@ -758,8 +758,8 @@ hwloc_set_solaris_hooks(struct hwloc_topology *topology)
 }
 
 static int
-hwloc_solaris_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
-				    struct hwloc_component *component __hwloc_attribute_unused,
+hwloc_solaris_component_instantiate(struct hwloc_topology *topology,
+				    struct hwloc_component *component,
 				    const void *_data1 __hwloc_attribute_unused,
 				    const void *_data2 __hwloc_attribute_unused,
 				    const void *_data3 __hwloc_attribute_unused)

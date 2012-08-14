@@ -385,7 +385,7 @@ hwloc_synthetic_backend_disable(struct hwloc_topology *topology __hwloc_attribut
 
 static int
 hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
-				      struct hwloc_component *component __hwloc_attribute_unused,
+				      struct hwloc_component *component,
 				      const void *_data1,
 				      const void *_data2 __hwloc_attribute_unused,
 				      const void *_data3 __hwloc_attribute_unused)

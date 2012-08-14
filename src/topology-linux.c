@@ -3679,7 +3679,7 @@ hwloc_linux_backend_notify_new_object(struct hwloc_topology *topology, struct hw
 }
 
 static int
-hwloc_linux_backend_get_obj_cpuset(struct hwloc_topology *topology __hwloc_attribute_unused,
+hwloc_linux_backend_get_obj_cpuset(struct hwloc_topology *topology,
 				   struct hwloc_obj *obj, hwloc_bitmap_t cpuset)
 {
   struct hwloc_linux_backend_data_s *data = topology->backend->private_data;
@@ -3728,7 +3728,7 @@ hwloc_linux_backend_disable(struct hwloc_topology *topology __hwloc_attribute_un
 
 static int
 hwloc_linux_component_instantiate(struct hwloc_topology *topology,
-				  struct hwloc_component *component __hwloc_attribute_unused,
+				  struct hwloc_component *component,
 				  const void *_data1,
 				  const void *_data2 __hwloc_attribute_unused,
 				  const void *_data3 __hwloc_attribute_unused)

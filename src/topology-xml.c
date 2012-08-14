@@ -895,7 +895,7 @@ hwloc_xml_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unus
 
 static int
 hwloc_xml_component_instantiate(struct hwloc_topology *topology,
-				struct hwloc_component *component __hwloc_attribute_unused,
+				struct hwloc_component *component,
 				const void *_data1,
 				const void *_data2,
 				const void *_data3)
