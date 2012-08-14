@@ -59,8 +59,7 @@ hwloc_pci_traverse_lookuposdevices_cb(struct hwloc_topology *topology, struct hw
   if (pcidev->type == HWLOC_OBJ_BRIDGE)
     return;
 
-  if (topology->backend->notify_new_object)
-    topology->backend->notify_new_object(topology, pcidev);
+  hwloc_backends_notify_new_object(topology, pcidev);
 }
 
 static void

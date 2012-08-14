@@ -138,6 +138,15 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
   topology->backend = backend;
 }
 
+int
+hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj)
+{
+  int res = 0;
+  if (topology->backend->notify_new_object)
+    res = topology->backend->notify_new_object(topology, obj);
+  return res;
+}
+
 void
 hwloc_backends_disable_all(struct hwloc_topology *topology)
 {

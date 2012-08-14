@@ -455,6 +455,7 @@ extern "C" {
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
 #define hwloc_backend_enable HWLOC_NAME(backend_enable)
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
+#define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
 
 #define hwloc_linux_component_register HWLOC_NAME(linux_component_register)
 #define hwloc_xml_component_register HWLOC_NAME(xml_component_register)

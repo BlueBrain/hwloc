@@ -98,6 +98,7 @@ struct hwloc_backend {
 extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
 extern void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
+extern int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
 struct hwloc__xml_import_state_s;
 
