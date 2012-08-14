@@ -41,6 +41,11 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 static int
 hwloc_look_custom(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
+  if (!topology->levels[0][0]->first_child) {
+    errno = EINVAL;
+    return -1;
+  }
+
   topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
   topology->is_thissystem = 0;
   return 1;
