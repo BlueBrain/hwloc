@@ -72,6 +72,7 @@ hwloc_components_init(struct hwloc_topology *topology)
   hwloc_custom_component_register(topology);
 
   topology->backend = NULL;
+  topology->additional_backends = NULL;
 }
 
 struct hwloc_component *
@@ -133,36 +134,76 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
 void
 hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend)
 {
-  if (topology->backend) {
-    if (topology->backend->disable)
-      topology->backend->disable(topology, topology->backend);
-    free(topology->backend);
-    if (topology->is_loaded) {
-      hwloc_topology_clear(topology);
-      hwloc_distances_destroy(topology);
-      hwloc_topology_setup_defaults(topology);
-      topology->is_loaded = 0;
+  switch (backend->component->type) {
+
+  case HWLOC_COMPONENT_TYPE_OS:
+  case HWLOC_COMPONENT_TYPE_GLOBAL:
+    if (NULL != topology->backend) {
+      /* only one base/global backend simultaneously */
+      if (topology->backend->disable)
+	topology->backend->disable(topology, topology->backend);
+      free(topology->backend);
+      if (topology->is_loaded) {
+	hwloc_topology_clear(topology);
+	hwloc_distances_destroy(topology);
+	hwloc_topology_setup_defaults(topology);
+	topology->is_loaded = 0;
+      }
     }
+    topology->backend = backend;
+    break;
+
+  case HWLOC_COMPONENT_TYPE_ADDITIONAL: {
+    struct hwloc_backend **pprev = &topology->additional_backends;
+    while (NULL != *pprev)
+      pprev = &((*pprev)->next);
+    *pprev = backend;
+    break;
   }
-  topology->backend = backend;
+
+  default:
+    assert(0);
+  }
 }
 
 int
 hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj)
 {
+  struct hwloc_backend *backend;
   int res = 0;
-  if (topology->backend->notify_new_object)
-    res = topology->backend->notify_new_object(topology, obj);
+
+  backend = topology->backend;
+  if (backend->notify_new_object)
+    res += backend->notify_new_object(topology, obj);
+
+  backend = topology->additional_backends;
+  while (NULL != backend) {
+    if (backend->notify_new_object)
+      res += backend->notify_new_object(topology, obj);
+    backend = backend->next;
+  }
+
   return res;
 }
 
 void
 hwloc_backends_disable_all(struct hwloc_topology *topology)
 {
-  if (topology->backend) {
-    if (topology->backend->disable)
-      topology->backend->disable(topology, topology->backend);
-    free(topology->backend);
+  struct hwloc_backend *backend;
+
+  if (NULL != (backend = topology->backend)) {
+    assert(NULL == backend->next);
+    if (backend->disable)
+      backend->disable(topology, backend);
+    free(backend);
+    topology->backend = NULL;
   }
-  topology->backend = NULL;
+
+  while (NULL != (backend = topology->additional_backends)) {
+    struct hwloc_backend *next = backend->next;
+    if (backend->disable)
+     backend->disable(topology, backend);
+    free(backend);
+    topology->additional_backends = next;
+  }
 }

@@ -177,6 +177,7 @@ struct hwloc_topology {
 
   struct hwloc_component * components;
   struct hwloc_backend * backend;
+  struct hwloc_backend * additional_backends;
 };
 
 

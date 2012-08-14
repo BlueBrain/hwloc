@@ -2245,15 +2245,25 @@ hwloc_discover(struct hwloc_topology *topology)
   propagate_total_memory(topology->levels[0][0]);
 
   /*
-   * Additional detection, using hwloc_insert_object to add a few objects here
-   * and there.
+   * Additional backends.
    */
 
-  /* I/O devices */
-
-  /* see if the backend already imported some I/O devices */
-  if (topology->backend->component->type == HWLOC_COMPONENT_TYPE_GLOBAL)
+  if (topology->backend->component->type == HWLOC_COMPONENT_TYPE_GLOBAL) {
+    /* The main backend already imported some I/O devices, disable additional backends */
     gotsomeio = 1;
+  } else {
+    /* Discovery with additional backends */
+    struct hwloc_backend *backend = topology->additional_backends;
+    while (NULL != backend) {
+      int err;
+      if (!backend->discover)
+	continue;
+      err = backend->discover(topology);
+      if (err >= 0)
+	gotsomeio += err;
+      backend = backend->next;
+    }
+  }
   /* import from libpci if needed */
   if (topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)
       && topology->backend->component->type == HWLOC_COMPONENT_TYPE_OS) {
@@ -2653,6 +2663,7 @@ hwloc_topology_destroy (struct hwloc_topology *topology)
 int
 hwloc_topology_load (struct hwloc_topology *topology)
 {
+  struct hwloc_component *comp = hwloc_component_find(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
   char *local_env;
   int err;
 
@@ -2694,12 +2705,17 @@ hwloc_topology_load (struct hwloc_topology *topology)
 
   /* if we haven't chosen the backend, set the OS-specific one if needed */
   if (!topology->backend) {
-    struct hwloc_component *comp = hwloc_component_find(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
+    comp = hwloc_component_find(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
     assert(comp);
     err = comp->instantiate(topology, comp, NULL, NULL, NULL);
     if (err < 0)
       goto out;
   }
+
+  /* instantiate additional backends now */
+  comp = NULL;
+  while (NULL != (comp = hwloc_component_find_next(topology, HWLOC_COMPONENT_TYPE_ADDITIONAL, NULL, comp)))
+    comp->instantiate(topology, comp, NULL, NULL, NULL);
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.
    * indexes will be converted into objects later once the tree will be filled
