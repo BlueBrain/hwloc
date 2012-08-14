@@ -447,7 +447,7 @@ extern "C" {
 #define hwloc_component_type_t HWLOC_NAME(component_type_t)
 #define hwloc_component HWLOC_NAME(component)
 #define hwloc_component_register HWLOC_NAME(component_register)
-#define hwloc_components_register_all HWLOC_NAME(components_register_all)
+#define hwloc_components_init HWLOC_NAME(components_init)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 #define hwloc_find_component HWLOC_NAME(find_component)
 

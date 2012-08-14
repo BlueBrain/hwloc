@@ -27,7 +27,7 @@ hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component
 }
 
 void
-hwloc_components_register_all(struct hwloc_topology *topology)
+hwloc_components_init(struct hwloc_topology *topology)
 {
   topology->components = NULL;
 
@@ -70,6 +70,8 @@ hwloc_components_register_all(struct hwloc_topology *topology)
   hwloc_xml_component_register(topology);
   hwloc_synthetic_component_register(topology);
   hwloc_custom_component_register(topology);
+
+  topology->backend = NULL;
 }
 
 struct hwloc_component *

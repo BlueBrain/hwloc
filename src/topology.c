@@ -2440,9 +2440,7 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
   if(!topology)
     return -1;
 
-  hwloc_components_register_all(topology);
-
-  topology->backend = NULL;
+  hwloc_components_init(topology);
 
   /* Setup topology context */
   topology->is_loaded = 0;
