@@ -80,7 +80,8 @@ struct hwloc_backend {
   struct hwloc_component * component;
 
   /* main discovery callback.
-   * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise. */
+   * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
+   * maybe NULL if type is HWLOC_COMPONENT_TYPE_ADDITIONAL. */
   int (*discover)(struct hwloc_topology *topology);
 
   /* used by the libpci backend to retrieve pci device locality from the OS backend */
