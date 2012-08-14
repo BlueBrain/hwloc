@@ -3658,6 +3658,9 @@ hwloc_linux_backend_notify_new_object(struct hwloc_topology *topology, struct hw
   assert(obj->type == HWLOC_OBJ_PCI_DEVICE);
 
   /* this should not be called if the backend isn't the real OS one */
+#ifdef HWLOC_DEBUG
+  assert(!strcmp(topology->backend->component->name, "linux"));
+#endif
   if (data->root_path) {
     assert(strlen(data->root_path) == 1);
     assert(data->root_path[0] == '/');
@@ -3689,6 +3692,9 @@ hwloc_linux_backend_get_obj_cpuset(struct hwloc_topology *topology __hwloc_attri
 	 || (obj->type == HWLOC_OBJ_BRIDGE && obj->attr->bridge.upstream_type == HWLOC_OBJ_BRIDGE_PCI));
 
   /* this should not be called if the backend isn't the real OS one */
+#ifdef HWLOC_DEBUG
+  assert(!strcmp(topology->backend->component->name, "linux"));
+#endif
   if (data->root_path) {
     assert(strlen(data->root_path) == 1);
     assert(data->root_path[0] == '/');
