@@ -77,6 +77,9 @@ extern struct hwloc_component * hwloc_find_component(struct hwloc_topology *topo
 
 struct hwloc_backend {
   struct hwloc_component * component;
+
+  /* main discovery callback.
+   * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise. */
   int (*discover)(struct hwloc_topology *topology);
 
   /* used by the libpci backend to retrieve pci device locality from the OS backend */

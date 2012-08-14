@@ -609,7 +609,7 @@ hwloc_look_xml(struct hwloc_topology *topology)
   topology->support.discovery->pu = 1;
 
   hwloc_localeswitch_fini();
-  return 0;
+  return 1;
 
  failed:
   if (data->look_failed)

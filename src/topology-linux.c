@@ -3338,7 +3338,7 @@ hwloc_look_linuxfs(struct hwloc_topology *topology)
      /* FIXME: reuse data->utsname */
      hwloc_add_uname_info(topology);
 
-  return 0;
+  return 1;
 }
 
 static void

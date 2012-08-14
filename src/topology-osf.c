@@ -337,7 +337,7 @@ hwloc_look_osf(struct hwloc_topology *topology)
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "OSF");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
-  return 0;
+  return 1;
 }
 
 static void

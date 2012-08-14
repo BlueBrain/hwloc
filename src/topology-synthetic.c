@@ -371,7 +371,7 @@ hwloc_look_synthetic(struct hwloc_topology *topology)
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Synthetic");
   hwloc_obj_add_info(topology->levels[0][0], "SyntheticDescription", data->string);
-  return 0;
+  return 1;
 }
 
 static void

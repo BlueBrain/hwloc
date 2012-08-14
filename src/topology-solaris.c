@@ -721,14 +721,14 @@ hwloc_look_solaris(struct hwloc_topology *topology)
 #ifdef HAVE_LIBKSTAT
   nbprocs = 0;
   if (hwloc_look_kstat(topology) > 0)
-    return 0;
+    return 1;
 #endif /* HAVE_LIBKSTAT */
   hwloc_setup_pu_level(topology, nbprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Solaris");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
-  return 0;
+  return 1;
 }
 
 static void
