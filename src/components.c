@@ -75,7 +75,7 @@ hwloc_components_init(struct hwloc_topology *topology)
 }
 
 struct hwloc_component *
-hwloc_find_component(struct hwloc_topology *topology,
+hwloc_component_find(struct hwloc_topology *topology,
 		     int type /* hwloc_component_type_t or -1 if any */,
 		     const char *name /* name of NULL if any */)
 {

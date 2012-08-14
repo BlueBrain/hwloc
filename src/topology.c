@@ -2301,7 +2301,7 @@ hwloc_discover(struct hwloc_topology *topology)
 
   if (topology->is_thissystem) {
     /* use the OS component set_hooks if thissystem, without caring about the used backend */
-    struct hwloc_component * comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
+    struct hwloc_component * comp = hwloc_component_find(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
     assert(comp);
     assert(comp->set_hooks);
     comp->set_hooks(topology);
@@ -2483,7 +2483,7 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
 {
-  struct hwloc_component *comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, "linux");
+  struct hwloc_component *comp = hwloc_component_find(topology, HWLOC_COMPONENT_TYPE_OS, "linux");
   if (!comp) {
     errno = ENOSYS;
     return -1;
@@ -2495,7 +2495,7 @@ hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_pa
 int
 hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *description)
 {
-  struct hwloc_component *comp = hwloc_find_component(topology, -1, "synthetic");
+  struct hwloc_component *comp = hwloc_component_find(topology, -1, "synthetic");
   if (!comp) {
     errno = ENOSYS;
     return -1;
@@ -2508,7 +2508,7 @@ int
 hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
                        const char *xmlpath __hwloc_attribute_unused)
 {
-  struct hwloc_component *comp = hwloc_find_component(topology, -1, "xml");
+  struct hwloc_component *comp = hwloc_component_find(topology, -1, "xml");
   if (!comp) {
     errno = ENOSYS;
     return -1;
@@ -2520,7 +2520,7 @@ hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
 int
 hwloc_topology_set_custom(struct hwloc_topology *topology)
 {
-  struct hwloc_component *comp = hwloc_find_component(topology, -1, "custom");
+  struct hwloc_component *comp = hwloc_component_find(topology, -1, "custom");
   if (!comp) {
     errno = ENOSYS;
     return -1;
@@ -2534,7 +2534,7 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
                              const char *xmlbuffer __hwloc_attribute_unused,
                              int size __hwloc_attribute_unused)
 {
-  struct hwloc_component *comp = hwloc_find_component(topology, -1, "xml");
+  struct hwloc_component *comp = hwloc_component_find(topology, -1, "xml");
   if (!comp) {
     errno = ENOSYS;
     return -1;
@@ -2694,7 +2694,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
 
   /* if we haven't chosen the backend, set the OS-specific one if needed */
   if (!topology->backend) {
-    struct hwloc_component *comp = hwloc_find_component(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
+    struct hwloc_component *comp = hwloc_component_find(topology, HWLOC_COMPONENT_TYPE_OS, NULL);
     assert(comp);
     err = comp->instantiate(topology, comp, NULL, NULL, NULL);
     if (err < 0)
