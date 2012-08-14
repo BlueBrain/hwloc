@@ -307,7 +307,7 @@ hwloc_pci_warning(char *msg __hwloc_attribute_unused, ...)
 {
 }
 
-void
+static int
 hwloc_look_libpci(struct hwloc_topology *topology)
 {
   struct pci_access *pciaccess;
@@ -327,7 +327,7 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
   if (setjmp(err_buf)) {
     pci_cleanup(pciaccess);
-    return;
+    return -1;
   }
 
   pci_init(pciaccess);
@@ -481,7 +481,7 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
   if (!fakehostbridge.first_child)
     /* found nothing, exit */
-    return;
+    return 0;
 
   /* walk the hierarchy, set bridge depth and lookup OS devices */
   hwloc_pci_traverse(topology, &fakehostbridge, hwloc_pci_traverse_setbridgedepth_cb);
@@ -541,6 +541,47 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
   if (createdgroups)
     topology->next_group_depth++;
+
+  return 1;
+}
+
+static int
+hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
+                                struct hwloc_component *component,
+                                const void *_data1 __hwloc_attribute_unused,
+                                const void *_data2 __hwloc_attribute_unused,
+                                const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+
+  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
+    return 0;
+
+  if (!topology->is_thissystem) {
+    hwloc_debug("%s", "\nno PCI detection (not thissystem)\n");
+    return 0;
+  }
+
+  backend = hwloc_backend_alloc(topology, component);
+  if (!backend)
+    return -1;
+  backend->discover = hwloc_look_libpci;
+  hwloc_backend_enable(topology, backend);
+  return 0;
+}
+
+static struct hwloc_component hwloc_libpci_component = {
+  HWLOC_COMPONENT_TYPE_ADDITIONAL,
+  "libpci",
+  hwloc_libpci_component_instantiate,
+  NULL,
+  NULL
+};
+
+void
+hwloc_libpci_component_register(struct hwloc_topology *topology)
+{
+  hwloc_component_register(topology, &hwloc_libpci_component);
 }
 
 #endif /* HWLOC_HAVE_LIBPCI */

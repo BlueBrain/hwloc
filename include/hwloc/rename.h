@@ -470,6 +470,7 @@ extern "C" {
 #define hwloc_synthetic_component_register HWLOC_NAME(synthetic_component_register)
 #define hwloc_custom_component_register HWLOC_NAME(custom_component_register)
 #define hwloc_noos_component_register HWLOC_NAME(noos_component_register)
+#define hwloc_libpci_component_register HWLOC_NAME(libpci_component_register)
 
 #define hwloc_xml_imported_distances_s HWLOC_NAME(xml_imported_distances_s)
 
@@ -483,8 +484,6 @@ extern "C" {
 
 #define hwloc_topology_setup_defaults HWLOC_NAME(topology_setup_defaults)
 #define hwloc_topology_clear HWLOC_NAME(topology_clear)
-
-#define hwloc_look_libpci HWLOC_NAME(look_libpci)
 
 #define hwloc_look_x86 HWLOC_NAME(look_x86)
 

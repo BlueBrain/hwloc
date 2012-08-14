@@ -71,6 +71,10 @@ hwloc_components_init(struct hwloc_topology *topology)
   hwloc_synthetic_component_register(topology);
   hwloc_custom_component_register(topology);
 
+#ifdef HWLOC_HAVE_LIBPCI
+  hwloc_libpci_component_register(topology);
+#endif
+
   topology->backend = NULL;
   topology->additional_backends = NULL;
 }

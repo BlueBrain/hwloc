@@ -2261,24 +2261,11 @@ hwloc_discover(struct hwloc_topology *topology)
       err = backend->discover(topology);
       if (err >= 0)
 	gotsomeio += err;
+      print_objects(topology, 0, topology->levels[0][0]);
       backend = backend->next;
     }
   }
-  /* import from libpci if needed */
-  if (topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)
-      && topology->backend->component->type == HWLOC_COMPONENT_TYPE_OS) {
-    hwloc_debug("%s", "\nLooking for PCI devices\n");
-#ifdef HWLOC_HAVE_LIBPCI
-    if (topology->is_thissystem) {
-      hwloc_look_libpci(topology);
-      print_objects(topology, 0, topology->levels[0][0]);
-      gotsomeio = 1;
-    } else
-#endif
-    {
-      hwloc_debug("%s", "\nno PCI detection\n");
-    }
-  }
+
   /* if we got anything, filter interesting objects and update the tree */
   if (gotsomeio) {
     hwloc_drop_useless_io(topology, topology->levels[0][0]);

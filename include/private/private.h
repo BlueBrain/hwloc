@@ -229,7 +229,7 @@ extern void hwloc_hpux_component_register(struct hwloc_topology *topology);
 extern void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs);
 
 #ifdef HWLOC_HAVE_LIBPCI
-extern void hwloc_look_libpci(struct hwloc_topology *topology);
+extern void hwloc_libpci_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_LIBPCI */
 
 extern void hwloc_synthetic_component_register(struct hwloc_topology *topology);
