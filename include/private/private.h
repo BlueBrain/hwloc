@@ -74,6 +74,7 @@ extern int hwloc_component_register(struct hwloc_topology *topology, struct hwlo
 extern void hwloc_components_init(struct hwloc_topology *topology);
 extern void hwloc_components_destroy_all(struct hwloc_topology *topology);
 extern struct hwloc_component * hwloc_component_find(struct hwloc_topology *topology, int type, const char *name);
+extern struct hwloc_component * hwloc_component_find_next(struct hwloc_topology *topology, int type, const char *name, struct hwloc_component *prev);
 
 struct hwloc_backend {
   struct hwloc_component * component;

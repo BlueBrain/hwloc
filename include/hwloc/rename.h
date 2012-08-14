@@ -450,6 +450,7 @@ extern "C" {
 #define hwloc_components_init HWLOC_NAME(components_init)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 #define hwloc_component_find HWLOC_NAME(component_find)
+#define hwloc_component_find_next HWLOC_NAME(component_find_next)
 
 #define hwloc_backend HWLOC_NAME(backend)
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)

@@ -75,12 +75,13 @@ hwloc_components_init(struct hwloc_topology *topology)
 }
 
 struct hwloc_component *
-hwloc_component_find(struct hwloc_topology *topology,
-		     int type /* hwloc_component_type_t or -1 if any */,
-		     const char *name /* name of NULL if any */)
+hwloc_component_find_next(struct hwloc_topology *topology,
+			  int type /* hwloc_component_type_t or -1 if any */,
+			  const char *name /* name of NULL if any */,
+			  struct hwloc_component *prev)
 {
   struct hwloc_component *comp;
-  comp = topology->components;
+  comp = prev ? prev->next : topology->components;
   while (NULL != comp) {
     if ((-1 == type || type == (int) comp->type)
        && (NULL == name || !strcmp(name, comp->name)))
@@ -88,6 +89,14 @@ hwloc_component_find(struct hwloc_topology *topology,
     comp = comp->next;
   }
   return NULL;
+}
+
+struct hwloc_component *
+hwloc_component_find(struct hwloc_topology *topology,
+		     int type /* hwloc_component_type_t or -1 if any */,
+		     const char *name /* name of NULL if any */)
+{
+  return hwloc_component_find_next(topology, type, name, NULL);
 }
 
 void
