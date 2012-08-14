@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * See COPYING in top-level directory.
  */
@@ -566,6 +566,7 @@ hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     return -1;
   backend->discover = hwloc_look_libpci;
+  backend->priority = 10;
   hwloc_backend_enable(topology, backend);
   return 0;
 }

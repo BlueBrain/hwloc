@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009      CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  *
@@ -94,7 +94,9 @@ struct hwloc_backend {
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
-  struct hwloc_backend * next;
+
+  struct hwloc_backend * next; /* used for the additional backend list. NULL otherwise. */
+  unsigned priority; /* the additional backend list is sorted by priority. ignored for other backends. */
 };
 
 extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
@@ -178,7 +180,7 @@ struct hwloc_topology {
 
   struct hwloc_component * components;
   struct hwloc_backend * backend;
-  struct hwloc_backend * additional_backends;
+  struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
 };
 
 
