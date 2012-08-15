@@ -68,8 +68,8 @@ struct hwloc_component {
   int (*instantiate)(struct hwloc_topology *topology, struct hwloc_component *component, const void *data1, const void *data2, const void *data3);
   void (*set_hooks)(struct hwloc_topology *topology); /* only used if HWLOC_COMPONENT_TYPE_OS */
 
-  unsigned priority; /* the component list is sorted by priority, higher first, 0 for noos, 10 for everything else */
-  struct hwloc_component * next; /* hwloc internal use only */
+  unsigned priority; /* used to sort topology->components and topology->additional_backends, higher priority first */
+  struct hwloc_component * next; /* used internally to list components by priority on topology->components */
 };
 
 extern int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
@@ -97,7 +97,9 @@ struct hwloc_backend {
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
 
-  struct hwloc_backend * next; /* used for the additional backend list. NULL otherwise. */
+  struct hwloc_backend * next; /* used internally to list additional backends by priority on topology->additional_backends.
+				* unused (NULL) for other backends (on topology->backend).
+				*/
 };
 
 extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
@@ -179,8 +181,17 @@ struct hwloc_topology {
     struct hwloc_os_distances_s *prev, *next;
   } *first_osdist, *last_osdist;
 
+  /* list of all registered components, sorted by priority, higher priority first.
+   * noos is last because its priority is 0.
+   * others' priority is 10.
+   */
   struct hwloc_component * components;
+  /* single base or global backend.
+   */
   struct hwloc_backend * backend;
+  /* list of additional backends, sorted by their component's priority, higher priority first.
+   * libpci has priority 10.
+   */
   struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
 
   struct hwloc_xml_callbacks *nolibxml_callbacks, *libxml_callbacks; /* set when registering nolibxml and libxml components */
