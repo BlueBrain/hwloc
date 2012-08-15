@@ -22,7 +22,7 @@ hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component
     prev = &((*prev)->next);
   }
   *prev = new;
-  component->next = NULL;
+  new->next = NULL;
   return 0;
 }
 
