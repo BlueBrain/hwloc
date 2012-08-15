@@ -32,40 +32,32 @@ hwloc_components_init(struct hwloc_topology *topology)
   topology->components = NULL;
 
 #ifdef HWLOC_LINUX_SYS
-# define HAVE_OS_SUPPORT
   hwloc_linux_component_register(topology);
 #endif
 #ifdef HWLOC_AIX_SYS
-# define HAVE_OS_SUPPORT
   hwloc_aix_component_register(topology);
 #endif /* HWLOC_AIX_SYS */
 #ifdef HWLOC_OSF_SYS
-# define HAVE_OS_SUPPORT
   hwloc_osf_component_register(topology);
 #endif /* HWLOC_OSF_SYS */
 #ifdef HWLOC_SOLARIS_SYS
-# define HAVE_OS_SUPPORT
   hwloc_solaris_component_register(topology);
 #endif /* HWLOC_SOLARIS_SYS */
 #ifdef HWLOC_WIN_SYS
-# define HAVE_OS_SUPPORT
   hwloc_windows_component_register(topology);
 #endif /* HWLOC_WIN_SYS */
 #ifdef HWLOC_DARWIN_SYS
-# define HAVE_OS_SUPPORT
   hwloc_darwin_component_register(topology);
 #endif /* HWLOC_DARWIN_SYS */
 #ifdef HWLOC_FREEBSD_SYS
-# define HAVE_OS_SUPPORT
   hwloc_freebsd_component_register(topology);
 #endif /* HWLOC_FREEBSD_SYS */
 #ifdef HWLOC_HPUX_SYS
-# define HAVE_OS_SUPPORT
   hwloc_hpux_component_register(topology);
 #endif /* HWLOC_HPUX_SYS */
-#ifndef HAVE_OS_SUPPORT
+
+  /* register this OS component last so that it doesn't get used if one real OS component above is available */
   hwloc_noos_component_register(topology);
-#endif /* Unsupported OS */
 
   hwloc_xml_component_register(topology);
   hwloc_synthetic_component_register(topology);
