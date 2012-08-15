@@ -178,7 +178,7 @@ hwloc_libxml_backend_exit(struct hwloc_topology *topology)
   xmlFreeDoc((xmlDoc*)bdata->data);
 }
 
-int
+static int
 hwloc_libxml_backend_init(struct hwloc_topology *topology __hwloc_attribute_unused,
 			  struct hwloc_backend *backend,
 			  const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
@@ -275,7 +275,7 @@ hwloc__libxml2_prepare_export(hwloc_topology_t topology)
   return doc;
 }
 
-int
+static int
 hwloc_libxml_export_file(hwloc_topology_t topology, const char *filename)
 {
   xmlDocPtr doc;
@@ -296,7 +296,7 @@ hwloc_libxml_export_file(hwloc_topology_t topology, const char *filename)
   return 0;
 }
 
-int
+static int
 hwloc_libxml_export_buffer(hwloc_topology_t topology, char **xmlbuffer, int *buflen)
 {
   xmlDocPtr doc = hwloc__libxml2_prepare_export(topology);
@@ -305,8 +305,26 @@ hwloc_libxml_export_buffer(hwloc_topology_t topology, char **xmlbuffer, int *buf
   return 0;
 }
 
-void
+static void
 hwloc_libxml_free_buffer(void *xmlbuffer)
 {
   xmlFree(BAD_CAST xmlbuffer);
+}
+
+/*************
+ * Callbacks *
+ *************/
+
+static struct hwloc_xml_callbacks hwloc_xml_libxml_callbacks = {
+  hwloc_libxml_backend_init,
+  hwloc_libxml_export_file,
+  hwloc_libxml_export_buffer,
+  hwloc_libxml_free_buffer
+};
+
+int
+hwloc_xml_libxml_callbacks_register(struct hwloc_topology *topology)
+{
+  topology->libxml_callbacks = &hwloc_xml_libxml_callbacks;
+  return 0;
 }

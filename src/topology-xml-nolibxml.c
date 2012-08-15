@@ -249,7 +249,7 @@ hwloc_nolibxml_backend_exit(struct hwloc_topology *topology)
   free(bdata->data);
 }
 
-int
+static int
 hwloc_nolibxml_backend_init(struct hwloc_topology *topology __hwloc_attribute_unused,
 			    struct hwloc_backend *backend,
 			    const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
@@ -435,7 +435,7 @@ hwloc___nolibxml_prepare_export(hwloc_topology_t topology, char *xmlbuffer, int 
   return ndata.written+1;
 }
 
-int
+static int
 hwloc_nolibxml_export_buffer(hwloc_topology_t topology, char **bufferp, int *buflenp)
 {
   char *buffer;
@@ -455,7 +455,7 @@ hwloc_nolibxml_export_buffer(hwloc_topology_t topology, char **bufferp, int *buf
   return 0;
 }
 
-int
+static int
 hwloc_nolibxml_export_file(hwloc_topology_t topology, const char *filename)
 {
   FILE *file;
@@ -485,8 +485,26 @@ hwloc_nolibxml_export_file(hwloc_topology_t topology, const char *filename)
   return 0;
 }
 
-void
+static void
 hwloc_nolibxml_free_buffer(void *xmlbuffer)
 {
   free(xmlbuffer);
+}
+
+/*************
+ * Callbacks *
+ *************/
+
+static struct hwloc_xml_callbacks hwloc_xml_nolibxml_callbacks = {
+  hwloc_nolibxml_backend_init,
+  hwloc_nolibxml_export_file,
+  hwloc_nolibxml_export_buffer,
+  hwloc_nolibxml_free_buffer
+};
+
+int
+hwloc_xml_nolibxml_callbacks_register(struct hwloc_topology *topology)
+{
+  topology->nolibxml_callbacks = &hwloc_xml_nolibxml_callbacks;
+  return 0;
 }

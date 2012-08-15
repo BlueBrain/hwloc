@@ -77,6 +77,14 @@ hwloc_components_init(struct hwloc_topology *topology)
 
   topology->backend = NULL;
   topology->additional_backends = NULL;
+
+  topology->nolibxml_callbacks = NULL;
+  topology->libxml_callbacks = NULL;
+
+  hwloc_xml_nolibxml_callbacks_register(topology);
+#ifdef HWLOC_HAVE_LIBXML2
+  hwloc_xml_libxml_callbacks_register(topology);
+#endif
 }
 
 struct hwloc_component *

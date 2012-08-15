@@ -104,7 +104,7 @@ extern void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_b
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 extern int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
-struct hwloc__xml_import_state_s;
+struct hwloc_xml_callbacks;
 
 struct hwloc_topology {
   unsigned nb_levels;					/* Number of horizontal levels */
@@ -181,6 +181,8 @@ struct hwloc_topology {
   struct hwloc_component * components;
   struct hwloc_backend * backend;
   struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
+
+  struct hwloc_xml_callbacks *nolibxml_callbacks, *libxml_callbacks; /* set when registering nolibxml and libxml components */
 };
 
 
@@ -240,6 +242,11 @@ extern void hwloc_synthetic_component_register(struct hwloc_topology *topology);
 extern void hwloc_noos_component_register(struct hwloc_topology *topology);
 
 extern void hwloc_custom_component_register(struct hwloc_topology *topology);
+
+extern int hwloc_xml_nolibxml_callbacks_register(struct hwloc_topology *topology);
+#ifdef HWLOC_HAVE_LIBXML2
+extern int hwloc_xml_libxml_callbacks_register(struct hwloc_topology *topology);
+#endif
 
 /*
  * Add an object to the topology.

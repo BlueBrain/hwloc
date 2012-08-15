@@ -418,15 +418,7 @@ extern "C" {
 #define hwloc__xml_export_output_t HWLOC_NAME(_xml_export_output_t)
 #define hwloc__xml_export_object HWLOC_NAME(_xml_export_object)
 
-#define hwloc_nolibxml_backend_init HWLOC_NAME(nolibxml_backend_init)
-#define hwloc_nolibxml_export_file HWLOC_NAME(nolibxml_export_file)
-#define hwloc_nolibxml_export_buffer HWLOC_NAME(nolibxml_export_buffer)
-#define hwloc_nolibxml_free_buffer HWLOC_NAME(nolibxml_free_buffer)
-
-#define hwloc_libxml_backend_init HWLOC_NAME(libxml_backend_init)
-#define hwloc_libxml_export_file HWLOC_NAME(libxml_export_file)
-#define hwloc_libxml_export_buffer HWLOC_NAME(libxml_export_buffer)
-#define hwloc_libxml_free_buffer HWLOC_NAME(libxml_free_buffer)
+#define hwloc_xml_callbacks HWLOC_NAME(xml_callbacks)
 
 /* private/private.h */
 
@@ -471,6 +463,9 @@ extern "C" {
 #define hwloc_custom_component_register HWLOC_NAME(custom_component_register)
 #define hwloc_noos_component_register HWLOC_NAME(noos_component_register)
 #define hwloc_libpci_component_register HWLOC_NAME(libpci_component_register)
+
+#define hwloc_xml_nolibxml_callbacks_register HWLOC_NAME(xml_nolibxml_callbacks_register)
+#define hwloc_xml_libxml_callbacks_register HWLOC_NAME(xml_libxml_callbacks_register)
 
 #define hwloc_xml_imported_distances_s HWLOC_NAME(xml_imported_distances_s)
 
