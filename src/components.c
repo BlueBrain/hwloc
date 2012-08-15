@@ -132,7 +132,6 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
   backend->notify_new_object = NULL;
   backend->disable = NULL;
   backend->is_custom = 0;
-  backend->priority = 0; /* additional backends have to define this */
   backend->next = NULL;
   return backend;
 }
@@ -162,7 +161,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
   case HWLOC_COMPONENT_TYPE_ADDITIONAL: {
     struct hwloc_backend **pprev = &topology->additional_backends;
     while (NULL != *pprev) {
-      if ((*pprev)->priority < backend->priority)
+      if ((*pprev)->component->priority < backend->component->priority)
         break;
       pprev = &((*pprev)->next);
     }

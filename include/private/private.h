@@ -98,7 +98,6 @@ struct hwloc_backend {
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
 
   struct hwloc_backend * next; /* used for the additional backend list. NULL otherwise. */
-  unsigned priority; /* the additional backend list is sorted by priority. ignored for other backends. */
 };
 
 extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
