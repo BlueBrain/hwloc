@@ -814,6 +814,7 @@ static struct hwloc_component hwloc_aix_component = {
   "aix",
   hwloc_aix_component_instantiate,
   hwloc_set_aix_hooks,
+  10,
   NULL
 };
 

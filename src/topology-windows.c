@@ -794,6 +794,7 @@ static struct hwloc_component hwloc_windows_component = {
   "windows",
   hwloc_windows_component_instantiate,
   hwloc_set_windows_hooks,
+  10,
   NULL
 };
 

@@ -400,6 +400,7 @@ static struct hwloc_component hwloc_osf_component = {
   "osf",
   hwloc_osf_component_instantiate,
   hwloc_set_osf_hooks,
+  10,
   NULL
 };
 

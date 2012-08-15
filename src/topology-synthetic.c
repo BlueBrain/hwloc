@@ -425,6 +425,7 @@ static struct hwloc_component hwloc_synthetic_component = {
   "synthetic",
   hwloc_synthetic_component_instantiate,
   NULL, /* no hooks for HWLOC_COMPONENT_TYPE_GLOBAL */
+  10,
   NULL
 };
 

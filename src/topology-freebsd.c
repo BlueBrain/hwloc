@@ -245,6 +245,7 @@ static struct hwloc_component hwloc_freebsd_component = {
   "freebsd",
   hwloc_freebsd_component_instantiate,
   hwloc_set_freebsd_hooks,
+  10,
   NULL
 };
 

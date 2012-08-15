@@ -278,6 +278,7 @@ static struct hwloc_component hwloc_darwin_component = {
   "darwin",
   hwloc_darwin_component_instantiate,
   hwloc_set_darwin_hooks,
+  10,
   NULL
 };
 

@@ -289,6 +289,7 @@ static struct hwloc_component hwloc_hpux_component = {
   "hpux",
   hwloc_hpux_component_instantiate,
   hwloc_set_hpux_hooks,
+  10,
   NULL
 };
 

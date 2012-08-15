@@ -19,10 +19,12 @@ hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component
 
   prev = &topology->components;
   while (NULL != *prev) {
+    if ((*prev)->priority < new->priority)
+      break;
     prev = &((*prev)->next);
   }
+  new->next = *prev;
   *prev = new;
-  new->next = NULL;
   return 0;
 }
 
@@ -56,8 +58,7 @@ hwloc_components_init(struct hwloc_topology *topology)
   hwloc_hpux_component_register(topology);
 #endif /* HWLOC_HPUX_SYS */
 
-  /* register this OS component last so that it doesn't get used if one real OS component above is available */
-  hwloc_noos_component_register(topology);
+  hwloc_noos_component_register(topology); /* has priority 0, will be inserted at the end of the list */
 
   hwloc_xml_component_register(topology);
   hwloc_synthetic_component_register(topology);

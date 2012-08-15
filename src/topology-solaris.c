@@ -778,6 +778,7 @@ static struct hwloc_component hwloc_solaris_component = {
   "solaris",
   hwloc_solaris_component_instantiate,
   hwloc_set_solaris_hooks,
+  10,
   NULL
 };
 

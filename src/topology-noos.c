@@ -46,6 +46,7 @@ static struct hwloc_component hwloc_noos_component = {
   "none",
   hwloc_noos_component_instantiate,
   hwloc_set_noos_hooks,
+  0, /* lowest priority */
   NULL
 };
 

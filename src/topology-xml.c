@@ -960,6 +960,7 @@ static struct hwloc_component hwloc_xml_component = {
   "xml",
   hwloc_xml_component_instantiate,
   NULL, /* no hooks for HWLOC_COMPONENT_TYPE_GLOBAL */
+  10,
   NULL
 };
 

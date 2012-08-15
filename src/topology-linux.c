@@ -3790,6 +3790,7 @@ static struct hwloc_component hwloc_linux_component = {
   "linux",
   hwloc_linux_component_instantiate,
   hwloc_set_linuxfs_hooks,
+  10,
   NULL
 };
 
