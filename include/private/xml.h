@@ -11,7 +11,7 @@
 
 #include <sys/types.h>
 
-extern int hwloc__xml_verbose(void);
+HWLOC_DECLSPEC int hwloc__xml_verbose(void);
 
 typedef struct hwloc__xml_import_state_s {
   struct hwloc__xml_import_state_s *parent;
@@ -50,7 +50,7 @@ typedef struct hwloc__xml_export_output_s {
   void *data;
 } * hwloc__xml_export_output_t;
 
-extern void hwloc__xml_export_object (hwloc__xml_export_output_t output, struct hwloc_topology *topology, struct hwloc_obj *obj);
+HWLOC_DECLSPEC void hwloc__xml_export_object (hwloc__xml_export_output_t output, struct hwloc_topology *topology, struct hwloc_obj *obj);
 
 struct hwloc_xml_callbacks {
   int (*backend_init)(struct hwloc_topology *topology, struct hwloc_backend *backend, const char *xmlpath, const char *xmlbuffer, int xmlbuflen);

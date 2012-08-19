@@ -72,7 +72,7 @@ struct hwloc_component {
   struct hwloc_component * next; /* used internally to list components by priority on topology->components */
 };
 
-extern int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
+HWLOC_DECLSPEC int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
 extern void hwloc_components_init(struct hwloc_topology *topology);
 extern void hwloc_components_destroy_all(struct hwloc_topology *topology);
 extern struct hwloc_component * hwloc_component_find(struct hwloc_topology *topology, int type, const char *name);
@@ -102,10 +102,10 @@ struct hwloc_backend {
 				*/
 };
 
-extern struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
-extern void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
+HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
+HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
-extern int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
+HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
 struct hwloc_xml_callbacks;
 
@@ -278,16 +278,16 @@ extern void hwloc_xml_libxml_component_register(struct hwloc_topology *topology)
  *
  * In case of error, hwloc_report_os_error() is called.
  */
-extern void hwloc_insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj);
+HWLOC_DECLSPEC void hwloc_insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj);
 
 /* Error reporting */
 typedef void (*hwloc_report_error_t)(const char * msg, int line);
-extern void hwloc_report_os_error(const char * msg, int line);
-extern int hwloc_hide_errors(void);
+HWLOC_DECLSPEC void hwloc_report_os_error(const char * msg, int line);
+HWLOC_DECLSPEC int hwloc_hide_errors(void);
 /*
  * Add an object to the topology and specify which error callback to use
  */
-extern int hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj, hwloc_report_error_t report_error);
+HWLOC_DECLSPEC int hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj, hwloc_report_error_t report_error);
 
 /*
  * Insert an object somewhere in the topology.
@@ -300,7 +300,7 @@ extern int hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc
  *
  * Remember to call topology_connect() afterwards to fix handy pointers.
  */
-extern void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, hwloc_obj_t obj);
+HWLOC_DECLSPEC void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, hwloc_obj_t obj);
 
 /* Insert uname-specific names/values in the object infos array */
 extern void hwloc_add_uname_info(struct hwloc_topology *topology);
