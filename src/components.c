@@ -7,12 +7,167 @@
 #include <hwloc.h>
 #include <private/private.h>
 
-#include <static-components.h>
+#ifdef HWLOC_HAVE_PLUGINS
+#include <ltdl.h>
+
+struct hwloc__dlforeach_cbdata {
+  struct hwloc_topology *topology;
+  int verbose;
+};
+
+static int
+hwloc__dlforeach_cb(const char *filename, void *_data)
+{
+  struct hwloc__dlforeach_cbdata *cbdata = _data;
+  struct hwloc_topology *topology = cbdata->topology;
+  int verbose = cbdata->verbose;
+  const char *_basename, *sep;
+  char *basename;
+  lt_dlhandle handle;
+  char *pluginsymbolname;
+  struct hwloc_plugin *plugin;
+  struct hwloc__plugin_desc *desc;
+
+  if (verbose)
+    fprintf(stderr, "Plugin dlforeach found %s\n", filename);
+
+  _basename = strrchr(filename, '/');
+  if (!_basename)
+    _basename = filename;
+  else
+    _basename++;
+  if (verbose)
+    fprintf(stderr, "Plugin basename %s\n", _basename);
+
+  /* format must be <class>_<name> */
+  sep = strchr(_basename, '_');
+  if (!sep)
+    goto out;
+  if (strchr(sep+1, '_'))
+    goto out;
+  basename = strdup(_basename);
+  if (!basename)
+    goto out;
+  if (verbose)
+    fprintf(stderr, "Plugin matches expected format\n");
+
+  /* dlopen and get the plugin structure */
+  handle = lt_dlopenext(filename);
+  if (!handle)
+    goto out_with_basename;
+  pluginsymbolname = malloc(6+strlen(basename)+7+1);
+  sprintf(pluginsymbolname, "hwloc_%s_plugin", basename);
+  plugin = lt_dlsym(handle, pluginsymbolname);
+  free(pluginsymbolname);
+  if (!plugin)
+    goto out_with_basename;
+  if (plugin->abi != HWLOC_PLUGIN_ABI)
+    goto out_with_basename;
+  if (verbose)
+    fprintf(stderr, "Plugin contains expected symbol name\n");
+
+  /* allocate a plugin_desc and queue it */
+  desc = malloc(sizeof(*desc));
+  if (!desc)
+    goto out_with_handle;
+  desc->name = basename;
+  desc->plugin = plugin;
+  desc->handle = handle;
+  if (verbose)
+    fprintf(stderr, "Plugin descriptor ready\n");
+
+  /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
+  if (!strncmp(basename, "core_", 5)) {
+    desc->next = topology->core_plugins;
+    topology->core_plugins = desc;
+  } else if (!strncmp(basename, "xml_", 4)) {
+    desc->next = topology->xml_plugins;
+    topology->xml_plugins = desc;
+  } else {
+    goto out_with_desc;
+  }
+  if (verbose)
+    fprintf(stderr, "Plugin descriptor queued\n");
+  return 0;
+
+ out_with_desc:
+  free(desc);
+ out_with_handle:
+  lt_dlclose(handle);
+ out_with_basename:
+  free(basename);
+ out:
+  return 0;
+}
+
+static void
+hwloc_plugins_exit(struct hwloc_topology *topology)
+{
+  struct hwloc__plugin_desc *desc, *next;
+
+  desc = topology->core_plugins;
+  while (desc) {
+    next = desc->next;
+    lt_dlclose(desc->handle);
+    free(desc->name);
+    free(desc);
+    desc = next;
+  }
+  topology->core_plugins = NULL;
+
+  desc = topology->xml_plugins;
+  while (desc) {
+    next = desc->next;
+    lt_dlclose(desc->handle);
+    free(desc->name);
+    free(desc);
+    desc = next;
+  }
+  topology->xml_plugins = NULL;
+
+  lt_dlexit();
+}
+
+static int
+hwloc_plugins_init(struct hwloc_topology *topology)
+{
+  struct hwloc__dlforeach_cbdata cbdata;
+  char *verboseenv = getenv("HWLOC_VERBOSE_PLUGINS");
+  int verbose = verboseenv ? atoi(verboseenv) : 0;
+  int err;
+
+  err = lt_dlinit();
+  if (err)
+    goto out;
+
+  topology->core_plugins = NULL;
+  topology->xml_plugins = NULL;
+
+  if (verbose)
+    fprintf(stderr, "Starting plugin dlforeach\n");
+  cbdata.topology = topology;
+  cbdata.verbose = verbose;
+  err = lt_dlforeachfile(HWLOC_PLUGINS_DIR, hwloc__dlforeach_cb, &cbdata);
+  if (err)
+    goto out_with_init;
+
+  return 0;
+
+ out_with_init:
+  hwloc_plugins_exit(topology);
+ out:
+  return -1;
+}
+
+#endif /* HWLOC_HAVE_PLUGINS */
 
 int
 hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component)
 {
   struct hwloc_component **prev, *new;
+
+  /* FIXME disallow multiple components with same name?
+   * in case they insert same objects twice */
 
   new = malloc(sizeof(*new));
   if (!new)
@@ -30,15 +185,28 @@ hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component
   return 0;
 }
 
+#include <static-components.h>
+
 void
 hwloc_components_init(struct hwloc_topology *topology)
 {
+#ifdef HWLOC_HAVE_PLUGINS
+  struct hwloc__plugin_desc *desc;
+#endif
   unsigned i;
+
+#ifdef HWLOC_HAVE_PLUGINS
+  hwloc_plugins_init(topology);
+#endif
 
   topology->components = NULL;
   /* hwloc_static_core_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_core_components[i]; i++)
     hwloc_static_core_components[i](topology);
+#ifdef HWLOC_HAVE_PLUGINS
+  for(desc = topology->core_plugins; NULL != desc; desc = desc->next)
+    desc->plugin->init(topology);
+#endif
   topology->backend = NULL;
   topology->additional_backends = NULL;
 
@@ -47,6 +215,10 @@ hwloc_components_init(struct hwloc_topology *topology)
   /* hwloc_static_xml_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_xml_components[i]; i++)
     hwloc_static_xml_components[i](topology);
+#ifdef HWLOC_HAVE_PLUGINS
+  for(desc = topology->xml_plugins; NULL != desc; desc = desc->next)
+    desc->plugin->init(topology);
+#endif
 }
 
 struct hwloc_component *
@@ -84,6 +256,10 @@ hwloc_components_destroy_all(struct hwloc_topology *topology)
     comp = next;
   }
   topology->components = NULL;
+
+#ifdef HWLOC_HAVE_PLUGINS
+  hwloc_plugins_exit(topology);
+#endif
 }
 
 struct hwloc_backend *

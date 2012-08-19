@@ -28,6 +28,10 @@
 #endif
 #include <string.h>
 
+#ifdef HWLOC_HAVE_PLUGINS
+#include <ltdl.h>
+#endif
+
 #ifdef HWLOC_HAVE_ATTRIBUTE_FORMAT
 # if HWLOC_HAVE_ATTRIBUTE_FORMAT
 #  define __hwloc_attribute_format(type, str, arg)  __attribute__((__format__(type, str, arg)))
@@ -205,8 +209,17 @@ struct hwloc_topology {
   struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
 
   struct hwloc_xml_callbacks *nolibxml_callbacks, *libxml_callbacks; /* set when registering nolibxml and libxml components */
-};
 
+#ifdef HWLOC_HAVE_PLUGINS
+  /* array of pointers to dynamically loaded plugins */
+  struct hwloc__plugin_desc {
+    char *name;
+    struct hwloc_plugin *plugin;
+    lt_dlhandle handle;
+    struct hwloc__plugin_desc *next;
+  } *core_plugins, *xml_plugins;
+#endif
+};
 
 extern void hwloc_alloc_obj_cpusets(hwloc_obj_t obj);
 extern void hwloc_setup_pu_level(struct hwloc_topology *topology, unsigned nb_pus);

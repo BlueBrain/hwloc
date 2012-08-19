@@ -21,6 +21,7 @@ endif
 
 pluginsdir = $(libdir)/hwloc
 plugins_LTLIBRARIES = 
+AM_CPPFLAGS += -DHWLOC_PLUGINS_DIR=\"$(pluginsdir)\"
 
 # Sources and ldflags
 
@@ -134,6 +135,9 @@ sources += topology-x86.c
 
 libhwloc_la_SOURCES = $(sources)
 libhwloc_la_LDFLAGS = $(ldflags) -version-info $(libhwloc_so_version) $(HWLOC_LIBS)
+if HWLOC_HAVE_PLUGINS
+libhwloc_la_LDFLAGS += -lltdl
+endif
 
 # Embedded library (note the lack of a .so version number -- that
 # intentionally only appears in the installable library).  Also note
