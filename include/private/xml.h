@@ -11,10 +11,6 @@
 
 #include <sys/types.h>
 
-#ifdef HWLOC_HAVE_LIBXML2
-#include <libxml/tree.h>
-#endif
-
 extern int hwloc__xml_verbose(void);
 
 typedef struct hwloc__xml_import_state_s {
