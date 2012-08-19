@@ -109,6 +109,8 @@ extern int hwloc_backends_notify_new_object(struct hwloc_topology *topology, str
 
 struct hwloc_xml_callbacks;
 
+typedef void (*hwloc_component_init_fn_t)(struct hwloc_topology *);
+
 struct hwloc_topology {
   unsigned nb_levels;					/* Number of horizontal levels */
   unsigned next_group_depth;				/* Depth of the next Group object that we may create */

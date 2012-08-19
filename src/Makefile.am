@@ -130,3 +130,5 @@ xml_DATA = $(srcdir)/hwloc.dtd
 xmldir = $(pkgdatadir)
 EXTRA_DIST += hwloc.dtd
 endif
+
+DISTCLEANFILES = static-components.h
