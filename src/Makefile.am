@@ -19,6 +19,9 @@ else
 noinst_LTLIBRARIES = libhwloc_embedded.la
 endif
 
+pluginsdir = $(libdir)/hwloc
+plugins_LTLIBRARIES = 
+
 # Sources and ldflags
 
 sources = \
@@ -26,24 +29,40 @@ sources = \
         traversal.c \
         distances.c \
         components.c \
-        topology-synthetic.c \
-        topology-custom.c \
-        topology-noos.c \
-        topology-xml.c \
-        topology-xml-nolibxml.c \
         bind.c \
         bitmap.c \
-        misc.c
+        misc.c \
+        topology-noos.c \
+        topology-synthetic.c \
+        topology-custom.c \
+        topology-xml.c \
+        topology-xml-nolibxml.c
 ldflags =
 
 # Conditionally add to the sources and ldflags
 
 if HWLOC_HAVE_LIBXML2
+if HWLOC_XML_LIBXML_BUILD_STATIC
 sources += topology-xml-libxml.c
+else
+plugins_LTLIBRARIES += xml_libxml.la
+xml_libxml_la_SOURCES = topology-xml-libxml.c
+xml_libxml_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
+xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS)
+xml_libxml_la_LDFLAGS = -module -avoid-version $(HWLOC_LIBXML2_LIBS)
+endif
 endif HWLOC_HAVE_LIBXML2
 
 if HWLOC_HAVE_LIBPCI
+if HWLOC_CORE_LIBPCI_BUILD_STATIC
 sources += topology-libpci.c
+else
+plugins_LTLIBRARIES += core_libpci.la
+core_libpci_la_SOURCES = topology-libpci.c
+core_libpci_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
+core_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS)
+core_libpci_la_LDFLAGS = -module -avoid-version $(HWLOC_PCI_LIBS)
+endif
 endif HWLOC_HAVE_LIBPCI
 
 if HWLOC_HAVE_SOLARIS

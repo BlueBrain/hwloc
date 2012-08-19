@@ -676,7 +676,6 @@ EOF])
         ])
     fi
     AC_SUBST(HWLOC_PCI_LIBS)
-    HWLOC_LIBS="$HWLOC_LIBS $HWLOC_PCI_LIBS"
     # If we asked for pci support but couldn't deliver, fail
     AS_IF([test "$enable_pci" = "yes" -a "$hwloc_pci_happy" = "no"],
           [AC_MSG_WARN([Specified --enable-pci switch, but could not])
@@ -723,7 +722,7 @@ EOF])
     else
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
     fi
-    HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_PCI_CFLAGS"
+    # don't add LIBS/CFLAGS yet, depends on plugins
 
     # libxml2 support
     hwloc_libxml2_happy=
@@ -744,8 +743,7 @@ EOF])
               [AC_MSG_WARN([--enable-libxml2 requested, but libxml2 was not found])
                AC_MSG_ERROR([Cannot continue])])
     fi
-    HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_LIBXML2_CFLAGS"    
-    HWLOC_LIBS="$HWLOC_LIBS $HWLOC_LIBXML2_LIBS"
+    # don't add LIBS/CFLAGS yet, depends on plugins
 
     #
     # Now enable registration of listed components
@@ -755,6 +753,10 @@ EOF])
     AC_MSG_CHECKING([if plugin support is enabled])
     # Plugins (even core support) are totally disabled by default
     AS_IF([test "x$enable_plugins" = "x"], [enable_plugins=no])
+    # Plugins not compatible with embedded
+    AS_IF([test "$enable_plugins" != "no" -a "$hwloc_mode" != "standalone"],
+          [AC_MSG_WARN([--enable-plugins requested, but hwloc not in standalone mode])
+           AC_MSG_ERROR([Cannot continue])])
     # Plugins are always supported for now
     AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
     AC_MSG_RESULT([$hwloc_have_plugins])
@@ -790,6 +792,13 @@ EOF])
     HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [xml], [$hwloc_static_xml_components])
     AC_MSG_CHECKING([xml components to build as plugins])
     AC_MSG_RESULT([$hwloc_plugin_xml_components])
+
+    AS_IF([test "$hwloc_core_libpci_component" = "static"],
+          [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_PCI_LIBS"
+           HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_PCI_CFLAGS"])
+    AS_IF([test "$hwloc_xml_libxml_component" = "static"],
+          [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_LIBXML2_LIBS"
+           HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_LIBXML2_CFLAGS"])
 
     #
     # Setup HWLOC's C, CPP, and LD flags, and LIBS
