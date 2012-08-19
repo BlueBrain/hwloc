@@ -70,6 +70,11 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
                   AS_HELP_STRING([--disable-libnuma],
                                  [Disable the Linux libnuma]))
 
+    # Plugins
+    AC_ARG_ENABLE([plugins],
+                  AS_HELP_STRING([--enable-plugins=class-name,...],
+                                 [Build the given components as dynamically-loaded plugins]))
+
 ])dnl
 
 #-----------------------------------------------------------------------

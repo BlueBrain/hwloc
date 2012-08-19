@@ -719,6 +719,7 @@ EOF])
       LIBS="$tmp_save_LIBS"
 
       hwloc_core_components="$hwloc_core_components libpci"
+      hwloc_core_libpci_component_maybeplugin=1
     else
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
     fi
@@ -736,6 +737,7 @@ EOF])
         AC_DEFINE([HWLOC_HAVE_LIBXML2], [1], [Define to 1 if you have the `libxml2' library.])
         AC_SUBST([HWLOC_HAVE_LIBXML2], [1])
         hwloc_xml_components="$hwloc_xml_components libxml"
+        hwloc_xml_libxml_component_maybeplugin=1
     else
         AC_SUBST([HWLOC_HAVE_LIBXML2], [0])
 	AS_IF([test "$enable_libxml2" = "yes"],
@@ -748,15 +750,46 @@ EOF])
     #
     # Now enable registration of listed components
     #
+
+    # Plugin support
+    AC_MSG_CHECKING([if plugin support is enabled])
+    # Plugins (even core support) are totally disabled by default
+    AS_IF([test "x$enable_plugins" = "x"], [enable_plugins=no])
+    # Plugins are always supported for now
+    AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
+    AC_MSG_RESULT([$hwloc_have_plugins])
+    AS_IF([test "x$hwloc_have_plugins" = "xyes"],
+          [AC_DEFINE([HWLOC_HAVE_PLUGINS], 1, [Define to 1 if the hwloc library should support dynamically-loaded plugins])])
+
     # Static components output file
     hwloc_static_components_dir=${HWLOC_top_builddir}/src
     mkdir -p ${hwloc_static_components_dir}
     hwloc_static_components_file=${hwloc_static_components_dir}/static-components.h
     rm -f ${hwloc_static_components_file}
 
-    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [core], [$hwloc_core_components])
+    # Make $enable_plugins easier to use (it contains either "yes" (all) or a list of <class>-<name>)
+    HWLOC_PREPARE_FILTER_COMPONENTS([$enable_plugins])
+    # Now we have some hwloc_<class>_<name>_component_wantplugin=1
 
-    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [xml], [$hwloc_xml_components])
+    # See which core components want plugin and support it
+    HWLOC_FILTER_COMPONENTS([core])
+    # Now we have some hwloc_core_<name>_component=plugin/static
+    # and hwloc_static/plugin_core_components
+    AC_MSG_CHECKING([core components to build statically])
+    AC_MSG_RESULT($hwloc_static_core_components)
+    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [core], [$hwloc_static_core_components])
+    AC_MSG_CHECKING([core components to build as plugins])
+    AC_MSG_RESULT([$hwloc_plugin_core_components])
+
+    # See which xml components want plugin and support it
+    HWLOC_FILTER_COMPONENTS([xml])
+    # Now we have some hwloc_xml_<name>_component=plugin/static
+    # and hwloc_static/plugin_xml_components
+    AC_MSG_CHECKING([xml components to build statically])
+    AC_MSG_RESULT($hwloc_static_xml_components)
+    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [xml], [$hwloc_static_xml_components])
+    AC_MSG_CHECKING([xml components to build as plugins])
+    AC_MSG_RESULT([$hwloc_plugin_xml_components])
 
     #
     # Setup HWLOC's C, CPP, and LD flags, and LIBS
@@ -884,6 +917,10 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_CPUID], [test "x$hwloc_have_cpuid" = "xyes"])
+
+        AM_CONDITIONAL([HWLOC_HAVE_PLUGINS], [test "x$hwloc_have_plugins" = "xyes"])
+        AM_CONDITIONAL([HWLOC_CORE_LIBPCI_BUILD_STATIC], [test "x$hwloc_core_libpci_component" = "xstatic"])
+        AM_CONDITIONAL([HWLOC_XML_LIBXML_BUILD_STATIC], [test "x$hwloc_xml_libxml_component" = "xstatic"])
     ])
     hwloc_did_am_conditionals=yes
 ])dnl
