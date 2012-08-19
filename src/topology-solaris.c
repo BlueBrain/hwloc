@@ -783,7 +783,7 @@ static struct hwloc_component hwloc_solaris_component = {
 };
 
 void
-hwloc_solaris_component_register(struct hwloc_topology *topology)
+hwloc_core_solaris_component_register(struct hwloc_topology *topology)
 {
   hwloc_component_register(topology, &hwloc_solaris_component);
 }

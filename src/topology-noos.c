@@ -51,7 +51,7 @@ static struct hwloc_component hwloc_noos_component = {
 };
 
 void
-hwloc_noos_component_register(struct hwloc_topology *topology)
+hwloc_core_noos_component_register(struct hwloc_topology *topology)
 {
   hwloc_component_register(topology, &hwloc_noos_component);
 }

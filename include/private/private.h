@@ -210,54 +210,54 @@ extern void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
 extern void hwloc_topology_clear(struct hwloc_topology *topology);
 
 #if defined(HWLOC_LINUX_SYS)
-extern void hwloc_linux_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_linux_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_LINUX_SYS */
 
-extern void hwloc_xml_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_xml_component_register(struct hwloc_topology *topology);
 
 #ifdef HWLOC_SOLARIS_SYS
-extern void hwloc_solaris_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_solaris_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_SOLARIS_SYS */
 
 #ifdef HWLOC_AIX_SYS
-extern void hwloc_aix_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_aix_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_AIX_SYS */
 
 #ifdef HWLOC_OSF_SYS
-extern void hwloc_osf_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_osf_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_OSF_SYS */
 
 #ifdef HWLOC_WIN_SYS
-extern void hwloc_windows_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_windows_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_WIN_SYS */
 
 #ifdef HWLOC_DARWIN_SYS
-extern void hwloc_darwin_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_darwin_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_DARWIN_SYS */
 
 #ifdef HWLOC_FREEBSD_SYS
-extern void hwloc_freebsd_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_freebsd_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_FREEBSD_SYS */
 
 #ifdef HWLOC_HPUX_SYS
-extern void hwloc_hpux_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_hpux_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_HPUX_SYS */
 
 extern void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs);
 
 #ifdef HWLOC_HAVE_LIBPCI
-extern void hwloc_libpci_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_libpci_component_register(struct hwloc_topology *topology);
 #endif /* HWLOC_HAVE_LIBPCI */
 
-extern void hwloc_synthetic_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_synthetic_component_register(struct hwloc_topology *topology);
 
-extern void hwloc_noos_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_noos_component_register(struct hwloc_topology *topology);
 
-extern void hwloc_custom_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_custom_component_register(struct hwloc_topology *topology);
 
-extern int hwloc_xml_nolibxml_callbacks_register(struct hwloc_topology *topology);
+extern void hwloc_xml_nolibxml_component_register(struct hwloc_topology *topology);
 #ifdef HWLOC_HAVE_LIBXML2
-extern int hwloc_xml_libxml_callbacks_register(struct hwloc_topology *topology);
+extern void hwloc_xml_libxml_component_register(struct hwloc_topology *topology);
 #endif
 
 /*

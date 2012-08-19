@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -322,9 +322,8 @@ static struct hwloc_xml_callbacks hwloc_xml_libxml_callbacks = {
   hwloc_libxml_free_buffer
 };
 
-int
-hwloc_xml_libxml_callbacks_register(struct hwloc_topology *topology)
+void
+hwloc_xml_libxml_component_register(struct hwloc_topology *topology)
 {
   topology->libxml_callbacks = &hwloc_xml_libxml_callbacks;
-  return 0;
 }

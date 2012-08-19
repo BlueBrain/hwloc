@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2010-2012 inria.  All rights reserved.
+ * Copyright © 2010-2012 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -450,22 +450,22 @@ extern "C" {
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
 #define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
 
-#define hwloc_linux_component_register HWLOC_NAME(linux_component_register)
-#define hwloc_xml_component_register HWLOC_NAME(xml_component_register)
-#define hwloc_solaris_component_register HWLOC_NAME(solaris_component_register)
-#define hwloc_aix_component_register HWLOC_NAME(aix_component_register)
-#define hwloc_osf_component_register HWLOC_NAME(osf_component_register)
-#define hwloc_windows_component_register HWLOC_NAME(windows_component_register)
-#define hwloc_darwin_component_register HWLOC_NAME(darwin_component_register)
-#define hwloc_freebsd_component_register HWLOC_NAME(freebsd_component_register)
-#define hwloc_hpux_component_register HWLOC_NAME(hpux_component_register)
-#define hwloc_synthetic_component_register HWLOC_NAME(synthetic_component_register)
-#define hwloc_custom_component_register HWLOC_NAME(custom_component_register)
-#define hwloc_noos_component_register HWLOC_NAME(noos_component_register)
-#define hwloc_libpci_component_register HWLOC_NAME(libpci_component_register)
+#define hwloc_core_linux_component_register HWLOC_NAME(core_linux_component_register)
+#define hwloc_core_xml_component_register HWLOC_NAME(core_xml_component_register)
+#define hwloc_core_solaris_component_register HWLOC_NAME(core_solaris_component_register)
+#define hwloc_core_aix_component_register HWLOC_NAME(core_aix_component_register)
+#define hwloc_core_osf_component_register HWLOC_NAME(core_osf_component_register)
+#define hwloc_core_windows_component_register HWLOC_NAME(core_windows_component_register)
+#define hwloc_core_darwin_component_register HWLOC_NAME(core_darwin_component_register)
+#define hwloc_core_freebsd_component_register HWLOC_NAME(core_freebsd_component_register)
+#define hwloc_core_hpux_component_register HWLOC_NAME(core_hpux_component_register)
+#define hwloc_core_synthetic_component_register HWLOC_NAME(core_synthetic_component_register)
+#define hwloc_core_custom_component_register HWLOC_NAME(core_custom_component_register)
+#define hwloc_core_noos_component_register HWLOC_NAME(core_noos_component_register)
+#define hwloc_core_libpci_component_register HWLOC_NAME(core_libpci_component_register)
 
-#define hwloc_xml_nolibxml_callbacks_register HWLOC_NAME(xml_nolibxml_callbacks_register)
-#define hwloc_xml_libxml_callbacks_register HWLOC_NAME(xml_libxml_callbacks_register)
+#define hwloc_xml_nolibxml_component_register HWLOC_NAME(xml_nolibxml_component_register)
+#define hwloc_xml_libxml_component_register HWLOC_NAME(xml_libxml_component_register)
 
 #define hwloc_xml_imported_distances_s HWLOC_NAME(xml_imported_distances_s)
 

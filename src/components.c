@@ -34,38 +34,38 @@ hwloc_components_init(struct hwloc_topology *topology)
   topology->components = NULL;
 
 #ifdef HWLOC_LINUX_SYS
-  hwloc_linux_component_register(topology);
+  hwloc_core_linux_component_register(topology);
 #endif
 #ifdef HWLOC_AIX_SYS
-  hwloc_aix_component_register(topology);
+  hwloc_core_aix_component_register(topology);
 #endif /* HWLOC_AIX_SYS */
 #ifdef HWLOC_OSF_SYS
-  hwloc_osf_component_register(topology);
+  hwloc_core_osf_component_register(topology);
 #endif /* HWLOC_OSF_SYS */
 #ifdef HWLOC_SOLARIS_SYS
-  hwloc_solaris_component_register(topology);
+  hwloc_core_solaris_component_register(topology);
 #endif /* HWLOC_SOLARIS_SYS */
 #ifdef HWLOC_WIN_SYS
-  hwloc_windows_component_register(topology);
+  hwloc_core_windows_component_register(topology);
 #endif /* HWLOC_WIN_SYS */
 #ifdef HWLOC_DARWIN_SYS
-  hwloc_darwin_component_register(topology);
+  hwloc_core_darwin_component_register(topology);
 #endif /* HWLOC_DARWIN_SYS */
 #ifdef HWLOC_FREEBSD_SYS
-  hwloc_freebsd_component_register(topology);
+  hwloc_core_freebsd_component_register(topology);
 #endif /* HWLOC_FREEBSD_SYS */
 #ifdef HWLOC_HPUX_SYS
-  hwloc_hpux_component_register(topology);
+  hwloc_core_hpux_component_register(topology);
 #endif /* HWLOC_HPUX_SYS */
 
-  hwloc_noos_component_register(topology); /* has priority 0, will be inserted at the end of the list */
+  hwloc_core_noos_component_register(topology); /* has priority 0, will be inserted at the end of the list */
 
-  hwloc_xml_component_register(topology);
-  hwloc_synthetic_component_register(topology);
-  hwloc_custom_component_register(topology);
+  hwloc_core_xml_component_register(topology);
+  hwloc_core_synthetic_component_register(topology);
+  hwloc_core_custom_component_register(topology);
 
 #ifdef HWLOC_HAVE_LIBPCI
-  hwloc_libpci_component_register(topology);
+  hwloc_core_libpci_component_register(topology);
 #endif
 
   topology->backend = NULL;
@@ -74,9 +74,9 @@ hwloc_components_init(struct hwloc_topology *topology)
   topology->nolibxml_callbacks = NULL;
   topology->libxml_callbacks = NULL;
 
-  hwloc_xml_nolibxml_callbacks_register(topology);
+  hwloc_xml_nolibxml_component_register(topology);
 #ifdef HWLOC_HAVE_LIBXML2
-  hwloc_xml_libxml_callbacks_register(topology);
+  hwloc_xml_libxml_component_register(topology);
 #endif
 }
 

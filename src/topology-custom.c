@@ -84,7 +84,7 @@ static struct hwloc_component hwloc_custom_component = {
 };
 
 void
-hwloc_custom_component_register(struct hwloc_topology *topology)
+hwloc_core_custom_component_register(struct hwloc_topology *topology)
 {
   hwloc_component_register(topology, &hwloc_custom_component);
 }

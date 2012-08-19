@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * Copyright © 2010 IBM
@@ -3795,7 +3795,7 @@ static struct hwloc_component hwloc_linux_component = {
 };
 
 void
-hwloc_linux_component_register(struct hwloc_topology *topology)
+hwloc_core_linux_component_register(struct hwloc_topology *topology)
 {
   hwloc_component_register(topology, &hwloc_linux_component);
 }

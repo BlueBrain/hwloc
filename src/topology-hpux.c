@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -294,7 +294,7 @@ static struct hwloc_component hwloc_hpux_component = {
 };
 
 void
-hwloc_hpux_component_register(struct hwloc_topology *topology)
+hwloc_core_hpux_component_register(struct hwloc_topology *topology)
 {
   hwloc_component_register(topology, &hwloc_hpux_component);
 }

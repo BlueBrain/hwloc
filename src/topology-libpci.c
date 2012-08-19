@@ -580,7 +580,7 @@ static struct hwloc_component hwloc_libpci_component = {
 };
 
 void
-hwloc_libpci_component_register(struct hwloc_topology *topology)
+hwloc_core_libpci_component_register(struct hwloc_topology *topology)
 {
   hwloc_component_register(topology, &hwloc_libpci_component);
 }
