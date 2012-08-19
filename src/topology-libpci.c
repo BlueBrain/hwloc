@@ -579,10 +579,22 @@ static struct hwloc_component hwloc_libpci_component = {
   NULL
 };
 
+#ifdef HWLOC_BUILD_PLUGIN
+static void
+hwloc_core_libpci_plugin_init(struct hwloc_topology *topology)
+#else
 void
 hwloc_core_libpci_component_register(struct hwloc_topology *topology)
+#endif
 {
   hwloc_component_register(topology, &hwloc_libpci_component);
 }
+
+#ifdef HWLOC_BUILD_PLUGIN
+HWLOC_DECLSPEC struct hwloc_plugin hwloc_core_libpci_plugin = {
+  HWLOC_PLUGIN_ABI,
+  hwloc_core_libpci_plugin_init
+};
+#endif
 
 #endif /* HWLOC_HAVE_LIBPCI */

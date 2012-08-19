@@ -111,6 +111,14 @@ struct hwloc_xml_callbacks;
 
 typedef void (*hwloc_component_init_fn_t)(struct hwloc_topology *);
 
+#ifdef HWLOC_HAVE_PLUGINS
+#define HWLOC_PLUGIN_ABI 1
+struct hwloc_plugin {
+  unsigned abi;
+  hwloc_component_init_fn_t init;
+};
+#endif /* HWLOC_HAVE_PLUGINS */
+
 struct hwloc_topology {
   unsigned nb_levels;					/* Number of horizontal levels */
   unsigned next_group_depth;				/* Depth of the next Group object that we may create */

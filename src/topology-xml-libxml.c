@@ -322,8 +322,20 @@ static struct hwloc_xml_callbacks hwloc_xml_libxml_callbacks = {
   hwloc_libxml_free_buffer
 };
 
+#ifdef HWLOC_BUILD_PLUGIN
+static void
+hwloc_xml_libxml_plugin_init(struct hwloc_topology *topology)
+#else
 void
 hwloc_xml_libxml_component_register(struct hwloc_topology *topology)
+#endif
 {
   topology->libxml_callbacks = &hwloc_xml_libxml_callbacks;
 }
+
+#ifdef HWLOC_BUILD_PLUGIN
+HWLOC_DECLSPEC struct hwloc_plugin hwloc_xml_libxml_plugin = {
+  HWLOC_PLUGIN_ABI,
+  hwloc_xml_libxml_plugin_init
+};
+#endif
