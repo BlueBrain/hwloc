@@ -43,6 +43,7 @@ check_PROGRAMS = hwloc_bitmap \
 	hwloc_topology_restrict \
 	hwloc_obj_infos \
 	hwloc_iodevs \
+	hwloc_valarray \
 	xmlbuffer
 
 if HWLOC_HAVE_LINUX_LIBNUMA
