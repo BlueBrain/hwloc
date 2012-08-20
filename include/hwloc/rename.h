@@ -177,6 +177,7 @@ extern "C" {
 #define hwloc_obj_get_info_by_name HWLOC_NAME(obj_get_info_by_name)
 #define hwloc_obj_add_info HWLOC_NAME(obj_add_info)
 #define hwloc_obj_add_valarray HWLOC_NAME(obj_add_valarray)
+#define hwloc_obj_get_valarray_by_name HWLOC_NAME(obj_get_valarray_by_name)
 
 #define HWLOC_CPUBIND_PROCESS HWLOC_NAME_CAPS(CPUBIND_PROCESS)
 #define HWLOC_CPUBIND_THREAD HWLOC_NAME_CAPS(CPUBIND_THREAD)

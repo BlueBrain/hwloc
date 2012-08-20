@@ -1345,6 +1345,20 @@ HWLOC_DECLSPEC void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const 
  */
 HWLOC_DECLSPEC int hwloc_obj_add_valarray(hwloc_obj_t obj, const char *name, unsigned nb, const float *values, const unsigned *idx);
 
+/** \brief Retrieve the array of values stored in a object with a given name.
+ */
+static __hwloc_inline struct hwloc_valarray_s *
+hwloc_obj_get_valarray_by_name(hwloc_obj_t obj, const char *name) __hwloc_attribute_pure;
+static __hwloc_inline struct hwloc_valarray_s *
+hwloc_obj_get_valarray_by_name(hwloc_obj_t obj, const char *name)
+{
+  unsigned i;
+  for(i=0; i<obj->valarray_count; i++)
+    if (!strcmp(obj->valarray[i]->name, name))
+      return obj->valarray[i];
+  return NULL;
+}
+
 /** @} */
 
 

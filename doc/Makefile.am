@@ -382,7 +382,8 @@ man3_conversion_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_obj_cpuset_snprintf.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_get_info_by_name.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_add_info.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_obj_add_valarray.3
+        $(DOX_MAN_DIR)/man3/hwloc_obj_add_valarray.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_get_valarray_by_name.3
 
 man3_cpubindingdir = $(man3dir)
 man3_cpubinding_DATA = \
