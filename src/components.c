@@ -24,20 +24,18 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   const char *_basename, *sep;
   char *basename;
   lt_dlhandle handle;
-  char *pluginsymbolname;
+  char *pluginsymbolname = NULL;
   struct hwloc_plugin *plugin;
   struct hwloc__plugin_desc *desc;
 
   if (verbose)
-    fprintf(stderr, "Plugin dlforeach found %s\n", filename);
+    fprintf(stderr, "Plugin dlforeach found `%s'\n", filename);
 
   _basename = strrchr(filename, '/');
   if (!_basename)
     _basename = filename;
   else
     _basename++;
-  if (verbose)
-    fprintf(stderr, "Plugin basename %s\n", _basename);
 
   /* format must be <class>_<name> */
   sep = strchr(_basename, '_');
@@ -45,11 +43,11 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
     goto out;
   if (strchr(sep+1, '_'))
     goto out;
+  if (verbose)
+    fprintf(stderr, "Plugin basename `%s' matches expected format\n", _basename);
   basename = strdup(_basename);
   if (!basename)
     goto out;
-  if (verbose)
-    fprintf(stderr, "Plugin matches expected format\n");
 
   /* dlopen and get the plugin structure */
   handle = lt_dlopenext(filename);
@@ -58,13 +56,23 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   pluginsymbolname = malloc(6+strlen(basename)+7+1);
   sprintf(pluginsymbolname, "hwloc_%s_plugin", basename);
   plugin = lt_dlsym(handle, pluginsymbolname);
-  free(pluginsymbolname);
-  if (!plugin)
-    goto out_with_basename;
-  if (plugin->abi != HWLOC_PLUGIN_ABI)
-    goto out_with_basename;
+  if (!plugin) {
+    if (verbose)
+      fprintf(stderr, "Failed to find plugin symbol `%s'\n",
+	      pluginsymbolname);
+    goto out_with_handle;
+  }
+  if (plugin->abi != HWLOC_PLUGIN_ABI) {
+    if (verbose)
+      fprintf(stderr, "Plugin symbol ABI %u instead of %u\n",
+	      plugin->abi, HWLOC_PLUGIN_ABI);
+    goto out_with_handle;
+  }
   if (verbose)
-    fprintf(stderr, "Plugin contains expected symbol name\n");
+    fprintf(stderr, "Plugin contains expected symbol `%s'\n",
+	    pluginsymbolname);
+  free(pluginsymbolname);
+  pluginsymbolname = NULL;
 
   /* allocate a plugin_desc and queue it */
   desc = malloc(sizeof(*desc));
@@ -74,7 +82,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   desc->plugin = plugin;
   desc->handle = handle;
   if (verbose)
-    fprintf(stderr, "Plugin descriptor ready\n");
+    fprintf(stderr, "Plugin descriptor `%s' ready\n", basename);
 
   /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
   if (!strncmp(basename, "core_", 5)) {
@@ -87,13 +95,14 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
     goto out_with_desc;
   }
   if (verbose)
-    fprintf(stderr, "Plugin descriptor queued\n");
+    fprintf(stderr, "Plugin descriptor `%s' queued\n", basename);
   return 0;
 
  out_with_desc:
   free(desc);
  out_with_handle:
   lt_dlclose(handle);
+  free(pluginsymbolname); /* NULL if already freed */
  out_with_basename:
   free(basename);
  out:
