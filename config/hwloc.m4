@@ -749,6 +749,9 @@ EOF])
     # Now enable registration of listed components
     #
 
+    # Temporary hack until we embed libltdl
+    AC_CHECK_HEADERS([ltdl.h], [have_ltdl=yes], [have_ltdl=no])
+
     # Plugin support
     AC_MSG_CHECKING([if plugin support is enabled])
     # Plugins (even core support) are totally disabled by default
@@ -757,7 +760,10 @@ EOF])
     AS_IF([test "$enable_plugins" != "no" -a "$hwloc_mode" != "standalone"],
           [AC_MSG_WARN([--enable-plugins requested, but hwloc not in standalone mode])
            AC_MSG_ERROR([Cannot continue])])
-    # Plugins are always supported for now
+
+    # End of temporary hack until we embed libltdl
+    AS_IF([test "x$have_ltdl" != "xyes"], [enable_plugins=no])
+
     AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
     AC_MSG_RESULT([$hwloc_have_plugins])
     AS_IF([test "x$hwloc_have_plugins" = "xyes"],
