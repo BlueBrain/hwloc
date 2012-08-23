@@ -2480,7 +2480,7 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
 }
 
 int
-hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path __hwloc_attribute_unused)
+hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path)
 {
   struct hwloc_component *comp = hwloc_component_find(HWLOC_COMPONENT_TYPE_OS, "linux");
   if (!comp) {
@@ -2504,8 +2504,8 @@ hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *descri
 }
 
 int
-hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
-                       const char *xmlpath __hwloc_attribute_unused)
+hwloc_topology_set_xml(struct hwloc_topology *topology,
+		       const char *xmlpath)
 {
   struct hwloc_component *comp = hwloc_component_find(-1, "xml");
   if (!comp) {
@@ -2529,9 +2529,9 @@ hwloc_topology_set_custom(struct hwloc_topology *topology)
 }
 
 int
-hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_unused,
-                             const char *xmlbuffer __hwloc_attribute_unused,
-                             int size __hwloc_attribute_unused)
+hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology,
+                             const char *xmlbuffer,
+                             int size)
 {
   struct hwloc_component *comp = hwloc_component_find(-1, "xml");
   if (!comp) {
