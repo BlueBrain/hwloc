@@ -8,10 +8,22 @@
 #include <private/private.h>
 
 #ifdef HWLOC_HAVE_PLUGINS
+
 #include <ltdl.h>
+#include <pthread.h>
+
+/* array of pointers to dynamically loaded plugins */
+static struct hwloc__plugin_desc {
+  char *name;
+  struct hwloc_plugin *plugin;
+  lt_dlhandle handle;
+  struct hwloc__plugin_desc *next;
+} *hwloc_core_plugins = NULL, *hwloc_xml_plugins = NULL;
+static unsigned hwloc_plugins_users = 0; /* first one initializes, last ones destroys */
+/* mutex protecting the above initialization */
+static pthread_mutex_t hwloc_plugins_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct hwloc__dlforeach_cbdata {
-  struct hwloc_topology *topology;
   int verbose;
 };
 
@@ -19,7 +31,6 @@ static int
 hwloc__dlforeach_cb(const char *filename, void *_data)
 {
   struct hwloc__dlforeach_cbdata *cbdata = _data;
-  struct hwloc_topology *topology = cbdata->topology;
   int verbose = cbdata->verbose;
   const char *_basename, *sep;
   char *basename;
@@ -86,11 +97,11 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 
   /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
   if (!strncmp(basename, "core_", 5)) {
-    desc->next = topology->core_plugins;
-    topology->core_plugins = desc;
+    desc->next = hwloc_core_plugins;
+    hwloc_core_plugins = desc;
   } else if (!strncmp(basename, "xml_", 4)) {
-    desc->next = topology->xml_plugins;
-    topology->xml_plugins = desc;
+    desc->next = hwloc_xml_plugins;
+    hwloc_xml_plugins = desc;
   } else {
     goto out_with_desc;
   }
@@ -110,21 +121,16 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 }
 
 static void
-hwloc_plugins_exit(struct hwloc_topology *topology)
+hwloc_plugins_exit(void)
 {
+  char *verboseenv = getenv("HWLOC_VERBOSE_PLUGINS");
+  int verbose = verboseenv ? atoi(verboseenv) : 0;
   struct hwloc__plugin_desc *desc, *next;
 
-  desc = topology->core_plugins;
-  while (desc) {
-    next = desc->next;
-    lt_dlclose(desc->handle);
-    free(desc->name);
-    free(desc);
-    desc = next;
-  }
-  topology->core_plugins = NULL;
+  if (verbose)
+    fprintf(stderr, "Closing all plugins\n");
 
-  desc = topology->xml_plugins;
+  desc = hwloc_core_plugins;
   while (desc) {
     next = desc->next;
     lt_dlclose(desc->handle);
@@ -132,13 +138,23 @@ hwloc_plugins_exit(struct hwloc_topology *topology)
     free(desc);
     desc = next;
   }
-  topology->xml_plugins = NULL;
+  hwloc_core_plugins = NULL;
+
+  desc = hwloc_xml_plugins;
+  while (desc) {
+    next = desc->next;
+    lt_dlclose(desc->handle);
+    free(desc->name);
+    free(desc);
+    desc = next;
+  }
+  hwloc_xml_plugins = NULL;
 
   lt_dlexit();
 }
 
 static int
-hwloc_plugins_init(struct hwloc_topology *topology)
+hwloc_plugins_init(void)
 {
   struct hwloc__dlforeach_cbdata cbdata;
   char *verboseenv = getenv("HWLOC_VERBOSE_PLUGINS");
@@ -149,12 +165,11 @@ hwloc_plugins_init(struct hwloc_topology *topology)
   if (err)
     goto out;
 
-  topology->core_plugins = NULL;
-  topology->xml_plugins = NULL;
+  hwloc_core_plugins = NULL;
+  hwloc_xml_plugins = NULL;
 
   if (verbose)
     fprintf(stderr, "Starting plugin dlforeach\n");
-  cbdata.topology = topology;
   cbdata.verbose = verbose;
   err = lt_dlforeachfile(HWLOC_PLUGINS_DIR, hwloc__dlforeach_cb, &cbdata);
   if (err)
@@ -163,7 +178,7 @@ hwloc_plugins_init(struct hwloc_topology *topology)
   return 0;
 
  out_with_init:
-  hwloc_plugins_exit(topology);
+  hwloc_plugins_exit();
  out:
   return -1;
 }
@@ -205,7 +220,11 @@ hwloc_components_init(struct hwloc_topology *topology)
   unsigned i;
 
 #ifdef HWLOC_HAVE_PLUGINS
-  hwloc_plugins_init(topology);
+  pthread_mutex_lock(&hwloc_plugins_mutex);
+  assert((unsigned) -1 != hwloc_plugins_users);
+  if (0 == hwloc_plugins_users++)
+    hwloc_plugins_init();
+  pthread_mutex_unlock(&hwloc_plugins_mutex);
 #endif
 
   topology->components = NULL;
@@ -213,7 +232,7 @@ hwloc_components_init(struct hwloc_topology *topology)
   for(i=0; NULL != hwloc_static_core_components[i]; i++)
     hwloc_static_core_components[i](topology);
 #ifdef HWLOC_HAVE_PLUGINS
-  for(desc = topology->core_plugins; NULL != desc; desc = desc->next)
+  for(desc = hwloc_core_plugins; NULL != desc; desc = desc->next)
     desc->plugin->init(topology);
 #endif
   topology->backend = NULL;
@@ -225,7 +244,7 @@ hwloc_components_init(struct hwloc_topology *topology)
   for(i=0; NULL != hwloc_static_xml_components[i]; i++)
     hwloc_static_xml_components[i](topology);
 #ifdef HWLOC_HAVE_PLUGINS
-  for(desc = topology->xml_plugins; NULL != desc; desc = desc->next)
+  for(desc = hwloc_xml_plugins; NULL != desc; desc = desc->next)
     desc->plugin->init(topology);
 #endif
 }
@@ -267,7 +286,11 @@ hwloc_components_destroy_all(struct hwloc_topology *topology)
   topology->components = NULL;
 
 #ifdef HWLOC_HAVE_PLUGINS
-  hwloc_plugins_exit(topology);
+  pthread_mutex_lock(&hwloc_plugins_mutex);
+  assert(0 != hwloc_plugins_users);
+  if (0 == --hwloc_plugins_users)
+    hwloc_plugins_exit();
+  pthread_mutex_unlock(&hwloc_plugins_mutex);
 #endif
 }
 

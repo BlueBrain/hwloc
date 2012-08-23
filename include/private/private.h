@@ -28,10 +28,6 @@
 #endif
 #include <string.h>
 
-#ifdef HWLOC_HAVE_PLUGINS
-#include <ltdl.h>
-#endif
-
 #ifdef HWLOC_HAVE_ATTRIBUTE_FORMAT
 # if HWLOC_HAVE_ATTRIBUTE_FORMAT
 #  define __hwloc_attribute_format(type, str, arg)  __attribute__((__format__(type, str, arg)))
@@ -77,8 +73,8 @@ struct hwloc_component {
 };
 
 HWLOC_DECLSPEC int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
-extern void hwloc_components_init(struct hwloc_topology *topology);
-extern void hwloc_components_destroy_all(struct hwloc_topology *topology);
+extern void hwloc_components_init(struct hwloc_topology *topology); /* increases plugins refcount, should be called exactly once per topology (during init) */
+extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases plugins refcount, should be called exactly once per topology (during destroy) */
 extern struct hwloc_component * hwloc_component_find(struct hwloc_topology *topology, int type, const char *name);
 extern struct hwloc_component * hwloc_component_find_next(struct hwloc_topology *topology, int type, const char *name, struct hwloc_component *prev);
 
@@ -209,16 +205,6 @@ struct hwloc_topology {
   struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
 
   struct hwloc_xml_callbacks *nolibxml_callbacks, *libxml_callbacks; /* set when registering nolibxml and libxml components */
-
-#ifdef HWLOC_HAVE_PLUGINS
-  /* array of pointers to dynamically loaded plugins */
-  struct hwloc__plugin_desc {
-    char *name;
-    struct hwloc_plugin *plugin;
-    lt_dlhandle handle;
-    struct hwloc__plugin_desc *next;
-  } *core_plugins, *xml_plugins;
-#endif
 };
 
 extern void hwloc_alloc_obj_cpusets(hwloc_obj_t obj);
