@@ -422,15 +422,7 @@ extern "C" {
 #define hwloc_xml_callbacks_register HWLOC_NAME(xml_callbacks_register)
 #define hwloc_xml_callbacks_reset HWLOC_NAME(xml_callbacks_reset)
 
-/* private/private.h */
-
-#define hwloc_ignore_type_e HWLOC_NAME(ignore_type_e)
-
-#define HWLOC_IGNORE_TYPE_NEVER HWLOC_NAME_CAPS(IGNORE_TYPE_NEVER)
-#define HWLOC_IGNORE_TYPE_KEEP_STRUCTURE HWLOC_NAME_CAPS(IGNORE_TYPE_KEEP_STRUCTURE)
-#define HWLOC_IGNORE_TYPE_ALWAYS HWLOC_NAME_CAPS(IGNORE_TYPE_ALWAYS)
-
-#define hwloc_os_distances_s HWLOC_NAME(os_distances_s)
+/* private/components.h */
 
 #define HWLOC_COMPONENT_TYPE_OS HWLOC_NAME(COMPONENT_TYPE_OS)
 #define HWLOC_COMPONENT_TYPE_GLOBAL HWLOC_NAME(COMPONENT_TYPE_GLOBAL)
@@ -452,6 +444,9 @@ extern "C" {
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
 #define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
 
+#define hwloc_component_init_fn_t HWLOC_NAME(component_init_fn_t)
+#define hwloc_plugin HWLOC_NAME(plugin)
+
 #define hwloc_core_linux_component_register HWLOC_NAME(core_linux_component_register)
 #define hwloc_core_xml_component_register HWLOC_NAME(core_xml_component_register)
 #define hwloc_core_solaris_component_register HWLOC_NAME(core_solaris_component_register)
@@ -468,6 +463,16 @@ extern "C" {
 
 #define hwloc_xml_nolibxml_component_register HWLOC_NAME(xml_nolibxml_component_register)
 #define hwloc_xml_libxml_component_register HWLOC_NAME(xml_libxml_component_register)
+
+/* private/private.h */
+
+#define hwloc_ignore_type_e HWLOC_NAME(ignore_type_e)
+
+#define HWLOC_IGNORE_TYPE_NEVER HWLOC_NAME_CAPS(IGNORE_TYPE_NEVER)
+#define HWLOC_IGNORE_TYPE_KEEP_STRUCTURE HWLOC_NAME_CAPS(IGNORE_TYPE_KEEP_STRUCTURE)
+#define HWLOC_IGNORE_TYPE_ALWAYS HWLOC_NAME_CAPS(IGNORE_TYPE_ALWAYS)
+
+#define hwloc_os_distances_s HWLOC_NAME(os_distances_s)
 
 #define hwloc_xml_imported_distances_s HWLOC_NAME(xml_imported_distances_s)
 
