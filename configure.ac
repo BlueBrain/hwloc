@@ -159,8 +159,15 @@ LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
 # Compiler support -- we don't need that stuff.
 AM_ENABLE_SHARED
 AM_DISABLE_STATIC
-AM_PROG_LIBTOOL([win32-dll])
+AM_PROG_LIBTOOL([dlopen win32-dll])
 LT_LANG([C])
+LT_CONFIG_LTDL_DIR([src/libltdl])
+LTDL_INIT([recursive convenience])
+AC_CONFIG_FILES([src/libltdl/Makefile])
+
+# Workarounds for libtool LT_CONFIG_H bug
+#CPPFLAGS="$CPPFLAGS -I$HWLOC_top_builddir"
+AC_CONFIG_COMMANDS_PRE([LT_CONFIG_H=`expr "$LT_CONFIG_H" : '.*/\(.*\)'`])
 
 # Party on
 AC_OUTPUT
