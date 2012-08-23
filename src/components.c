@@ -196,24 +196,19 @@ int
 hwloc_component_register(struct hwloc_topology *topology __hwloc_attribute_unused,
 			 struct hwloc_component *component)
 {
-  struct hwloc_component **prev, *new;
+  struct hwloc_component **prev;
 
   /* FIXME disallow multiple components with same name?
    * in case they insert same objects twice */
 
-  new = malloc(sizeof(*new));
-  if (!new)
-    return -1;
-  memcpy(new, component, sizeof(*new));
-
   prev = &hwloc_components;
   while (NULL != *prev) {
-    if ((*prev)->priority < new->priority)
+    if ((*prev)->priority < component->priority)
       break;
     prev = &((*prev)->next);
   }
-  new->next = *prev;
-  *prev = new;
+  component->next = *prev;
+  *prev = component;
   return 0;
 }
 
@@ -288,8 +283,6 @@ hwloc_component_find(struct hwloc_topology *topology,
 void
 hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
-  struct hwloc_component *comp, *next;
-
   pthread_mutex_lock(&hwloc_components_mutex);
   assert(0 != hwloc_components_users);
   if (0 != --hwloc_components_users) {
@@ -297,14 +290,9 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
     return;
   }
 
-  comp = hwloc_components;
-  while (NULL != comp) {
-    next = comp->next;
-    free(comp);
-    comp = next;
-  }
-  hwloc_components = NULL;
+  /* no need to unlink/free the list of components, they'll be unloaded below */
 
+  hwloc_components = NULL;
   hwloc_xml_callbacks_reset();
 
 #ifdef HWLOC_HAVE_PLUGINS
