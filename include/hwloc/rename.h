@@ -420,6 +420,7 @@ extern "C" {
 
 #define hwloc_xml_callbacks HWLOC_NAME(xml_callbacks)
 #define hwloc_xml_callbacks_register HWLOC_NAME(xml_callbacks_register)
+#define hwloc_xml_callbacks_reset HWLOC_NAME(xml_callbacks_reset)
 
 /* private/private.h */
 

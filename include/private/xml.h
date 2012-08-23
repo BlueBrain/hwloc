@@ -60,5 +60,6 @@ struct hwloc_xml_callbacks {
 };
 
 HWLOC_DECLSPEC void hwloc_xml_callbacks_register(struct hwloc_topology *topology, struct hwloc_xml_callbacks *nolibxml, struct hwloc_xml_callbacks *libxml);
+HWLOC_DECLSPEC void hwloc_xml_callbacks_reset(void);
 
 #endif /* PRIVATE_XML_H */

@@ -763,6 +763,9 @@ EOF])
        AC_MSG_RESULT([$hwloc_pthread_mutex_happy])
        LIBS="$tmp_save_LIBS"
       ])
+    AS_IF([test "x$hwloc_pthread_mutex_happy" != "xyes"],
+      [AC_MSG_WARN([pthread_mutex_lock not available, required for thread-safe initialization])
+       AC_MSG_ERROR([Cannot continue])])
 
     #
     # Now enable registration of listed components
@@ -772,7 +775,6 @@ EOF])
     AC_MSG_CHECKING([if plugin support is enabled])
     # Plugins (even core support) are totally disabled by default
     AS_IF([test "x$enable_plugins" = "x"], [enable_plugins=no])
-    AS_IF([test "x$hwloc_pthread_mutex_happy" != "xyes"], [enable_plugins=no])
 
     AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
     AC_MSG_RESULT([$hwloc_have_plugins])

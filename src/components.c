@@ -6,11 +6,21 @@
 #include <private/autogen/config.h>
 #include <hwloc.h>
 #include <private/private.h>
+#include <private/xml.h>
+#include <pthread.h>
+
+/* list of all registered components, sorted by priority, higher priority first.
+ * noos is last because its priority is 0.
+ * others' priority is 10.
+ */
+static struct hwloc_component * hwloc_components = NULL;
+
+static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
+static pthread_mutex_t hwloc_components_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef HWLOC_HAVE_PLUGINS
 
 #include <ltdl.h>
-#include <pthread.h>
 
 /* array of pointers to dynamically loaded plugins */
 static struct hwloc__plugin_desc {
@@ -19,9 +29,6 @@ static struct hwloc__plugin_desc {
   lt_dlhandle handle;
   struct hwloc__plugin_desc *next;
 } *hwloc_core_plugins = NULL, *hwloc_xml_plugins = NULL;
-static unsigned hwloc_plugins_users = 0; /* first one initializes, last ones destroys */
-/* mutex protecting the above initialization */
-static pthread_mutex_t hwloc_plugins_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct hwloc__dlforeach_cbdata {
   int verbose;
@@ -186,7 +193,8 @@ hwloc_plugins_init(void)
 #endif /* HWLOC_HAVE_PLUGINS */
 
 int
-hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component)
+hwloc_component_register(struct hwloc_topology *topology __hwloc_attribute_unused,
+			 struct hwloc_component *component)
 {
   struct hwloc_component **prev, *new;
 
@@ -198,7 +206,7 @@ hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component
     return -1;
   memcpy(new, component, sizeof(*new));
 
-  prev = &topology->components;
+  prev = &hwloc_components;
   while (NULL != *prev) {
     if ((*prev)->priority < new->priority)
       break;
@@ -219,15 +227,20 @@ hwloc_components_init(struct hwloc_topology *topology)
 #endif
   unsigned i;
 
+  topology->backend = NULL;
+  topology->additional_backends = NULL;
+
+  pthread_mutex_lock(&hwloc_components_mutex);
+  assert((unsigned) -1 != hwloc_components_users);
+  if (0 != hwloc_components_users++) {
+    pthread_mutex_unlock(&hwloc_components_mutex);
+    return;
+  }
+
 #ifdef HWLOC_HAVE_PLUGINS
-  pthread_mutex_lock(&hwloc_plugins_mutex);
-  assert((unsigned) -1 != hwloc_plugins_users);
-  if (0 == hwloc_plugins_users++)
-    hwloc_plugins_init();
-  pthread_mutex_unlock(&hwloc_plugins_mutex);
+  hwloc_plugins_init();
 #endif
 
-  topology->components = NULL;
   /* hwloc_static_core_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_core_components[i]; i++)
     hwloc_static_core_components[i](topology);
@@ -235,11 +248,7 @@ hwloc_components_init(struct hwloc_topology *topology)
   for(desc = hwloc_core_plugins; NULL != desc; desc = desc->next)
     desc->plugin->init(topology);
 #endif
-  topology->backend = NULL;
-  topology->additional_backends = NULL;
 
-  topology->nolibxml_callbacks = NULL;
-  topology->libxml_callbacks = NULL;
   /* hwloc_static_xml_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_xml_components[i]; i++)
     hwloc_static_xml_components[i](topology);
@@ -247,16 +256,18 @@ hwloc_components_init(struct hwloc_topology *topology)
   for(desc = hwloc_xml_plugins; NULL != desc; desc = desc->next)
     desc->plugin->init(topology);
 #endif
+
+  pthread_mutex_unlock(&hwloc_components_mutex);
 }
 
 struct hwloc_component *
-hwloc_component_find_next(struct hwloc_topology *topology,
+hwloc_component_find_next(struct hwloc_topology *topology __hwloc_attribute_unused,
 			  int type /* hwloc_component_type_t or -1 if any */,
 			  const char *name /* name of NULL if any */,
 			  struct hwloc_component *prev)
 {
   struct hwloc_component *comp;
-  comp = prev ? prev->next : topology->components;
+  comp = prev ? prev->next : hwloc_components;
   while (NULL != comp) {
     if ((-1 == type || type == (int) comp->type)
        && (NULL == name || !strcmp(name, comp->name)))
@@ -275,23 +286,32 @@ hwloc_component_find(struct hwloc_topology *topology,
 }
 
 void
-hwloc_components_destroy_all(struct hwloc_topology *topology)
+hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
-  struct hwloc_component *comp = topology->components, *next;
+  struct hwloc_component *comp, *next;
+
+  pthread_mutex_lock(&hwloc_components_mutex);
+  assert(0 != hwloc_components_users);
+  if (0 != --hwloc_components_users) {
+    pthread_mutex_unlock(&hwloc_components_mutex);
+    return;
+  }
+
+  comp = hwloc_components;
   while (NULL != comp) {
     next = comp->next;
     free(comp);
     comp = next;
   }
-  topology->components = NULL;
+  hwloc_components = NULL;
+
+  hwloc_xml_callbacks_reset();
 
 #ifdef HWLOC_HAVE_PLUGINS
-  pthread_mutex_lock(&hwloc_plugins_mutex);
-  assert(0 != hwloc_plugins_users);
-  if (0 == --hwloc_plugins_users)
-    hwloc_plugins_exit();
-  pthread_mutex_unlock(&hwloc_plugins_mutex);
+  hwloc_plugins_exit();
 #endif
+
+  pthread_mutex_unlock(&hwloc_components_mutex);
 }
 
 struct hwloc_backend *

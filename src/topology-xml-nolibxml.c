@@ -503,7 +503,7 @@ static struct hwloc_xml_callbacks hwloc_xml_nolibxml_callbacks = {
 };
 
 void
-hwloc_xml_nolibxml_component_register(struct hwloc_topology *topology)
+hwloc_xml_nolibxml_component_register(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
   hwloc_xml_callbacks_register(topology, &hwloc_xml_nolibxml_callbacks, NULL);
 }

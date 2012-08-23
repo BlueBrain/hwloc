@@ -107,8 +107,6 @@ HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
-struct hwloc_xml_callbacks;
-
 typedef void (*hwloc_component_init_fn_t)(struct hwloc_topology *);
 
 #ifdef HWLOC_HAVE_PLUGINS
@@ -191,11 +189,6 @@ struct hwloc_topology {
     struct hwloc_os_distances_s *prev, *next;
   } *first_osdist, *last_osdist;
 
-  /* list of all registered components, sorted by priority, higher priority first.
-   * noos is last because its priority is 0.
-   * others' priority is 10.
-   */
-  struct hwloc_component * components;
   /* single base or global backend.
    */
   struct hwloc_backend * backend;
@@ -203,8 +196,6 @@ struct hwloc_topology {
    * libpci has priority 10.
    */
   struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
-
-  struct hwloc_xml_callbacks *nolibxml_callbacks, *libxml_callbacks; /* set when registering nolibxml and libxml components */
 };
 
 extern void hwloc_alloc_obj_cpusets(hwloc_obj_t obj);

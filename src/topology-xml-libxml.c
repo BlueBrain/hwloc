@@ -324,10 +324,10 @@ static struct hwloc_xml_callbacks hwloc_xml_libxml_callbacks = {
 
 #ifdef HWLOC_BUILD_PLUGIN
 static void
-hwloc_xml_libxml_plugin_init(struct hwloc_topology *topology)
+hwloc_xml_libxml_plugin_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 #else
 void
-hwloc_xml_libxml_component_register(struct hwloc_topology *topology)
+hwloc_xml_libxml_component_register(struct hwloc_topology *topology __hwloc_attribute_unused)
 #endif
 {
   hwloc_xml_callbacks_register(topology, NULL, &hwloc_xml_libxml_callbacks);
