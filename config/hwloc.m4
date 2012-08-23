@@ -745,6 +745,25 @@ EOF])
     fi
     # don't add LIBS/CFLAGS yet, depends on plugins
 
+    # Plugins require pthread_mutex, see if it needs -lpthread
+    hwloc_pthread_mutex_happy=no
+    # Try without explicit -lpthread first
+    AC_CHECK_FUNC([pthread_mutex_lock],
+      [hwloc_pthread_mutex_happy=yes
+      ],
+      [AC_MSG_CHECKING([fot pthread_mutex_lock with -lpthread])
+       # Try again with explicit -lpthread, but don't use AC_CHECK_FUNC to avoid the cache
+       tmp_save_LIBS=$LIBS
+       LIBS="$LIBS -lpthread"
+       AC_LINK_IFELSE([AC_LANG_CALL([], [pthread_mutex_lock])],
+         [hwloc_pthread_mutex_happy=yes
+          HWLOC_LIBS="$HWLOC_LIBS -lpthread"
+	  HWLOC_REQUIRES="$HWLOC_REQUIRES libpthread"
+         ])
+       AC_MSG_RESULT([$hwloc_pthread_mutex_happy])
+       LIBS="$tmp_save_LIBS"
+      ])
+
     #
     # Now enable registration of listed components
     #
@@ -760,6 +779,7 @@ EOF])
     AS_IF([test "$enable_plugins" != "no" -a "$hwloc_mode" != "standalone"],
           [AC_MSG_WARN([--enable-plugins requested, but hwloc not in standalone mode])
            AC_MSG_ERROR([Cannot continue])])
+    AS_IF([test "x$hwloc_pthread_mutex_happy" != "xyes"], [enable_plugins=no])
 
     # End of temporary hack until we embed libltdl
     AS_IF([test "x$have_ltdl" != "xyes"], [enable_plugins=no])
