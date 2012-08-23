@@ -772,10 +772,6 @@ EOF])
     AC_MSG_CHECKING([if plugin support is enabled])
     # Plugins (even core support) are totally disabled by default
     AS_IF([test "x$enable_plugins" = "x"], [enable_plugins=no])
-    # Plugins not compatible with embedded
-    AS_IF([test "$enable_plugins" != "no" -a "$hwloc_mode" != "standalone"],
-          [AC_MSG_WARN([--enable-plugins requested, but hwloc not in standalone mode])
-           AC_MSG_ERROR([Cannot continue])])
     AS_IF([test "x$hwloc_pthread_mutex_happy" != "xyes"], [enable_plugins=no])
 
     AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
