@@ -26,6 +26,8 @@ typedef enum hwloc_component_type_e {
   HWLOC_COMPONENT_TYPE_MAX
 } hwloc_component_type_t;
 
+typedef void (*hwloc_component_init_fn_t)(void);
+
 struct hwloc_component {
   hwloc_component_type_t type;
   const char *name;
@@ -82,8 +84,6 @@ HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topol
 #ifdef HWLOC_HAVE_PLUGINS
 
 #define HWLOC_PLUGIN_ABI 1
-
-typedef void (*hwloc_component_init_fn_t)(void);
 
 struct hwloc_plugin {
   unsigned abi;
