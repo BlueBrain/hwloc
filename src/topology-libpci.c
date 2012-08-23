@@ -12,8 +12,6 @@
 #include <private/debug.h>
 #include <private/misc.h>
 
-#ifdef HWLOC_HAVE_LIBPCI
-
 #include <pci/pci.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -596,5 +594,3 @@ HWLOC_DECLSPEC struct hwloc_plugin hwloc_core_libpci_plugin = {
   hwloc_core_libpci_plugin_init
 };
 #endif
-
-#endif /* HWLOC_HAVE_LIBPCI */

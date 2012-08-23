@@ -206,7 +206,7 @@ EOF
         add="$add -Wmissing-prototypes -Wstrict-prototypes"
         add="$add -Wcomment -pedantic"
 
-        CFLAGS="$CFLAGS $add"
+        HWLOC_CFLAGS="$HWLOC_CFLAGS $add"
     fi
 
     # Generate some files for the docs
