@@ -330,7 +330,7 @@ void
 hwloc_xml_libxml_component_register(struct hwloc_topology *topology)
 #endif
 {
-  topology->libxml_callbacks = &hwloc_xml_libxml_callbacks;
+  hwloc_xml_callbacks_register(topology, NULL, &hwloc_xml_libxml_callbacks);
 }
 
 #ifdef HWLOC_BUILD_PLUGIN

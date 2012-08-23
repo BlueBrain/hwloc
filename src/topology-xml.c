@@ -27,6 +27,21 @@ hwloc__xml_verbose(void)
   return verbose;
 }
 
+/*********************************
+ ********* XML callbacks *********
+ *********************************/
+
+void
+hwloc_xml_callbacks_register(struct hwloc_topology *topology,
+			     struct hwloc_xml_callbacks *nolibxml,
+			     struct hwloc_xml_callbacks *libxml)
+{
+  if (!topology->nolibxml_callbacks)
+    topology->nolibxml_callbacks = nolibxml;
+  if (!topology->libxml_callbacks)
+    topology->libxml_callbacks = libxml;
+}
+
 /************************************************
  ********* XML import (common routines) *********
  ************************************************/

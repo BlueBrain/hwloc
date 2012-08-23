@@ -419,6 +419,7 @@ extern "C" {
 #define hwloc__xml_export_object HWLOC_NAME(_xml_export_object)
 
 #define hwloc_xml_callbacks HWLOC_NAME(xml_callbacks)
+#define hwloc_xml_callbacks_register HWLOC_NAME(xml_callbacks_register)
 
 /* private/private.h */
 
