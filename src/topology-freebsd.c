@@ -250,7 +250,7 @@ static struct hwloc_component hwloc_freebsd_component = {
 };
 
 void
-hwloc_core_freebsd_component_register(struct hwloc_topology *topology)
+hwloc_core_freebsd_component_register(void)
 {
-  hwloc_component_register(topology, &hwloc_freebsd_component);
+  hwloc_component_register(&hwloc_freebsd_component);
 }

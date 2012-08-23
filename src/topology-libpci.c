@@ -579,13 +579,13 @@ static struct hwloc_component hwloc_libpci_component = {
 
 #ifdef HWLOC_BUILD_PLUGIN
 static void
-hwloc_core_libpci_plugin_init(struct hwloc_topology *topology)
+hwloc_core_libpci_plugin_init(void)
 #else
 void
-hwloc_core_libpci_component_register(struct hwloc_topology *topology)
+hwloc_core_libpci_component_register(void)
 #endif
 {
-  hwloc_component_register(topology, &hwloc_libpci_component);
+  hwloc_component_register(&hwloc_libpci_component);
 }
 
 #ifdef HWLOC_BUILD_PLUGIN

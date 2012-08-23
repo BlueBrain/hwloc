@@ -294,7 +294,7 @@ static struct hwloc_component hwloc_hpux_component = {
 };
 
 void
-hwloc_core_hpux_component_register(struct hwloc_topology *topology)
+hwloc_core_hpux_component_register(void)
 {
-  hwloc_component_register(topology, &hwloc_hpux_component);
+  hwloc_component_register(&hwloc_hpux_component);
 }

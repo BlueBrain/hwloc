@@ -819,7 +819,7 @@ static struct hwloc_component hwloc_aix_component = {
 };
 
 void
-hwloc_core_aix_component_register(struct hwloc_topology *topology)
+hwloc_core_aix_component_register(void)
 {
-  hwloc_component_register(topology, &hwloc_aix_component);
+  hwloc_component_register(&hwloc_aix_component);
 }

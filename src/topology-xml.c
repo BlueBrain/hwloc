@@ -38,8 +38,7 @@ hwloc__xml_verbose(void)
 static struct hwloc_xml_callbacks *hwloc_nolibxml_callbacks = NULL, *hwloc_libxml_callbacks = NULL;
 
 void
-hwloc_xml_callbacks_register(struct hwloc_topology *topology __hwloc_attribute_unused,
-			     struct hwloc_xml_callbacks *nolibxml,
+hwloc_xml_callbacks_register(struct hwloc_xml_callbacks *nolibxml,
 			     struct hwloc_xml_callbacks *libxml)
 {
   if (!hwloc_nolibxml_callbacks)
@@ -993,7 +992,7 @@ static struct hwloc_component hwloc_xml_component = {
 };
 
 void
-hwloc_core_xml_component_register(struct hwloc_topology *topology)
+hwloc_core_xml_component_register(void)
 {
-  hwloc_component_register(topology, &hwloc_xml_component);
+  hwloc_component_register(&hwloc_xml_component);
 }

@@ -72,11 +72,11 @@ struct hwloc_component {
   struct hwloc_component * next; /* used internally to list components by priority on topology->components */
 };
 
-HWLOC_DECLSPEC int hwloc_component_register(struct hwloc_topology *topology, struct hwloc_component *component);
+HWLOC_DECLSPEC int hwloc_component_register(struct hwloc_component *component);
 extern void hwloc_components_init(struct hwloc_topology *topology); /* increases plugins refcount, should be called exactly once per topology (during init) */
 extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases plugins refcount, should be called exactly once per topology (during destroy) */
-extern struct hwloc_component * hwloc_component_find(struct hwloc_topology *topology, int type, const char *name);
-extern struct hwloc_component * hwloc_component_find_next(struct hwloc_topology *topology, int type, const char *name, struct hwloc_component *prev);
+extern struct hwloc_component * hwloc_component_find(int type, const char *name);
+extern struct hwloc_component * hwloc_component_find_next(int type, const char *name, struct hwloc_component *prev);
 
 struct hwloc_backend {
   struct hwloc_component * component;
@@ -107,7 +107,7 @@ HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
-typedef void (*hwloc_component_init_fn_t)(struct hwloc_topology *);
+typedef void (*hwloc_component_init_fn_t)(void);
 
 #ifdef HWLOC_HAVE_PLUGINS
 #define HWLOC_PLUGIN_ABI 1
@@ -210,54 +210,54 @@ extern void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
 extern void hwloc_topology_clear(struct hwloc_topology *topology);
 
 #if defined(HWLOC_LINUX_SYS)
-extern void hwloc_core_linux_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_linux_component_register(void);
 #endif /* HWLOC_LINUX_SYS */
 
-extern void hwloc_core_xml_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_xml_component_register(void);
 
 #ifdef HWLOC_SOLARIS_SYS
-extern void hwloc_core_solaris_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_solaris_component_register(void);
 #endif /* HWLOC_SOLARIS_SYS */
 
 #ifdef HWLOC_AIX_SYS
-extern void hwloc_core_aix_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_aix_component_register(void);
 #endif /* HWLOC_AIX_SYS */
 
 #ifdef HWLOC_OSF_SYS
-extern void hwloc_core_osf_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_osf_component_register(void);
 #endif /* HWLOC_OSF_SYS */
 
 #ifdef HWLOC_WIN_SYS
-extern void hwloc_core_windows_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_windows_component_register(void);
 #endif /* HWLOC_WIN_SYS */
 
 #ifdef HWLOC_DARWIN_SYS
-extern void hwloc_core_darwin_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_darwin_component_register(void);
 #endif /* HWLOC_DARWIN_SYS */
 
 #ifdef HWLOC_FREEBSD_SYS
-extern void hwloc_core_freebsd_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_freebsd_component_register(void);
 #endif /* HWLOC_FREEBSD_SYS */
 
 #ifdef HWLOC_HPUX_SYS
-extern void hwloc_core_hpux_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_hpux_component_register(void);
 #endif /* HWLOC_HPUX_SYS */
 
 extern void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs);
 
 #ifdef HWLOC_HAVE_LIBPCI
-extern void hwloc_core_libpci_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_libpci_component_register(void);
 #endif /* HWLOC_HAVE_LIBPCI */
 
-extern void hwloc_core_synthetic_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_synthetic_component_register(void);
 
-extern void hwloc_core_noos_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_noos_component_register(void);
 
-extern void hwloc_core_custom_component_register(struct hwloc_topology *topology);
+extern void hwloc_core_custom_component_register(void);
 
-extern void hwloc_xml_nolibxml_component_register(struct hwloc_topology *topology);
+extern void hwloc_xml_nolibxml_component_register(void);
 #ifdef HWLOC_HAVE_LIBXML2
-extern void hwloc_xml_libxml_component_register(struct hwloc_topology *topology);
+extern void hwloc_xml_libxml_component_register(void);
 #endif
 
 /*

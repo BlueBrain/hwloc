@@ -799,7 +799,7 @@ static struct hwloc_component hwloc_windows_component = {
 };
 
 void
-hwloc_core_windows_component_register(struct hwloc_topology *topology)
+hwloc_core_windows_component_register(void)
 {
-  hwloc_component_register(topology, &hwloc_windows_component);
+  hwloc_component_register(&hwloc_windows_component);
 }

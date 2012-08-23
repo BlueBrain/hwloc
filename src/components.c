@@ -193,8 +193,7 @@ hwloc_plugins_init(void)
 #endif /* HWLOC_HAVE_PLUGINS */
 
 int
-hwloc_component_register(struct hwloc_topology *topology __hwloc_attribute_unused,
-			 struct hwloc_component *component)
+hwloc_component_register(struct hwloc_component *component)
 {
   struct hwloc_component **prev;
 
@@ -215,15 +214,12 @@ hwloc_component_register(struct hwloc_topology *topology __hwloc_attribute_unuse
 #include <static-components.h>
 
 void
-hwloc_components_init(struct hwloc_topology *topology)
+hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
 #ifdef HWLOC_HAVE_PLUGINS
   struct hwloc__plugin_desc *desc;
 #endif
   unsigned i;
-
-  topology->backend = NULL;
-  topology->additional_backends = NULL;
 
   pthread_mutex_lock(&hwloc_components_mutex);
   assert((unsigned) -1 != hwloc_components_users);
@@ -238,26 +234,25 @@ hwloc_components_init(struct hwloc_topology *topology)
 
   /* hwloc_static_core_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_core_components[i]; i++)
-    hwloc_static_core_components[i](topology);
+    hwloc_static_core_components[i]();
 #ifdef HWLOC_HAVE_PLUGINS
   for(desc = hwloc_core_plugins; NULL != desc; desc = desc->next)
-    desc->plugin->init(topology);
+    desc->plugin->init();
 #endif
 
   /* hwloc_static_xml_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_xml_components[i]; i++)
-    hwloc_static_xml_components[i](topology);
+    hwloc_static_xml_components[i]();
 #ifdef HWLOC_HAVE_PLUGINS
   for(desc = hwloc_xml_plugins; NULL != desc; desc = desc->next)
-    desc->plugin->init(topology);
+    desc->plugin->init();
 #endif
 
   pthread_mutex_unlock(&hwloc_components_mutex);
 }
 
 struct hwloc_component *
-hwloc_component_find_next(struct hwloc_topology *topology __hwloc_attribute_unused,
-			  int type /* hwloc_component_type_t or -1 if any */,
+hwloc_component_find_next(int type /* hwloc_component_type_t or -1 if any */,
 			  const char *name /* name of NULL if any */,
 			  struct hwloc_component *prev)
 {
@@ -273,11 +268,10 @@ hwloc_component_find_next(struct hwloc_topology *topology __hwloc_attribute_unus
 }
 
 struct hwloc_component *
-hwloc_component_find(struct hwloc_topology *topology,
-		     int type /* hwloc_component_type_t or -1 if any */,
+hwloc_component_find(int type /* hwloc_component_type_t or -1 if any */,
 		     const char *name /* name of NULL if any */)
 {
-  return hwloc_component_find_next(topology, type, name, NULL);
+  return hwloc_component_find_next(type, name, NULL);
 }
 
 void
