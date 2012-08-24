@@ -1924,17 +1924,30 @@ do not belong to the same horizontal levels).</strong>
 \section faq_annotate How do I annotate the topology with private notes?
 
 Each hwloc object contains a <tt>userdata</tt> field that may be used by
-applications to store private pointers. This field is kept intact as long
-as the object is valid, which means as long as topology objects are not
-modified by reloading or restricting the topology.
+applications to store private pointers. This field is only valid
+during the lifetime of these exact container object and topology.
+It is invalid as soon the topology is reloaded or destroyed,
+or as soon as the object disappears, for instance when restricting
+the topology.
+Contrary to the following kinds of annotations, the userdata pointer
+is <em>not saved/restored during XML export/import</em>.
 
 Each object may also contain some <em>info</em> attributes
-(key name and value) that are setup by hwloc and may be extended
-by the user with <tt>hwloc_obj_add_info()</tt>.
+(key name and value) that are setup by hwloc during discovery
+and that may be extended by the user with <tt>hwloc_obj_add_info()</tt>.
 Contrary to the <tt>userdata</tt> field which is unique, multiple info
 attributes may exist for each object, even with the same name.
 These attributes are also exported to XML together with the topology.
 However only character strings may be used as key names and values.
+
+In addition to info attributes, the topology may also be annotated
+with arrays of custom values (that are also exported to XML).
+These attributes are identified by a character string name.
+Then they contain one array of float values and on array of indexes.
+Each index in the second array may be used to identify what the
+corresponding float value means in the first array.
+This feature may for instance be used to store in each Core object
+the latencies to every other core in the machine.
 
 It is also possible to insert Misc objects with custom names anywhere
 in the topology (<tt>hwloc_topology_insert_misc_object_by_cpuset()</tt>)
