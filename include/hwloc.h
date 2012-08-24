@@ -1295,7 +1295,18 @@ HWLOC_DECLSPEC int hwloc_obj_snprintf(char * __hwloc_restrict string, size_t siz
  */
 HWLOC_DECLSPEC int hwloc_obj_cpuset_snprintf(char * __hwloc_restrict str, size_t size, size_t nobj, const hwloc_obj_t * __hwloc_restrict objs);
 
+/** @} */
+
+
+
+/** \defgroup hwlocality_annotation Object annotation
+ * @{
+ */
+
 /** \brief Search the given key name in object infos and return the corresponding value.
+ *
+ * These keys are added by hwloc during discovery, or by the application,
+ * with hwloc_obj_add_info().
  *
  * If multiple keys match the given name, only the first one is returned.
  *
