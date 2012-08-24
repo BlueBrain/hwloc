@@ -7,7 +7,6 @@
 #include <hwloc.h>
 #include <private/private.h>
 #include <private/xml.h>
-#include <pthread.h>
 
 /* list of all registered components, sorted by priority, higher priority first.
  * noos is last because its priority is 0.
@@ -16,7 +15,31 @@
 static struct hwloc_component * hwloc_components = NULL;
 
 static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
+
+#ifdef HWLOC_HAVE_INTERLOCKED_COMPARE_EXCHANGE
+/* mutex on top of InterlockedCompareExchange() on windows */
+#include <windows.h>
+static LONG hwloc_components_mutex = 0;
+#define HWLOC_COMPONENTS_LOCK() do {						\
+  while (InterlockedCompareExchange(&hwloc_components_mutex, 1, 0) != 0)	\
+    SwitchToThread();								\
+} while (0)
+#define HWLOC_COMPONENTS_UNLOCK() do {						\
+  assert(hwloc_components_mutex == 1);						\
+  hwloc_components_mutex = 0;							\
+} while (0)
+
+#elif defined HWLOC_HAVE_PTHREAD_MUTEX
+/* pthread mutex if available (except on windows) */
+#include <pthread.h>
 static pthread_mutex_t hwloc_components_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define HWLOC_COMPONENTS_LOCK() pthread_mutex_lock(&hwloc_components_mutex)
+#define HWLOC_COMPONENTS_UNLOCK() pthread_mutex_unlock(&hwloc_components_mutex)
+
+#else /* HWLOC_HAVE_INTERLOCKED_COMPARE_EXCHANGE || HWLOC_HAVE_PTHREAD_MUTEX */
+#error No mutex implementation available
+#endif
+
 
 #ifdef HWLOC_HAVE_PLUGINS
 
@@ -221,10 +244,10 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 #endif
   unsigned i;
 
-  pthread_mutex_lock(&hwloc_components_mutex);
+  HWLOC_COMPONENTS_LOCK();
   assert((unsigned) -1 != hwloc_components_users);
   if (0 != hwloc_components_users++) {
-    pthread_mutex_unlock(&hwloc_components_mutex);
+    HWLOC_COMPONENTS_UNLOCK();
     return;
   }
 
@@ -248,7 +271,7 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
     desc->plugin->init();
 #endif
 
-  pthread_mutex_unlock(&hwloc_components_mutex);
+  HWLOC_COMPONENTS_UNLOCK();
 }
 
 struct hwloc_component *
@@ -277,10 +300,10 @@ hwloc_component_find(int type /* hwloc_component_type_t or -1 if any */,
 void
 hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
-  pthread_mutex_lock(&hwloc_components_mutex);
+  HWLOC_COMPONENTS_LOCK();
   assert(0 != hwloc_components_users);
   if (0 != --hwloc_components_users) {
-    pthread_mutex_unlock(&hwloc_components_mutex);
+    HWLOC_COMPONENTS_UNLOCK();
     return;
   }
 
@@ -293,7 +316,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
   hwloc_plugins_exit();
 #endif
 
-  pthread_mutex_unlock(&hwloc_components_mutex);
+  HWLOC_COMPONENTS_UNLOCK();
 }
 
 struct hwloc_backend *

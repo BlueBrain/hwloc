@@ -763,8 +763,17 @@ EOF])
        AC_MSG_RESULT([$hwloc_pthread_mutex_happy])
        LIBS="$tmp_save_LIBS"
       ])
-    AS_IF([test "x$hwloc_pthread_mutex_happy" != "xyes"],
-      [AC_MSG_WARN([pthread_mutex_lock not available, required for thread-safe initialization])
+    AS_IF([test "x$hwloc_pthread_mutex_happy" = "xyes"],
+      [AC_DEFINE([HWLOC_HAVE_PTHREAD_MUTEX], 1, [Define to 1 if pthread mutexes are available])])
+
+    # We dont use pthread_mutex on windows since it's not even included in MinGW by default
+    AC_CHECK_FUNC([InterlockedCompareExchange],
+      [hwloc_InterlockedCompareExchange=yes
+       AC_DEFINE([HWLOC_HAVE_INTERLOCKED_COMPARE_EXCHANGE], 1, [Define to 1 if InterlockedCompareExchange is available])])
+
+    AS_IF([test "x$hwloc_pthread_mutex_happy" != xyes -a "x$hwloc_InterlockedCompareExchange" != xyes],
+      [AC_MSG_WARN([pthread_mutex_lock and InterlockedCompareExchange not available, required for thread-safe initialization])
+       AC_MSG_WARN([Please report this to the hwloc-devel mailing list.])
        AC_MSG_ERROR([Cannot continue])])
 
     #
