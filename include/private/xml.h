@@ -21,6 +21,7 @@ typedef struct hwloc__xml_import_state_s {
   int (*close_tag)(struct hwloc__xml_import_state_s * state); /* look for an explicit closing tag </name> */
   void (*close_child)(struct hwloc__xml_import_state_s * state);
   int (*get_content)(struct hwloc__xml_import_state_s * state, char **beginp, size_t expected_length);
+  void (*close_content)(struct hwloc__xml_import_state_s * state);
 
   /* opaque data used to store backend-specific data.
    * statically allocated to allow stack-allocation by the common code without knowing actual backend needs.
@@ -41,18 +42,21 @@ struct hwloc_xml_backend_data_s {
   } *first_distances, *last_distances;
 };
 
-typedef struct hwloc__xml_export_output_s {
-  void (*new_child)(struct hwloc__xml_export_output_s *output, const char *name);
-  void (*new_prop)(struct hwloc__xml_export_output_s *output, const char *name, const char *value);
-  void (*end_props)(struct hwloc__xml_export_output_s *output, unsigned nr_children, int has_content);
-  void (*add_content)(struct hwloc__xml_export_output_s *output, const char *buffer, size_t length);
-  void (*end_object)(struct hwloc__xml_export_output_s *output, const char *name, unsigned nr_children, int has_content);
+typedef struct hwloc__xml_export_state_s {
+  struct hwloc__xml_export_state_s *parent;
 
-  /* allocated by the backend (a single output is needed for the entire export) */
-  void *data;
-} * hwloc__xml_export_output_t;
+  void (*new_child)(struct hwloc__xml_export_state_s *parentstate, struct hwloc__xml_export_state_s *state, const char *name);
+  void (*new_prop)(struct hwloc__xml_export_state_s *state, const char *name, const char *value);
+  void (*add_content)(struct hwloc__xml_export_state_s *state, const char *buffer, size_t length);
+  void (*end_object)(struct hwloc__xml_export_state_s *state, const char *name);
 
-HWLOC_DECLSPEC void hwloc__xml_export_object (hwloc__xml_export_output_t output, struct hwloc_topology *topology, struct hwloc_obj *obj);
+  /* opaque data used to store backend-specific data.
+   * statically allocated to allow stack-allocation by the common code without knowing actual backend needs.
+   */
+  char data[40];
+} * hwloc__xml_export_state_t;
+
+HWLOC_DECLSPEC void hwloc__xml_export_object (hwloc__xml_export_state_t state, struct hwloc_topology *topology, struct hwloc_obj *obj);
 
 struct hwloc_xml_callbacks {
   int (*backend_init)(struct hwloc_topology *topology, struct hwloc_backend *backend, const char *xmlpath, const char *xmlbuffer, int xmlbuflen);

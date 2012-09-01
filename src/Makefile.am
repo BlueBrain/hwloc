@@ -33,6 +33,7 @@ sources = \
         bind.c \
         bitmap.c \
         misc.c \
+        base64.c \
         topology-noos.c \
         topology-synthetic.c \
         topology-custom.c \
