@@ -4,15 +4,13 @@
 
 # HWLOC_PREPARE_FILTER_COMPONENTS
 #
-# Given a list of <class>-<name>, define hwloc_<class>_<name>_component_maybeplugin=1.
+# Given a comma-separated list of names, define hwloc_<name>_component_maybeplugin=1.
 #
 # $1 = command-line given list of components to build as plugins
 #
 AC_DEFUN([HWLOC_PREPARE_FILTER_COMPONENTS], [
-  for classname in `echo [$1] | sed -e 's/,/ /g'` ; do
-    class=`echo $classname | cut -d- -f1`
-    name=`echo $classname | cut -d- -f2`
-    str="hwloc_${class}_${name}_component_wantplugin=1"
+  for name in `echo [$1] | sed -e 's/,/ /g'` ; do
+    str="hwloc_${name}_component_wantplugin=1"
     eval $str
   done
 ])
