@@ -52,7 +52,7 @@ static struct hwloc__plugin_desc {
   struct hwloc_component *component;
   lt_dlhandle handle;
   struct hwloc__plugin_desc *next;
-} *hwloc_core_plugins = NULL, *hwloc_xml_plugins = NULL;
+} *hwloc_plugins = NULL;
 
 struct hwloc__dlforeach_cbdata {
   int verbose;
@@ -127,15 +127,15 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
     fprintf(stderr, "Plugin descriptor `%s' ready\n", basename);
 
   /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
-  if (!strncmp(basename, "core_", 5)) {
-    desc->next = hwloc_core_plugins;
-    hwloc_core_plugins = desc;
-  } else if (!strncmp(basename, "xml_", 4)) {
-    desc->next = hwloc_xml_plugins;
-    hwloc_xml_plugins = desc;
-  } else {
+  if (!strncmp(basename, "core_", 5))
+    assert(HWLOC_COMPONENT_TYPE_CORE == desc->component->type);
+  else if (!strncmp(basename, "xml_", 4))
+    assert(HWLOC_COMPONENT_TYPE_XML == desc->component->type);
+  else
     goto out_with_desc;
-  }
+
+  desc->next = hwloc_plugins;
+  hwloc_plugins = desc;
   if (verbose)
     fprintf(stderr, "Plugin descriptor `%s' queued\n", basename);
   return 0;
@@ -161,7 +161,7 @@ hwloc_plugins_exit(void)
   if (verbose)
     fprintf(stderr, "Closing all plugins\n");
 
-  desc = hwloc_core_plugins;
+  desc = hwloc_plugins;
   while (desc) {
     next = desc->next;
     lt_dlclose(desc->handle);
@@ -169,17 +169,7 @@ hwloc_plugins_exit(void)
     free(desc);
     desc = next;
   }
-  hwloc_core_plugins = NULL;
-
-  desc = hwloc_xml_plugins;
-  while (desc) {
-    next = desc->next;
-    lt_dlclose(desc->handle);
-    free(desc->name);
-    free(desc);
-    desc = next;
-  }
-  hwloc_xml_plugins = NULL;
+  hwloc_plugins = NULL;
 
   lt_dlexit();
 }
@@ -202,8 +192,7 @@ hwloc_plugins_init(void)
   if (env)
     path = env;
 
-  hwloc_core_plugins = NULL;
-  hwloc_xml_plugins = NULL;
+  hwloc_plugins = NULL;
 
   if (verbose)
     fprintf(stderr, "Starting plugin dlforeach in %s\n", path);
@@ -265,17 +254,20 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   /* hwloc_static_core_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_core_components[i]; i++)
     hwloc_core_component_register(hwloc_static_core_components[i]->data);
-#ifdef HWLOC_HAVE_PLUGINS
-  for(desc = hwloc_core_plugins; NULL != desc; desc = desc->next)
-    hwloc_core_component_register(desc->component->data);
-#endif
 
   /* hwloc_static_xml_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_xml_components[i]; i++)
     hwloc_xml_callbacks_register(hwloc_static_xml_components[i]->data);
+
+  /* dynamic plugins */
 #ifdef HWLOC_HAVE_PLUGINS
-  for(desc = hwloc_xml_plugins; NULL != desc; desc = desc->next)
-    hwloc_xml_callbacks_register(desc->component->data);
+  for(desc = hwloc_plugins; NULL != desc; desc = desc->next)
+    if (HWLOC_COMPONENT_TYPE_CORE == desc->component->type)
+      hwloc_core_component_register(desc->component->data);
+    else if (HWLOC_COMPONENT_TYPE_XML == desc->component->type)
+      hwloc_xml_callbacks_register(desc->component->data);
+    else
+      assert(0);
 #endif
 
   HWLOC_COMPONENTS_UNLOCK();
