@@ -784,6 +784,10 @@ EOF])
     AC_MSG_CHECKING([if plugin support is enabled])
     # Plugins (even core support) are totally disabled by default
     AS_IF([test "x$enable_plugins" = "x"], [enable_plugins=no])
+    # libltdl doesn't work on AIX as of 2.4.2
+    AS_IF([test "x$enable_plugins" = "xyes" -a "x$hwloc_aix" = "xyes"],
+      [AC_MSG_WARN([libltdl does not work on AIX, plugins support cannot be enabled.])
+       AC_MSG_ERROR([Cannot continue])])
 
     AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
     AC_MSG_RESULT([$hwloc_have_plugins])
