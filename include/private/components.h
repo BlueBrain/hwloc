@@ -48,6 +48,11 @@ extern struct hwloc_core_component * hwloc_core_component_find_next(int type, co
  * Backends *
  ************/
 
+/* A backend is the instantiation of a core component.
+ * When a component gets enabled for a topology,
+ * its instantiate() callback creates a backend.
+ */
+
 struct hwloc_backend {
   struct hwloc_core_component * component;
 
