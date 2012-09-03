@@ -49,7 +49,7 @@ static pthread_mutex_t hwloc_components_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* array of pointers to dynamically loaded plugins */
 static struct hwloc__plugin_desc {
   char *name;
-  struct hwloc_plugin *plugin;
+  struct hwloc_component *component;
   lt_dlhandle handle;
   struct hwloc__plugin_desc *next;
 } *hwloc_core_plugins = NULL, *hwloc_xml_plugins = NULL;
@@ -66,8 +66,8 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   const char *_basename, *sep;
   char *basename;
   lt_dlhandle handle;
-  char *pluginsymbolname = NULL;
-  struct hwloc_plugin *plugin;
+  char *componentsymbolname = NULL;
+  struct hwloc_component *component;
   struct hwloc__plugin_desc *desc;
 
   if (verbose)
@@ -91,37 +91,37 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   if (!basename)
     goto out;
 
-  /* dlopen and get the plugin structure */
+  /* dlopen and get the component structure */
   handle = lt_dlopenext(filename);
   if (!handle)
     goto out_with_basename;
-  pluginsymbolname = malloc(6+strlen(basename)+7+1);
-  sprintf(pluginsymbolname, "hwloc_%s_plugin", basename);
-  plugin = lt_dlsym(handle, pluginsymbolname);
-  if (!plugin) {
+  componentsymbolname = malloc(6+strlen(basename)+10+1);
+  sprintf(componentsymbolname, "hwloc_%s_component", basename);
+  component = lt_dlsym(handle, componentsymbolname);
+  if (!component) {
     if (verbose)
-      fprintf(stderr, "Failed to find plugin symbol `%s'\n",
-	      pluginsymbolname);
+      fprintf(stderr, "Failed to find component symbol `%s'\n",
+	      componentsymbolname);
     goto out_with_handle;
   }
-  if (plugin->abi != HWLOC_PLUGIN_ABI) {
+  if (component->abi != HWLOC_COMPONENT_ABI) {
     if (verbose)
       fprintf(stderr, "Plugin symbol ABI %u instead of %u\n",
-	      plugin->abi, HWLOC_PLUGIN_ABI);
+	      component->abi, HWLOC_COMPONENT_ABI);
     goto out_with_handle;
   }
   if (verbose)
     fprintf(stderr, "Plugin contains expected symbol `%s'\n",
-	    pluginsymbolname);
-  free(pluginsymbolname);
-  pluginsymbolname = NULL;
+	    componentsymbolname);
+  free(componentsymbolname);
+  componentsymbolname = NULL;
 
   /* allocate a plugin_desc and queue it */
   desc = malloc(sizeof(*desc));
   if (!desc)
     goto out_with_handle;
   desc->name = basename;
-  desc->plugin = plugin;
+  desc->component = component;
   desc->handle = handle;
   if (verbose)
     fprintf(stderr, "Plugin descriptor `%s' ready\n", basename);
@@ -144,7 +144,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   free(desc);
  out_with_handle:
   lt_dlclose(handle);
-  free(pluginsymbolname); /* NULL if already freed */
+  free(componentsymbolname); /* NULL if already freed */
  out_with_basename:
   free(basename);
  out:
@@ -264,18 +264,18 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 
   /* hwloc_static_core_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_core_components[i]; i++)
-    hwloc_static_core_components[i]();
+    hwloc_core_component_register(hwloc_static_core_components[i]->data);
 #ifdef HWLOC_HAVE_PLUGINS
   for(desc = hwloc_core_plugins; NULL != desc; desc = desc->next)
-    desc->plugin->init();
+    hwloc_core_component_register(desc->component->data);
 #endif
 
   /* hwloc_static_xml_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_xml_components[i]; i++)
-    hwloc_static_xml_components[i]();
+    hwloc_xml_callbacks_register(hwloc_static_xml_components[i]->data);
 #ifdef HWLOC_HAVE_PLUGINS
   for(desc = hwloc_xml_plugins; NULL != desc; desc = desc->next)
-    desc->plugin->init();
+    hwloc_xml_callbacks_register(desc->component->data);
 #endif
 
   HWLOC_COMPONENTS_UNLOCK();

@@ -41,7 +41,7 @@ hwloc_set_noos_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
 }
 
-static struct hwloc_core_component hwloc_core_noos_component = {
+static struct hwloc_core_component hwloc_noos_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "none",
   hwloc_noos_component_instantiate,
@@ -50,8 +50,8 @@ static struct hwloc_core_component hwloc_core_noos_component = {
   NULL
 };
 
-void
-hwloc_core_noos_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_noos_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_noos_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_noos_core_component
+};

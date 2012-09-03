@@ -240,7 +240,7 @@ hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_core_component hwloc_core_freebsd_component = {
+static struct hwloc_core_component hwloc_freebsd_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "freebsd",
   hwloc_freebsd_component_instantiate,
@@ -249,8 +249,8 @@ static struct hwloc_core_component hwloc_core_freebsd_component = {
   NULL
 };
 
-void
-hwloc_core_freebsd_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_freebsd_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_freebsd_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_freebsd_core_component
+};

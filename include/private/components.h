@@ -77,78 +77,83 @@ HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
-/**************
- * Components *
- **************/
+/**********************
+ * Generic components *
+ **********************/
 
-extern void hwloc_components_init(struct hwloc_topology *topology); /* increases plugins refcount, should be called exactly once per topology (during init) */
-extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases plugins refcount, should be called exactly once per topology (during destroy) */
+/* Generic components structure, either static listed by configure in static-components.h
+ * or dynamically loaded as a plugin.
+ */
 
-typedef void (*hwloc_component_init_fn_t)(void);
+extern void hwloc_components_init(struct hwloc_topology *topology); /* increases components refcount, should be called exactly once per topology (during init) */
+extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases components refcount, should be called exactly once per topology (during destroy) */
 
-#ifdef HWLOC_HAVE_PLUGINS
+#define HWLOC_COMPONENT_ABI 1
 
-#define HWLOC_PLUGIN_ABI 1
+typedef enum hwloc_component_type_e {
+  HWLOC_COMPONENT_TYPE_CORE,	/* The data field must point to a struct hwloc_core_component. */
+  HWLOC_COMPONENT_TYPE_XML,	/* The data field must point to a struct hwloc_xml_component. */
+  HWLOC_COMPONENT_TYPE_MAX
+} hwloc_component_type_t;
 
-struct hwloc_plugin {
+struct hwloc_component {
   unsigned abi;
-  hwloc_component_init_fn_t init;
+  hwloc_component_type_t type;
+  void * data;
 };
-
-#endif /* HWLOC_HAVE_PLUGINS */
 
 /****************************************
  * Misc component registration routines *
  ****************************************/
 
 #if defined(HWLOC_LINUX_SYS)
-extern void hwloc_core_linux_component_register(void);
+extern struct hwloc_component hwloc_core_linux_component;
 #endif /* HWLOC_LINUX_SYS */
 
-extern void hwloc_core_xml_component_register(void);
+extern struct hwloc_component hwloc_core_xml_component;
 
 #ifdef HWLOC_SOLARIS_SYS
-extern void hwloc_core_solaris_component_register(void);
+extern struct hwloc_component hwloc_core_solaris_component;
 #endif /* HWLOC_SOLARIS_SYS */
 
 #ifdef HWLOC_AIX_SYS
-extern void hwloc_core_aix_component_register(void);
+extern struct hwloc_component hwloc_core_aix_component;
 #endif /* HWLOC_AIX_SYS */
 
 #ifdef HWLOC_OSF_SYS
-extern void hwloc_core_osf_component_register(void);
+extern struct hwloc_component hwloc_core_osf_component;
 #endif /* HWLOC_OSF_SYS */
 
 #ifdef HWLOC_WIN_SYS
-extern void hwloc_core_windows_component_register(void);
+extern struct hwloc_component hwloc_core_windows_component;
 #endif /* HWLOC_WIN_SYS */
 
 #ifdef HWLOC_DARWIN_SYS
-extern void hwloc_core_darwin_component_register(void);
+extern struct hwloc_component hwloc_core_darwin_component;
 #endif /* HWLOC_DARWIN_SYS */
 
 #ifdef HWLOC_FREEBSD_SYS
-extern void hwloc_core_freebsd_component_register(void);
+extern struct hwloc_component hwloc_core_freebsd_component;
 #endif /* HWLOC_FREEBSD_SYS */
 
 #ifdef HWLOC_HPUX_SYS
-extern void hwloc_core_hpux_component_register(void);
+extern struct hwloc_component hwloc_core_hpux_component;
 #endif /* HWLOC_HPUX_SYS */
 
 #ifdef HWLOC_HAVE_LIBPCI
-extern void hwloc_core_libpci_component_register(void);
+extern struct hwloc_component hwloc_core_libpci_component;
 #endif /* HWLOC_HAVE_LIBPCI */
 
-extern void hwloc_core_synthetic_component_register(void);
+extern struct hwloc_component hwloc_core_synthetic_component;
 
-extern void hwloc_core_noos_component_register(void);
+extern struct hwloc_component hwloc_core_noos_component;
 
-extern void hwloc_core_custom_component_register(void);
+extern struct hwloc_component hwloc_core_custom_component;
 
 
-extern void hwloc_xml_nolibxml_component_register(void);
+extern struct hwloc_component hwloc_xml_nolibxml_component;
 #ifdef HWLOC_HAVE_LIBXML2
-extern void hwloc_xml_libxml_component_register(void);
+extern struct hwloc_component hwloc_xml_libxml_component;
 #endif
 
 #endif /* PRIVATE_COMPONENTS_H */

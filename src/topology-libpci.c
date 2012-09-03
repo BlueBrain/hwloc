@@ -568,7 +568,7 @@ hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_core_component hwloc_core_libpci_component = {
+static struct hwloc_core_component hwloc_libpci_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
   "libpci",
   hwloc_libpci_component_instantiate,
@@ -577,20 +577,8 @@ static struct hwloc_core_component hwloc_core_libpci_component = {
   NULL
 };
 
-#ifdef HWLOC_BUILD_PLUGIN
-static void
-hwloc_core_libpci_plugin_init(void)
-#else
-void
-hwloc_core_libpci_component_register(void)
-#endif
-{
-  hwloc_core_component_register(&hwloc_core_libpci_component);
-}
-
-#ifdef HWLOC_BUILD_PLUGIN
-HWLOC_DECLSPEC struct hwloc_plugin hwloc_core_libpci_plugin = {
-  HWLOC_PLUGIN_ABI,
-  hwloc_core_libpci_plugin_init
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_libpci_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_libpci_core_component
 };
-#endif

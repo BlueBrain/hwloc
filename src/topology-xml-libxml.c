@@ -366,25 +366,13 @@ static struct hwloc_xml_callbacks hwloc_xml_libxml_callbacks = {
   hwloc_libxml_free_buffer
 };
 
-static struct hwloc_xml_component hwloc_xml_libxml_component = {
+static struct hwloc_xml_component hwloc_libxml_xml_component = {
   NULL,
   &hwloc_xml_libxml_callbacks
 };
 
-#ifdef HWLOC_BUILD_PLUGIN
-static void
-hwloc_xml_libxml_plugin_init(void)
-#else
-void
-hwloc_xml_libxml_component_register(void)
-#endif
-{
-  hwloc_xml_callbacks_register(&hwloc_xml_libxml_component);
-}
-
-#ifdef HWLOC_BUILD_PLUGIN
-HWLOC_DECLSPEC struct hwloc_plugin hwloc_xml_libxml_plugin = {
-  HWLOC_PLUGIN_ABI,
-  hwloc_xml_libxml_plugin_init
+HWLOC_DECLSPEC struct hwloc_component hwloc_xml_libxml_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_XML,
+  &hwloc_libxml_xml_component
 };
-#endif

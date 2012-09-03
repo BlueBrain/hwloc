@@ -420,7 +420,7 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
   return -1;
 }
 
-static struct hwloc_core_component hwloc_core_synthetic_component = {
+static struct hwloc_core_component hwloc_synthetic_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   "synthetic",
   hwloc_synthetic_component_instantiate,
@@ -429,8 +429,8 @@ static struct hwloc_core_component hwloc_core_synthetic_component = {
   NULL
 };
 
-void
-hwloc_core_synthetic_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_synthetic_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_synthetic_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_synthetic_core_component
+};

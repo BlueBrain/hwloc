@@ -395,7 +395,7 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology,
   return -1;
 }
 
-static struct hwloc_core_component hwloc_core_osf_component = {
+static struct hwloc_core_component hwloc_osf_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "osf",
   hwloc_osf_component_instantiate,
@@ -404,8 +404,8 @@ static struct hwloc_core_component hwloc_core_osf_component = {
   NULL
 };
 
-void
-hwloc_core_osf_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_osf_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_osf_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_osf_core_component
+};

@@ -429,10 +429,10 @@ extern "C" {
 
 /* private/components.h */
 
-#define HWLOC_CORE_COMPONENT_TYPE_OS HWLOC_NAME(CORE_COMPONENT_TYPE_OS)
-#define HWLOC_CORE_COMPONENT_TYPE_GLOBAL HWLOC_NAME(CORE_COMPONENT_TYPE_GLOBAL)
-#define HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME(CORE_COMPONENT_TYPE_ADDITIONAL)
-#define HWLOC_CORE_COMPONENT_TYPE_MAX HWLOC_NAME(CORE_COMPONENT_TYPE_MAX)
+#define HWLOC_CORE_COMPONENT_TYPE_OS HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_OS)
+#define HWLOC_CORE_COMPONENT_TYPE_GLOBAL HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_GLOBAL)
+#define HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_ADDITIONAL)
+#define HWLOC_CORE_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_MAX)
 
 #define hwloc_core_component_type_e HWLOC_NAME(core_component_type_e)
 #define hwloc_core_component_type_t HWLOC_NAME(core_component_type_t)
@@ -451,25 +451,31 @@ extern "C" {
 #define hwloc_components_init HWLOC_NAME(components_init)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 
-#define hwloc_component_init_fn_t HWLOC_NAME(component_init_fn_t)
-#define hwloc_plugin HWLOC_NAME(plugin)
+#define HWLOC_COMPONENT_TYPE_CORE HWLOC_NAME_CAPS(COMPONENT_TYPE_CORE)
+#define HWLOC_COMPONENT_TYPE_XML HWLOC_NAME_CAPS(COMPONENT_TYPE_XML)
+#define HWLOC_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(COMPONENT_TYPE_MAX)
 
-#define hwloc_core_linux_component_register HWLOC_NAME(core_linux_component_register)
-#define hwloc_core_xml_component_register HWLOC_NAME(core_xml_component_register)
-#define hwloc_core_solaris_component_register HWLOC_NAME(core_solaris_component_register)
-#define hwloc_core_aix_component_register HWLOC_NAME(core_aix_component_register)
-#define hwloc_core_osf_component_register HWLOC_NAME(core_osf_component_register)
-#define hwloc_core_windows_component_register HWLOC_NAME(core_windows_component_register)
-#define hwloc_core_darwin_component_register HWLOC_NAME(core_darwin_component_register)
-#define hwloc_core_freebsd_component_register HWLOC_NAME(core_freebsd_component_register)
-#define hwloc_core_hpux_component_register HWLOC_NAME(core_hpux_component_register)
-#define hwloc_core_synthetic_component_register HWLOC_NAME(core_synthetic_component_register)
-#define hwloc_core_custom_component_register HWLOC_NAME(core_custom_component_register)
-#define hwloc_core_noos_component_register HWLOC_NAME(core_noos_component_register)
-#define hwloc_core_libpci_component_register HWLOC_NAME(core_libpci_component_register)
+#define hwloc_component_type_e HWLOC_NAME(component_type_e)
+#define hwloc_component_type_t HWLOC_NAME(component_type_t)
 
-#define hwloc_xml_nolibxml_component_register HWLOC_NAME(xml_nolibxml_component_register)
-#define hwloc_xml_libxml_component_register HWLOC_NAME(xml_libxml_component_register)
+#define hwloc_component HWLOC_NAME(component)
+
+#define hwloc_core_linux_component HWLOC_NAME(core_linux_component)
+#define hwloc_core_xml_component HWLOC_NAME(core_xml_component)
+#define hwloc_core_solaris_component HWLOC_NAME(core_solaris_component)
+#define hwloc_core_aix_component HWLOC_NAME(core_aix_component)
+#define hwloc_core_osf_component HWLOC_NAME(core_osf_component)
+#define hwloc_core_windows_component HWLOC_NAME(core_windows_component)
+#define hwloc_core_darwin_component HWLOC_NAME(core_darwin_component)
+#define hwloc_core_freebsd_component HWLOC_NAME(core_freebsd_component)
+#define hwloc_core_hpux_component HWLOC_NAME(core_hpux_component)
+#define hwloc_core_synthetic_component HWLOC_NAME(core_synthetic_component)
+#define hwloc_core_custom_component HWLOC_NAME(core_custom_component)
+#define hwloc_core_noos_component HWLOC_NAME(core_noos_component)
+#define hwloc_core_libpci_component HWLOC_NAME(core_libpci_component)
+
+#define hwloc_xml_nolibxml_component HWLOC_NAME(xml_nolibxml_component)
+#define hwloc_xml_libxml_component HWLOC_NAME(xml_libxml_component)
 
 /* private/private.h */
 

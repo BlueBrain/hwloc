@@ -284,7 +284,7 @@ hwloc_hpux_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_core_component hwloc_core_hpux_component = {
+static struct hwloc_core_component hwloc_hpux_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "hpux",
   hwloc_hpux_component_instantiate,
@@ -293,8 +293,8 @@ static struct hwloc_core_component hwloc_core_hpux_component = {
   NULL
 };
 
-void
-hwloc_core_hpux_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_hpux_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_hpux_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_hpux_core_component
+};

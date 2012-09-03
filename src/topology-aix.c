@@ -809,7 +809,7 @@ hwloc_aix_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_core_component hwloc_core_aix_component = {
+static struct hwloc_core_component hwloc_aix_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "aix",
   hwloc_aix_component_instantiate,
@@ -818,8 +818,8 @@ static struct hwloc_core_component hwloc_core_aix_component = {
   NULL
 };
 
-void
-hwloc_core_aix_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_aix_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_aix_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_aix_core_component
+};

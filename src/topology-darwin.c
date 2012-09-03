@@ -273,7 +273,7 @@ hwloc_darwin_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_core_component hwloc_core_darwin_component = {
+static struct hwloc_core_component hwloc_darwin_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "darwin",
   hwloc_darwin_component_instantiate,
@@ -282,8 +282,8 @@ static struct hwloc_core_component hwloc_core_darwin_component = {
   NULL
 };
 
-void
-hwloc_core_darwin_component_register(void)
-{
-  hwloc_core_component_register(&hwloc_core_darwin_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_core_darwin_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  &hwloc_darwin_core_component
+};

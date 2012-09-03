@@ -588,13 +588,13 @@ static struct hwloc_xml_callbacks hwloc_xml_nolibxml_callbacks = {
   hwloc_nolibxml_free_buffer
 };
 
-static struct hwloc_xml_component hwloc_xml_nolibxml_component = {
+static struct hwloc_xml_component hwloc_nolibxml_xml_component = {
   &hwloc_xml_nolibxml_callbacks,
   NULL
 };
 
-void
-hwloc_xml_nolibxml_component_register(void)
-{
-  hwloc_xml_callbacks_register(&hwloc_xml_nolibxml_component);
-}
+HWLOC_DECLSPEC struct hwloc_component hwloc_xml_nolibxml_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_XML,
+  &hwloc_nolibxml_xml_component
+};
