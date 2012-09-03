@@ -10,6 +10,9 @@ abs_top_builddir="@abs_top_builddir@"
 distances="$abs_top_builddir/utils/hwloc-distances"
 abs_top_srcdir="@abs_top_srcdir@"
 
+HWLOC_PLUGINS_PATH=${abs_top_builddir}/src
+export HWLOC_PLUGINS_PATH
+
 # make sure we use default numeric formats
 LANG=C
 LC_ALL=C
