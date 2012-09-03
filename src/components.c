@@ -189,19 +189,25 @@ hwloc_plugins_init(void)
   struct hwloc__dlforeach_cbdata cbdata;
   char *verboseenv = getenv("HWLOC_VERBOSE_PLUGINS");
   int verbose = verboseenv ? atoi(verboseenv) : 0;
+  char *path = HWLOC_PLUGINS_DIR;
+  char *env;
   int err;
 
   err = lt_dlinit();
   if (err)
     goto out;
 
+  env = getenv("HWLOC_PLUGINS_PATH");
+  if (env)
+    path = env;
+
   hwloc_core_plugins = NULL;
   hwloc_xml_plugins = NULL;
 
   if (verbose)
-    fprintf(stderr, "Starting plugin dlforeach\n");
+    fprintf(stderr, "Starting plugin dlforeach in %s\n", path);
   cbdata.verbose = verbose;
-  err = lt_dlforeachfile(HWLOC_PLUGINS_DIR, hwloc__dlforeach_cb, &cbdata);
+  err = lt_dlforeachfile(path, hwloc__dlforeach_cb, &cbdata);
   if (err)
     goto out_with_init;
 
