@@ -16,8 +16,9 @@ static struct hwloc_component * hwloc_components = NULL;
 
 static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
 
-#ifdef HWLOC_HAVE_INTERLOCKED_COMPARE_EXCHANGE
-/* mutex on top of InterlockedCompareExchange() on windows */
+#ifdef HWLOC_WIN_SYS
+/* Basic mutex on top of InterlockedCompareExchange() on windows,
+ * Far from perfect, but easy to maintain, and way enough given that this code will never be needed for real. */
 #include <windows.h>
 static LONG hwloc_components_mutex = 0;
 #define HWLOC_COMPONENTS_LOCK() do {						\
@@ -36,7 +37,7 @@ static pthread_mutex_t hwloc_components_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define HWLOC_COMPONENTS_LOCK() pthread_mutex_lock(&hwloc_components_mutex)
 #define HWLOC_COMPONENTS_UNLOCK() pthread_mutex_unlock(&hwloc_components_mutex)
 
-#else /* HWLOC_HAVE_INTERLOCKED_COMPARE_EXCHANGE || HWLOC_HAVE_PTHREAD_MUTEX */
+#else /* HWLOC_WIN_SYS || HWLOC_HAVE_PTHREAD_MUTEX */
 #error No mutex implementation available
 #endif
 
