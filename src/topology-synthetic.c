@@ -385,7 +385,7 @@ hwloc_synthetic_backend_disable(struct hwloc_topology *topology __hwloc_attribut
 
 static int
 hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
-				      struct hwloc_component *component,
+				      struct hwloc_core_component *component,
 				      const void *_data1,
 				      const void *_data2 __hwloc_attribute_unused,
 				      const void *_data3 __hwloc_attribute_unused)
@@ -420,11 +420,11 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
   return -1;
 }
 
-static struct hwloc_component hwloc_synthetic_component = {
-  HWLOC_COMPONENT_TYPE_GLOBAL,
+static struct hwloc_core_component hwloc_core_synthetic_component = {
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   "synthetic",
   hwloc_synthetic_component_instantiate,
-  NULL, /* no hooks for HWLOC_COMPONENT_TYPE_GLOBAL */
+  NULL, /* no hooks for HWLOC_CORE_COMPONENT_TYPE_GLOBAL */
   10,
   NULL
 };
@@ -432,5 +432,5 @@ static struct hwloc_component hwloc_synthetic_component = {
 void
 hwloc_core_synthetic_component_register(void)
 {
-  hwloc_component_register(&hwloc_synthetic_component);
+  hwloc_core_component_register(&hwloc_core_synthetic_component);
 }

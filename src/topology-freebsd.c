@@ -226,7 +226,7 @@ hwloc_set_freebsd_hooks(struct hwloc_topology *topology)
 
 static int
 hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
-				    struct hwloc_component *component,
+				    struct hwloc_core_component *component,
 				    const void *_data1 __hwloc_attribute_unused,
 				    const void *_data2 __hwloc_attribute_unused,
 				    const void *_data3 __hwloc_attribute_unused)
@@ -240,8 +240,8 @@ hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_component hwloc_freebsd_component = {
-  HWLOC_COMPONENT_TYPE_OS,
+static struct hwloc_core_component hwloc_core_freebsd_component = {
+  HWLOC_CORE_COMPONENT_TYPE_OS,
   "freebsd",
   hwloc_freebsd_component_instantiate,
   hwloc_set_freebsd_hooks,
@@ -252,5 +252,5 @@ static struct hwloc_component hwloc_freebsd_component = {
 void
 hwloc_core_freebsd_component_register(void)
 {
-  hwloc_component_register(&hwloc_freebsd_component);
+  hwloc_core_component_register(&hwloc_core_freebsd_component);
 }

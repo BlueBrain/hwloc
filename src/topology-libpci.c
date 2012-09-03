@@ -545,7 +545,7 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
 static int
 hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
-                                struct hwloc_component *component,
+                                struct hwloc_core_component *component,
                                 const void *_data1 __hwloc_attribute_unused,
                                 const void *_data2 __hwloc_attribute_unused,
                                 const void *_data3 __hwloc_attribute_unused)
@@ -568,8 +568,8 @@ hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_component hwloc_libpci_component = {
-  HWLOC_COMPONENT_TYPE_ADDITIONAL,
+static struct hwloc_core_component hwloc_core_libpci_component = {
+  HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
   "libpci",
   hwloc_libpci_component_instantiate,
   NULL,
@@ -585,7 +585,7 @@ void
 hwloc_core_libpci_component_register(void)
 #endif
 {
-  hwloc_component_register(&hwloc_libpci_component);
+  hwloc_core_component_register(&hwloc_core_libpci_component);
 }
 
 #ifdef HWLOC_BUILD_PLUGIN

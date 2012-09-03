@@ -8,11 +8,11 @@
 #include <private/private.h>
 #include <private/xml.h>
 
-/* list of all registered components, sorted by priority, higher priority first.
+/* list of all registered core components, sorted by priority, higher priority first.
  * noos is last because its priority is 0.
  * others' priority is 10.
  */
-static struct hwloc_component * hwloc_components = NULL;
+static struct hwloc_core_component * hwloc_core_components = NULL;
 
 static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
 
@@ -223,14 +223,14 @@ hwloc_plugins_init(void)
 #endif /* HWLOC_HAVE_PLUGINS */
 
 int
-hwloc_component_register(struct hwloc_component *component)
+hwloc_core_component_register(struct hwloc_core_component *component)
 {
-  struct hwloc_component **prev;
+  struct hwloc_core_component **prev;
 
   /* FIXME disallow multiple components with same name?
    * in case they insert same objects twice */
 
-  prev = &hwloc_components;
+  prev = &hwloc_core_components;
   while (NULL != *prev) {
     if ((*prev)->priority < component->priority)
       break;
@@ -281,13 +281,13 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   HWLOC_COMPONENTS_UNLOCK();
 }
 
-struct hwloc_component *
-hwloc_component_find_next(int type /* hwloc_component_type_t or -1 if any */,
-			  const char *name /* name of NULL if any */,
-			  struct hwloc_component *prev)
+struct hwloc_core_component *
+hwloc_core_component_find_next(int type /* hwloc_core_component_type_t or -1 if any */,
+			       const char *name /* name of NULL if any */,
+			       struct hwloc_core_component *prev)
 {
-  struct hwloc_component *comp;
-  comp = prev ? prev->next : hwloc_components;
+  struct hwloc_core_component *comp;
+  comp = prev ? prev->next : hwloc_core_components;
   while (NULL != comp) {
     if ((-1 == type || type == (int) comp->type)
        && (NULL == name || !strcmp(name, comp->name)))
@@ -297,11 +297,11 @@ hwloc_component_find_next(int type /* hwloc_component_type_t or -1 if any */,
   return NULL;
 }
 
-struct hwloc_component *
-hwloc_component_find(int type /* hwloc_component_type_t or -1 if any */,
-		     const char *name /* name of NULL if any */)
+struct hwloc_core_component *
+hwloc_core_component_find(int type /* hwloc_component_type_t or -1 if any */,
+			  const char *name /* name of NULL if any */)
 {
-  return hwloc_component_find_next(type, name, NULL);
+  return hwloc_core_component_find_next(type, name, NULL);
 }
 
 void
@@ -316,7 +316,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
 
   /* no need to unlink/free the list of components, they'll be unloaded below */
 
-  hwloc_components = NULL;
+  hwloc_core_components = NULL;
   hwloc_xml_callbacks_reset();
 
 #ifdef HWLOC_HAVE_PLUGINS
@@ -328,7 +328,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
 
 struct hwloc_backend *
 hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
-		    struct hwloc_component *component)
+		    struct hwloc_core_component *component)
 {
   struct hwloc_backend * backend = malloc(sizeof(*backend));
   if (!backend) {
@@ -350,8 +350,8 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 {
   switch (backend->component->type) {
 
-  case HWLOC_COMPONENT_TYPE_OS:
-  case HWLOC_COMPONENT_TYPE_GLOBAL:
+  case HWLOC_CORE_COMPONENT_TYPE_OS:
+  case HWLOC_CORE_COMPONENT_TYPE_GLOBAL:
     if (NULL != topology->backend) {
       /* only one base/global backend simultaneously */
       if (topology->backend->disable)
@@ -367,7 +367,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
     topology->backend = backend;
     break;
 
-  case HWLOC_COMPONENT_TYPE_ADDITIONAL: {
+  case HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL: {
     struct hwloc_backend **pprev = &topology->additional_backends;
     while (NULL != *pprev) {
       if ((*pprev)->component->priority < backend->component->priority)

@@ -8,52 +8,52 @@
 
 struct hwloc_backend;
 
-/**************
- * Components *
- **************/
+/*******************
+ * Core components *
+ *******************/
 
-typedef enum hwloc_component_type_e {
-  HWLOC_COMPONENT_TYPE_OS, /* OS backend, and no-OS support.
+/* Core components are components taking take of the discovery.
+ * They are registered by generic components, either static or plugins.
+ */
+
+typedef enum hwloc_core_component_type_e {
+  HWLOC_CORE_COMPONENT_TYPE_OS, /* OS backend, and no-OS support.
 		       * that's where we take hooks from when is_this_system=1.
 		       */
-  HWLOC_COMPONENT_TYPE_GLOBAL, /* xml, synthetic or custom.
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL, /* xml, synthetic or custom.
 			   * no additional backend is used.
 			   */
-  HWLOC_COMPONENT_TYPE_ADDITIONAL, /* pci, etc.
+  HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, /* pci, etc.
 			       */
   /* This value is only here so that we can end the enum list without
      a comma (thereby preventing compiler warnings) */
-  HWLOC_COMPONENT_TYPE_MAX
-} hwloc_component_type_t;
+  HWLOC_CORE_COMPONENT_TYPE_MAX
+} hwloc_core_component_type_t;
 
-typedef void (*hwloc_component_init_fn_t)(void);
-
-struct hwloc_component {
-  hwloc_component_type_t type;
+struct hwloc_core_component {
+  hwloc_core_component_type_t type;
   const char *name;
-  int (*instantiate)(struct hwloc_topology *topology, struct hwloc_component *component, const void *data1, const void *data2, const void *data3);
+  int (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
   void (*set_hooks)(struct hwloc_topology *topology); /* only used if HWLOC_COMPONENT_TYPE_OS */
 
   unsigned priority; /* used to sort topology->components and topology->additional_backends, higher priority first */
-  struct hwloc_component * next; /* used internally to list components by priority on topology->components */
+  struct hwloc_core_component * next; /* used internally to list components by priority on topology->components */
 };
 
-HWLOC_DECLSPEC int hwloc_component_register(struct hwloc_component *component);
-extern void hwloc_components_init(struct hwloc_topology *topology); /* increases plugins refcount, should be called exactly once per topology (during init) */
-extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases plugins refcount, should be called exactly once per topology (during destroy) */
-extern struct hwloc_component * hwloc_component_find(int type, const char *name);
-extern struct hwloc_component * hwloc_component_find_next(int type, const char *name, struct hwloc_component *prev);
+HWLOC_DECLSPEC int hwloc_core_component_register(struct hwloc_core_component *component);
+extern struct hwloc_core_component * hwloc_core_component_find(int type, const char *name);
+extern struct hwloc_core_component * hwloc_core_component_find_next(int type, const char *name, struct hwloc_core_component *prev);
 
 /************
  * Backends *
  ************/
 
 struct hwloc_backend {
-  struct hwloc_component * component;
+  struct hwloc_core_component * component;
 
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
-   * maybe NULL if type is HWLOC_COMPONENT_TYPE_ADDITIONAL. */
+   * maybe NULL if type is HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL. */
   int (*discover)(struct hwloc_topology *topology);
 
   /* used by the libpci backend to retrieve pci device locality from the OS backend */
@@ -72,14 +72,19 @@ struct hwloc_backend {
 				*/
 };
 
-HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_component *component);
+HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_core_component *component);
 HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
-/***********
- * Plugins *
- ***********/
+/**************
+ * Components *
+ **************/
+
+extern void hwloc_components_init(struct hwloc_topology *topology); /* increases plugins refcount, should be called exactly once per topology (during init) */
+extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases plugins refcount, should be called exactly once per topology (during destroy) */
+
+typedef void (*hwloc_component_init_fn_t)(void);
 
 #ifdef HWLOC_HAVE_PLUGINS
 

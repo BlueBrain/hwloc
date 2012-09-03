@@ -259,7 +259,7 @@ hwloc_set_darwin_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
 
 static int
 hwloc_darwin_component_instantiate(struct hwloc_topology *topology,
-				   struct hwloc_component *component,
+				   struct hwloc_core_component *component,
 				   const void *_data1 __hwloc_attribute_unused,
 				   const void *_data2 __hwloc_attribute_unused,
 				   const void *_data3 __hwloc_attribute_unused)
@@ -273,8 +273,8 @@ hwloc_darwin_component_instantiate(struct hwloc_topology *topology,
   return 0;
 }
 
-static struct hwloc_component hwloc_darwin_component = {
-  HWLOC_COMPONENT_TYPE_OS,
+static struct hwloc_core_component hwloc_core_darwin_component = {
+  HWLOC_CORE_COMPONENT_TYPE_OS,
   "darwin",
   hwloc_darwin_component_instantiate,
   hwloc_set_darwin_hooks,
@@ -285,5 +285,5 @@ static struct hwloc_component hwloc_darwin_component = {
 void
 hwloc_core_darwin_component_register(void)
 {
-  hwloc_component_register(&hwloc_darwin_component);
+  hwloc_core_component_register(&hwloc_core_darwin_component);
 }

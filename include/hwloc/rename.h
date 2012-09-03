@@ -428,25 +428,27 @@ extern "C" {
 
 /* private/components.h */
 
-#define HWLOC_COMPONENT_TYPE_OS HWLOC_NAME(COMPONENT_TYPE_OS)
-#define HWLOC_COMPONENT_TYPE_GLOBAL HWLOC_NAME(COMPONENT_TYPE_GLOBAL)
-#define HWLOC_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME(COMPONENT_TYPE_ADDITIONAL)
-#define HWLOC_COMPONENT_TYPE_MAX HWLOC_NAME(COMPONENT_TYPE_MAX)
+#define HWLOC_CORE_COMPONENT_TYPE_OS HWLOC_NAME(CORE_COMPONENT_TYPE_OS)
+#define HWLOC_CORE_COMPONENT_TYPE_GLOBAL HWLOC_NAME(CORE_COMPONENT_TYPE_GLOBAL)
+#define HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME(CORE_COMPONENT_TYPE_ADDITIONAL)
+#define HWLOC_CORE_COMPONENT_TYPE_MAX HWLOC_NAME(CORE_COMPONENT_TYPE_MAX)
 
-#define hwloc_component_type_e HWLOC_NAME(component_type_e)
-#define hwloc_component_type_t HWLOC_NAME(component_type_t)
-#define hwloc_component HWLOC_NAME(component)
-#define hwloc_component_register HWLOC_NAME(component_register)
-#define hwloc_components_init HWLOC_NAME(components_init)
-#define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
-#define hwloc_component_find HWLOC_NAME(component_find)
-#define hwloc_component_find_next HWLOC_NAME(component_find_next)
+#define hwloc_core_component_type_e HWLOC_NAME(core_component_type_e)
+#define hwloc_core_component_type_t HWLOC_NAME(core_component_type_t)
+#define hwloc_core_component HWLOC_NAME(core_component)
+
+#define hwloc_core_component_register HWLOC_NAME(core_component_register)
+#define hwloc_core_component_find HWLOC_NAME(core_component_find)
+#define hwloc_core_component_find_next HWLOC_NAME(core_component_find_next)
 
 #define hwloc_backend HWLOC_NAME(backend)
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
 #define hwloc_backend_enable HWLOC_NAME(backend_enable)
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
 #define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
+
+#define hwloc_components_init HWLOC_NAME(components_init)
+#define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 
 #define hwloc_component_init_fn_t HWLOC_NAME(component_init_fn_t)
 #define hwloc_plugin HWLOC_NAME(plugin)
