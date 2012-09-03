@@ -38,13 +38,12 @@ hwloc__xml_verbose(void)
 static struct hwloc_xml_callbacks *hwloc_nolibxml_callbacks = NULL, *hwloc_libxml_callbacks = NULL;
 
 void
-hwloc_xml_callbacks_register(struct hwloc_xml_callbacks *nolibxml,
-			     struct hwloc_xml_callbacks *libxml)
+hwloc_xml_callbacks_register(struct hwloc_xml_component *comp)
 {
   if (!hwloc_nolibxml_callbacks)
-    hwloc_nolibxml_callbacks = nolibxml;
+    hwloc_nolibxml_callbacks = comp->nolibxml_callbacks;
   if (!hwloc_libxml_callbacks)
-    hwloc_libxml_callbacks = libxml;
+    hwloc_libxml_callbacks = comp->libxml_callbacks;
 }
 
 void

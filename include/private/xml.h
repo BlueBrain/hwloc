@@ -58,6 +58,10 @@ typedef struct hwloc__xml_export_state_s {
 
 HWLOC_DECLSPEC void hwloc__xml_export_object (hwloc__xml_export_state_t state, struct hwloc_topology *topology, struct hwloc_obj *obj);
 
+/******************
+ * XML components *
+ ******************/
+
 struct hwloc_xml_callbacks {
   int (*backend_init)(struct hwloc_topology *topology, struct hwloc_backend *backend, const char *xmlpath, const char *xmlbuffer, int xmlbuflen);
   int (*export_file)(struct hwloc_topology *topology, const char *filename);
@@ -65,7 +69,12 @@ struct hwloc_xml_callbacks {
   void (*free_buffer)(void *xmlbuffer);
 };
 
-HWLOC_DECLSPEC void hwloc_xml_callbacks_register(struct hwloc_xml_callbacks *nolibxml, struct hwloc_xml_callbacks *libxml);
+struct hwloc_xml_component {
+  struct hwloc_xml_callbacks *nolibxml_callbacks;
+  struct hwloc_xml_callbacks *libxml_callbacks;
+};
+
+HWLOC_DECLSPEC void hwloc_xml_callbacks_register(struct hwloc_xml_component *component);
 HWLOC_DECLSPEC void hwloc_xml_callbacks_reset(void);
 
 #endif /* PRIVATE_XML_H */
