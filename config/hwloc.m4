@@ -165,8 +165,7 @@ EOF])
     # List of components to be built, either statically or dynamically.
     # To be enlarged below.
     #
-    hwloc_core_components="noos xml synthetic custom"
-    hwloc_xml_components="nolibxml"
+    hwloc_components="core_noos core_xml core_synthetic core_custom xml_nolibxml"
 
     #
     # Check OS support
@@ -177,7 +176,7 @@ EOF])
         AC_DEFINE(HWLOC_LINUX_SYS, 1, [Define to 1 on Linux])
         hwloc_linux=yes
         AC_MSG_RESULT([Linux])
-        hwloc_core_components="$hwloc_core_components linux"
+        hwloc_components="$hwloc_components core_linux"
         ;;
       *-*-irix*)
         AC_DEFINE(HWLOC_IRIX_SYS, 1, [Define to 1 on Irix])
@@ -189,43 +188,43 @@ EOF])
         AC_DEFINE(HWLOC_DARWIN_SYS, 1, [Define to 1 on Darwin])
         hwloc_darwin=yes
         AC_MSG_RESULT([Darwin])
-        hwloc_core_components="$hwloc_core_components darwin"
+        hwloc_components="$hwloc_components core_darwin"
         ;;
       *-*-solaris*)
         AC_DEFINE(HWLOC_SOLARIS_SYS, 1, [Define to 1 on Solaris])
         hwloc_solaris=yes
         AC_MSG_RESULT([Solaris])
-        hwloc_core_components="$hwloc_core_components solaris"
+        hwloc_components="$hwloc_components core_solaris"
         ;;
       *-*-aix*)
         AC_DEFINE(HWLOC_AIX_SYS, 1, [Define to 1 on AIX])
         hwloc_aix=yes
         AC_MSG_RESULT([AIX])
-        hwloc_core_components="$hwloc_core_components aix"
+        hwloc_components="$hwloc_components core_aix"
         ;;
       *-*-osf*)
         AC_DEFINE(HWLOC_OSF_SYS, 1, [Define to 1 on OSF])
         hwloc_osf=yes
         AC_MSG_RESULT([OSF])
-        hwloc_core_components="$hwloc_core_components osf"
+        hwloc_components="$hwloc_components core_osf"
         ;;
       *-*-hpux*)
         AC_DEFINE(HWLOC_HPUX_SYS, 1, [Define to 1 on HP-UX])
         hwloc_hpux=yes
         AC_MSG_RESULT([HP-UX])
-        hwloc_core_components="$hwloc_core_components hpux"
+        hwloc_components="$hwloc_components core_hpux"
         ;;
       *-*-mingw*|*-*-cygwin*)
         AC_DEFINE(HWLOC_WIN_SYS, 1, [Define to 1 on WINDOWS])
         hwloc_windows=yes
         AC_MSG_RESULT([Windows])
-        hwloc_core_components="$hwloc_core_components windows"
+        hwloc_components="$hwloc_components core_windows"
         ;;
       *-*-*freebsd*)
         AC_DEFINE(HWLOC_FREEBSD_SYS, 1, [Define to 1 on *FREEBSD])
         hwloc_freebsd=yes
         AC_MSG_RESULT([FreeBSD])
-        hwloc_core_components="$hwloc_core_components freebsd"
+        hwloc_components="$hwloc_components core_freebsd"
         ;;
       *)
         AC_MSG_RESULT([Unsupported! ($target)])
@@ -717,7 +716,7 @@ EOF])
       CFLAGS="$tmp_save_CFLAGS"
       LIBS="$tmp_save_LIBS"
 
-      hwloc_core_components="$hwloc_core_components libpci"
+      hwloc_components="$hwloc_components core_libpci"
       hwloc_core_libpci_component_maybeplugin=1
     else
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
@@ -735,7 +734,7 @@ EOF])
         HWLOC_REQUIRES="libxml-2.0 $HWLOC_REQUIRES"
         AC_DEFINE([HWLOC_HAVE_LIBXML2], [1], [Define to 1 if you have the `libxml2' library.])
         AC_SUBST([HWLOC_HAVE_LIBXML2], [1])
-        hwloc_xml_components="$hwloc_xml_components libxml"
+        hwloc_components="$hwloc_components xml_libxml"
         hwloc_xml_libxml_component_maybeplugin=1
     else
         AC_SUBST([HWLOC_HAVE_LIBXML2], [0])
@@ -800,24 +799,14 @@ EOF])
     # Now we have some hwloc_<class>_<name>_component_wantplugin=1
 
     # See which core components want plugin and support it
-    HWLOC_FILTER_COMPONENTS([core])
-    # Now we have some hwloc_core_<name>_component=plugin/static
-    # and hwloc_static/plugin_core_components
-    AC_MSG_CHECKING([core components to build statically])
-    AC_MSG_RESULT($hwloc_static_core_components)
-    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [core], [$hwloc_static_core_components])
-    AC_MSG_CHECKING([core components to build as plugins])
-    AC_MSG_RESULT([$hwloc_plugin_core_components])
-
-    # See which xml components want plugin and support it
-    HWLOC_FILTER_COMPONENTS([xml])
-    # Now we have some hwloc_xml_<name>_component=plugin/static
-    # and hwloc_static/plugin_xml_components
-    AC_MSG_CHECKING([xml components to build statically])
-    AC_MSG_RESULT($hwloc_static_xml_components)
-    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [xml], [$hwloc_static_xml_components])
-    AC_MSG_CHECKING([xml components to build as plugins])
-    AC_MSG_RESULT([$hwloc_plugin_xml_components])
+    HWLOC_FILTER_COMPONENTS
+    # Now we have some hwloc_<name>_component=plugin/static
+    # and hwloc_static/plugin_components
+    AC_MSG_CHECKING([components to build statically])
+    AC_MSG_RESULT($hwloc_static_components)
+    HWLOC_LIST_STATIC_COMPONENTS([$hwloc_static_components_file], [$hwloc_static_components])
+    AC_MSG_CHECKING([components to build as plugins])
+    AC_MSG_RESULT([$hwloc_plugin_components])
 
     AS_IF([test "$hwloc_core_libpci_component" = "static"],
           [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_PCI_LIBS"

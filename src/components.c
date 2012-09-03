@@ -251,13 +251,14 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   hwloc_plugins_init();
 #endif
 
-  /* hwloc_static_core_components is created by configure in static-components.h */
-  for(i=0; NULL != hwloc_static_core_components[i]; i++)
-    hwloc_core_component_register(hwloc_static_core_components[i]->data);
-
-  /* hwloc_static_xml_components is created by configure in static-components.h */
-  for(i=0; NULL != hwloc_static_xml_components[i]; i++)
-    hwloc_xml_callbacks_register(hwloc_static_xml_components[i]->data);
+  /* hwloc_static_components is created by configure in static-components.h */
+  for(i=0; NULL != hwloc_static_components[i]; i++)
+    if (HWLOC_COMPONENT_TYPE_CORE == hwloc_static_components[i]->type)
+      hwloc_core_component_register(hwloc_static_components[i]->data);
+    else if (HWLOC_COMPONENT_TYPE_XML == hwloc_static_components[i]->type)
+      hwloc_xml_callbacks_register(hwloc_static_components[i]->data);
+    else
+      assert(0);
 
   /* dynamic plugins */
 #ifdef HWLOC_HAVE_PLUGINS
