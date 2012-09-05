@@ -40,6 +40,7 @@ sources = \
         topology-xml.c \
         topology-xml-nolibxml.c
 ldflags =
+common_ldflags = 
 
 # Conditionally add to the sources and ldflags
 
@@ -51,7 +52,7 @@ plugins_LTLIBRARIES += xml_libxml.la
 xml_libxml_la_SOURCES = topology-xml-libxml.c
 xml_libxml_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
 xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS)
-xml_libxml_la_LDFLAGS = -module -avoid-version $(HWLOC_LIBXML2_LIBS)
+xml_libxml_la_LDFLAGS = $(common_ldflags) -module -avoid-version $(HWLOC_LIBXML2_LIBS)
 endif
 endif HWLOC_HAVE_LIBXML2
 
@@ -63,7 +64,7 @@ plugins_LTLIBRARIES += core_libpci.la
 core_libpci_la_SOURCES = topology-libpci.c
 core_libpci_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
 core_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS)
-core_libpci_la_LDFLAGS = -module -avoid-version $(HWLOC_PCI_LIBS)
+core_libpci_la_LDFLAGS = $(common_ldflags) -module -avoid-version $(HWLOC_PCI_LIBS)
 endif
 endif HWLOC_HAVE_LIBPCI
 
@@ -104,7 +105,7 @@ sources += topology-freebsd.c
 endif HWLOC_HAVE_FREEBSD
 
 if HWLOC_HAVE_GCC
-ldflags += -no-undefined
+common_ldflags += -no-undefined
 endif HWLOC_HAVE_GCC
 
 if HWLOC_HAVE_WINDOWS
@@ -135,7 +136,7 @@ sources += topology-x86.c
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
-libhwloc_la_LDFLAGS = $(ldflags) -version-info $(libhwloc_so_version) $(HWLOC_LIBS)
+libhwloc_la_LDFLAGS = $(common_ldflags) $(ldflags) -version-info $(libhwloc_so_version) $(HWLOC_LIBS)
 
 if HWLOC_HAVE_PLUGINS
 AM_CPPFLAGS += $(LTDLINCL)
