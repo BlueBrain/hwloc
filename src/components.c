@@ -154,7 +154,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 static void
 hwloc_plugins_exit(void)
 {
-  char *verboseenv = getenv("HWLOC_VERBOSE_PLUGINS");
+  char *verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
   int verbose = verboseenv ? atoi(verboseenv) : 0;
   struct hwloc__plugin_desc *desc, *next;
 
@@ -178,7 +178,7 @@ static int
 hwloc_plugins_init(void)
 {
   struct hwloc__dlforeach_cbdata cbdata;
-  char *verboseenv = getenv("HWLOC_VERBOSE_PLUGINS");
+  char *verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
   int verbose = verboseenv ? atoi(verboseenv) : 0;
   char *path = HWLOC_PLUGINS_DIR;
   char *env;

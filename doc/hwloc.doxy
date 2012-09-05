@@ -971,6 +971,18 @@ following environment variables.
   of the corresponding host bridge.
   </dd>
 
+<dt>HWLOC_PLUGINS_PATH=/path/to/hwloc/plugins/:...</dt>
+  <dd>changes the default search directory for plugins.
+  By default, <tt>$libdir/hwloc</tt> is used.
+  The variable may contain several colon-separated directories.
+  </dd>
+
+<dt>HWLOC_PLUGINS_VERBOSE=1</dt>
+  <dd>display verbose information about plugins.
+  List which directories are scanned, which files are loaded,
+  and which components are successfully loaded.
+  </dd>
+
 </dl>
 
 <!-- not documented:
