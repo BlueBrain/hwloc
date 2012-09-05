@@ -418,8 +418,8 @@ extern "C" {
 #define hwloc__xml_import_state_s HWLOC_NAME(_xml_import_state_s)
 #define hwloc__xml_import_state_t HWLOC_NAME(_xml_import_state_t)
 #define hwloc_xml_backend_data_s HWLOC_NAME(xml_backend_data_s)
-#define hwloc__xml_export_output_s HWLOC_NAME(_xml_export_output_s)
-#define hwloc__xml_export_output_t HWLOC_NAME(_xml_export_output_t)
+#define hwloc__xml_export_state_s HWLOC_NAME(_xml_export_state_s)
+#define hwloc__xml_export_state_t HWLOC_NAME(_xml_export_state_t)
 #define hwloc__xml_export_object HWLOC_NAME(_xml_export_object)
 
 #define hwloc_xml_callbacks HWLOC_NAME(xml_callbacks)
