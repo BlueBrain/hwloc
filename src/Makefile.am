@@ -163,3 +163,10 @@ EXTRA_DIST += hwloc.dtd
 endif
 
 DISTCLEANFILES = static-components.h
+
+if HWLOC_HAVE_PLUGINS
+check_LTLIBRARIES = core_fake.la
+core_fake_la_SOURCES = topology-fake.c
+core_fake_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
+core_fake_la_LDFLAGS = $(common_ldflags) -module -avoid-version -rpath /nowhere # force libtool to build a shared-library even it's check-only
+endif
