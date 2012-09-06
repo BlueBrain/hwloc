@@ -40,6 +40,7 @@ struct hwloc_core_component {
   struct hwloc_core_component * next; /* used internally to list components by priority on topology->components */
 };
 
+/* Used by the core to decide which component to instantiate */
 extern struct hwloc_core_component * hwloc_core_component_find(int type, const char *name);
 extern struct hwloc_core_component * hwloc_core_component_find_next(int type, const char *name, struct hwloc_core_component *prev);
 
@@ -50,10 +51,14 @@ extern struct hwloc_core_component * hwloc_core_component_find_next(int type, co
 /* A backend is the instantiation of a core component.
  * When a component gets enabled for a topology,
  * its instantiate() callback creates a backend.
+ *
+ * hwloc_backend_alloc() initializes all fields to default values
+ * that the component may change (except "component" and "next")
+ * before enabling the backend with hwloc_backend_enable().
  */
 
 struct hwloc_backend {
-  struct hwloc_core_component * component;
+  struct hwloc_core_component * component; /* Reserved for the core */
 
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
@@ -71,15 +76,27 @@ struct hwloc_backend {
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
 
-  struct hwloc_backend * next; /* used internally to list additional backends by priority on topology->additional_backends.
+  struct hwloc_backend * next; /* Used internally to list additional backends by priority on topology->additional_backends.
 				* unused (NULL) for other backends (on topology->backend).
+				* Reserved for the core.
 				*/
 };
 
+/* Allocate a backend structure, set good default values, initialize backend->component.
+ * The caller will then modify whatever needed, and call hwloc_backend_enable().
+ */
 HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_core_component *component);
+
+/* Enable a previously allocated and setup backend. */
 HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
-extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
+
+/* Used by backends discovery callbacks to notify other backends
+ * that they are adding a new object.
+ */
 HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
+
+/* Disable and destroy all backends used by a topology */
+extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 
 /**********************
  * Generic components *
@@ -89,6 +106,7 @@ HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topol
  * or dynamically loaded as a plugin.
  */
 
+/* Used by the core to setup/destroy the list of components */
 extern void hwloc_components_init(struct hwloc_topology *topology); /* increases components refcount, should be called exactly once per topology (during init) */
 extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* decreases components refcount, should be called exactly once per topology (during destroy) */
 
