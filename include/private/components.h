@@ -40,7 +40,6 @@ struct hwloc_core_component {
   struct hwloc_core_component * next; /* used internally to list components by priority on topology->components */
 };
 
-HWLOC_DECLSPEC int hwloc_core_component_register(struct hwloc_core_component *component);
 extern struct hwloc_core_component * hwloc_core_component_find(int type, const char *name);
 extern struct hwloc_core_component * hwloc_core_component_find_next(int type, const char *name, struct hwloc_core_component *prev);
 

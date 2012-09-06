@@ -211,7 +211,7 @@ hwloc_plugins_init(void)
 
 #endif /* HWLOC_HAVE_PLUGINS */
 
-int
+static int
 hwloc_core_component_register(struct hwloc_core_component *component)
 {
   struct hwloc_core_component **prev;
