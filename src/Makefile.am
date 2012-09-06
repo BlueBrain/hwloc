@@ -21,7 +21,7 @@ endif
 
 pluginsdir = $(libdir)/hwloc
 plugins_LTLIBRARIES = 
-plugins_ldflags = -module -avoid-version -lhwloc
+plugins_ldflags = -module -avoid-version
 AM_CPPFLAGS += -DHWLOC_PLUGINS_DIR=\"$(pluginsdir)\"
 
 # Sources and ldflags
@@ -106,7 +106,6 @@ endif HWLOC_HAVE_FREEBSD
 
 if HWLOC_HAVE_GCC
 ldflags += -no-undefined
-plugins_ldflags += -no-undefined
 endif HWLOC_HAVE_GCC
 
 if HWLOC_HAVE_WINDOWS
