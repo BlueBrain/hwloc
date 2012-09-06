@@ -438,7 +438,6 @@ extern "C" {
 #define hwloc_core_component_type_t HWLOC_NAME(core_component_type_t)
 #define hwloc_core_component HWLOC_NAME(core_component)
 
-#define hwloc_core_component_register HWLOC_NAME(core_component_register)
 #define hwloc_core_component_find HWLOC_NAME(core_component_find)
 #define hwloc_core_component_find_next HWLOC_NAME(core_component_find_next)
 
