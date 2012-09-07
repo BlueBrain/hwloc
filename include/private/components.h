@@ -60,6 +60,8 @@ extern struct hwloc_core_component * hwloc_core_component_find_next(int type, co
 struct hwloc_backend {
   struct hwloc_core_component * component; /* Reserved for the core */
 
+  unsigned long flags; /* unused for now */
+
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
    * maybe NULL if type is HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL. */
@@ -121,6 +123,7 @@ typedef enum hwloc_component_type_e {
 struct hwloc_component {
   unsigned abi;
   hwloc_component_type_t type;
+  unsigned long flags; /* unused for now */
   void * data;
 };
 

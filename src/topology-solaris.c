@@ -785,5 +785,6 @@ static struct hwloc_core_component hwloc_solaris_core_component = {
 HWLOC_DECLSPEC struct hwloc_component hwloc_core_solaris_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_CORE,
+  0,
   &hwloc_solaris_core_component
 };

@@ -3797,5 +3797,6 @@ static struct hwloc_core_component hwloc_linux_core_component = {
 HWLOC_DECLSPEC struct hwloc_component hwloc_core_linux_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_CORE,
+  0,
   &hwloc_linux_core_component
 };

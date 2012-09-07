@@ -53,5 +53,6 @@ static struct hwloc_core_component hwloc_noos_core_component = {
 HWLOC_DECLSPEC struct hwloc_component hwloc_core_noos_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_CORE,
+  0,
   &hwloc_noos_core_component
 };

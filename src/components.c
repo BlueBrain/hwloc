@@ -329,6 +329,7 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
     return NULL;
   }
   backend->component = component;
+  backend->flags = 0;
   backend->discover = NULL;
   backend->get_obj_cpuset = NULL;
   backend->notify_new_object = NULL;
