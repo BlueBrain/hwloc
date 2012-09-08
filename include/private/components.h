@@ -132,53 +132,53 @@ struct hwloc_component {
  ****************************************/
 
 #if defined(HWLOC_LINUX_SYS)
-extern struct hwloc_component hwloc_core_linux_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_linux_component;
 #endif /* HWLOC_LINUX_SYS */
 
-extern struct hwloc_component hwloc_core_xml_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_xml_component;
 
 #ifdef HWLOC_SOLARIS_SYS
-extern struct hwloc_component hwloc_core_solaris_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_solaris_component;
 #endif /* HWLOC_SOLARIS_SYS */
 
 #ifdef HWLOC_AIX_SYS
-extern struct hwloc_component hwloc_core_aix_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_aix_component;
 #endif /* HWLOC_AIX_SYS */
 
 #ifdef HWLOC_OSF_SYS
-extern struct hwloc_component hwloc_core_osf_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_osf_component;
 #endif /* HWLOC_OSF_SYS */
 
 #ifdef HWLOC_WIN_SYS
-extern struct hwloc_component hwloc_core_windows_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_windows_component;
 #endif /* HWLOC_WIN_SYS */
 
 #ifdef HWLOC_DARWIN_SYS
-extern struct hwloc_component hwloc_core_darwin_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_darwin_component;
 #endif /* HWLOC_DARWIN_SYS */
 
 #ifdef HWLOC_FREEBSD_SYS
-extern struct hwloc_component hwloc_core_freebsd_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_freebsd_component;
 #endif /* HWLOC_FREEBSD_SYS */
 
 #ifdef HWLOC_HPUX_SYS
-extern struct hwloc_component hwloc_core_hpux_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_hpux_component;
 #endif /* HWLOC_HPUX_SYS */
 
 #ifdef HWLOC_HAVE_LIBPCI
-extern struct hwloc_component hwloc_core_libpci_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_libpci_component;
 #endif /* HWLOC_HAVE_LIBPCI */
 
-extern struct hwloc_component hwloc_core_synthetic_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_synthetic_component;
 
-extern struct hwloc_component hwloc_core_noos_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_noos_component;
 
-extern struct hwloc_component hwloc_core_custom_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_core_custom_component;
 
 
-extern struct hwloc_component hwloc_xml_nolibxml_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_xml_nolibxml_component;
 #ifdef HWLOC_HAVE_LIBXML2
-extern struct hwloc_component hwloc_xml_libxml_component;
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_xml_libxml_component;
 #endif
 
 #endif /* PRIVATE_COMPONENTS_H */

@@ -593,7 +593,7 @@ static struct hwloc_xml_component hwloc_nolibxml_xml_component = {
   NULL
 };
 
-HWLOC_DECLSPEC struct hwloc_component hwloc_xml_nolibxml_component = {
+const struct hwloc_component hwloc_xml_nolibxml_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_XML,
   0,

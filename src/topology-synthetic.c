@@ -429,7 +429,7 @@ static struct hwloc_core_component hwloc_synthetic_core_component = {
   NULL
 };
 
-HWLOC_DECLSPEC struct hwloc_component hwloc_core_synthetic_component = {
+const struct hwloc_component hwloc_core_synthetic_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_CORE,
   0,

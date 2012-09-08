@@ -51,7 +51,7 @@ done
 #
 AC_DEFUN([HWLOC_LIST_STATIC_COMPONENTS], [
 cat <<EOF >>[$1]
-static struct hwloc_component * hwloc_static_components[[]] = {
+static const struct hwloc_component * hwloc_static_components[[]] = {
 EOF
 for comp in [$2]; do
   echo "  &hwloc_${comp}_component," >>[$1]

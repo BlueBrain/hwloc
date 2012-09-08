@@ -249,7 +249,7 @@ static struct hwloc_core_component hwloc_freebsd_core_component = {
   NULL
 };
 
-HWLOC_DECLSPEC struct hwloc_component hwloc_core_freebsd_component = {
+const struct hwloc_component hwloc_core_freebsd_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_CORE,
   0,
