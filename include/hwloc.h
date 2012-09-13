@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -371,7 +371,10 @@ struct hwloc_obj {
   struct hwloc_obj *last_child;		/**< \brief Last child */
 
   /* misc */
-  void *userdata;			/**< \brief Application-given private data pointer, initialized to \c NULL, use it as you wish */
+  void *userdata;			/**< \brief Application-given private data pointer,
+					 * initialized to \c NULL, use it as you wish.
+					 * See hwloc_topology_set_userdata_export_callback()
+					 * if you wish to export this field to XML. */
 
   /* cpusets and nodesets */
   hwloc_cpuset_t cpuset;		/**< \brief CPUs covered by this object
@@ -590,6 +593,9 @@ HWLOC_DECLSPEC int hwloc_topology_init (hwloc_topology_t *topologyp);
  *
  * \return 0 on success, -1 on error.
  *
+ * \note On failure, the topology is reinitialized. It should be either
+ * destroyed with hwloc_topology_destroy() or configured and loaded again.
+ * 
  * \sa hwlocality_configuration
  */
 HWLOC_DECLSPEC int hwloc_topology_load(hwloc_topology_t topology);
@@ -832,6 +838,9 @@ HWLOC_DECLSPEC int hwloc_topology_set_synthetic(hwloc_topology_t __hwloc_restric
  *
  * \return -1 with errno set to EINVAL on failure to read the XML file.
  *
+ * \note See also hwloc_topology_set_userdata_import_callback()
+ * for importing application-specific userdata.
+ *
  * \note For convenience, this backend provides empty binding hooks which just
  * return success.  To have hwloc still actually call OS-specific hooks, the
  * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
@@ -854,6 +863,9 @@ HWLOC_DECLSPEC int hwloc_topology_set_xml(hwloc_topology_t __hwloc_restrict topo
  * topology information.
  *
  * \return -1 with errno set to EINVAL on failure to read the XML buffer.
+ *
+ * \note See also hwloc_topology_set_userdata_import_callback()
+ * for importing application-specific userdata.
  *
  * \note For convenience, this backend provides empty binding hooks which just
  * return success.  To have hwloc still actually call OS-specific hooks, the
@@ -982,7 +994,7 @@ HWLOC_DECLSPEC const struct hwloc_topology_support *hwloc_topology_get_support(h
 
 
 
-/** \defgroup hwlocality_tinker Tinker With Topologies.
+/** \defgroup hwlocality_xmlexport Exporting Topologies to XML.
  * @{
  */
 
@@ -991,6 +1003,9 @@ HWLOC_DECLSPEC const struct hwloc_topology_support *hwloc_topology_get_support(h
  * This file may be loaded later through hwloc_topology_set_xml().
  *
  * \return -1 if a failure occured.
+ *
+ * \note See also hwloc_topology_set_userdata_export_callback()
+ * for exporting application-specific userdata.
  *
  * \note Only printable characters may be exported to XML string attributes.
  * Any other character, especially any non-ASCII character, will be silently
@@ -1007,6 +1022,9 @@ HWLOC_DECLSPEC int hwloc_topology_export_xml(hwloc_topology_t topology, const ch
  *
  * \return -1 if a failure occured.
  *
+ * \note See also hwloc_topology_set_userdata_export_callback()
+ * for exporting application-specific userdata.
+ *
  * \note Only printable characters may be exported to XML string attributes.
  * Any other character, especially any non-ASCII character, will be silently
  * dropped.
@@ -1015,6 +1033,98 @@ HWLOC_DECLSPEC int hwloc_topology_export_xmlbuffer(hwloc_topology_t topology, ch
 
 /** \brief Free a buffer allocated by hwloc_topology_export_xmlbuffer() */
 HWLOC_DECLSPEC void hwloc_free_xmlbuffer(hwloc_topology_t topology, char *xmlbuffer);
+
+/** \brief Set the application-specific callback for exporting userdata
+ *
+ * The object userdata pointer is not exported to XML by default because hwloc
+ * does not know what it contains.
+ *
+ * This function lets applications set \p export_cb to a callback function
+ * that converts this opaque userdata into an exportable string.
+ *
+ * \p export_cb is invoked during XML export for each object whose
+ * \p userdata pointer is not \c NULL.
+ * The callback should use hwloc_export_obj_userdata() or
+ * hwloc_export_obj_userdata_base64() to actually export
+ * something to XML (possibly multiple times per object).
+ *
+ * \p export_cb may be set to \c NULL if userdata should not be exported to XML.
+ */
+HWLOC_DECLSPEC void hwloc_topology_set_userdata_export_callback(hwloc_topology_t topology,
+								void (*export_cb)(void *reserved, hwloc_topology_t topology, hwloc_obj_t obj));
+
+/** \brief Export some object userdata to XML
+ *
+ * This function may only be called from within the export() callback passed
+ * to hwloc_topology_set_userdata_export_callback().
+ * It may be invoked one of multiple times to export some userdata to XML.
+ * The \p buffer content of length \p length is stored with optional name
+ * \p name.
+ *
+ * When importing this XML file, the import() callback (if set) will be
+ * called exactly as many times as hwloc_export_obj_userdata() was called
+ * during export(). It will receive the corresponding \p name, \p buffer
+ * and \p length arguments.
+ *
+ * \p reserved, \p topology and \p obj must be the first three parameters
+ * that were given to the export callback.
+ *
+ * Only printable characters may be exported to XML string attributes.
+ * If a non-printable character is passed in \p name or \p buffer,
+ * the function returns -1 with errno set to EINVAL.
+ *
+ * If exporting binary data, the application should first encode into
+ * printable characters only (or use hwloc_export_obj_userdata_base64()).
+ * It should also take care of portability issues if the export may
+ * be reimported on a different architecture.
+ */
+HWLOC_DECLSPEC int hwloc_export_obj_userdata(void *reserved, hwloc_topology_t topology, hwloc_obj_t obj, const char *name, const void *buffer, size_t length);
+
+/** \brief Encode and export some object userdata to XML
+ *
+ * This function is similar to hwloc_export_obj_userdata() but it encodes
+ * the input buffer into printable characters before exporting.
+ * On import, decoding is automatically performed before the data is given
+ * to the import() callback if any.
+ *
+ * This function may only be called from within the export() callback passed
+ * to hwloc_topology_set_userdata_export_callback().
+ *
+ * The function does not take care of portability issues if the export
+ * may be reimported on a different architecture.
+ */
+HWLOC_DECLSPEC int hwloc_export_obj_userdata_base64(void *reserved, hwloc_topology_t topology, hwloc_obj_t obj, const char *name, const void *buffer, size_t length);
+
+/** \brief Set the application-specific callback for importing userdata
+ *
+ * On XML import, userdata is ignored by default because hwloc does not know
+ * how to store it in memory.
+ *
+ * This function lets applications set \p import_cb to a callback function
+ * that will get the XML-stored userdata and store it in the object as expected
+ * by the application.
+ *
+ * \p import_cb is called during hwloc_topology_load() as many times as
+ * hwloc_export_obj_userdata() was called during export. The topology
+ * is not entirely setup yet. Object attributes are ready to consult,
+ * but links between objects are not.
+ *
+ * \p import_cb may be \c NULL if userdata should be ignored during import.
+ *
+ * \note \p buffer contains \p length characters followed by a null byte ('\0').
+ *
+ * \note This function should be called before hwloc_topology_load().
+ */
+HWLOC_DECLSPEC void hwloc_topology_set_userdata_import_callback(hwloc_topology_t topology,
+								void (*import_cb)(hwloc_topology_t topology, hwloc_obj_t obj, const char *name, const void *buffer, size_t length));
+
+/** @} */
+
+
+
+/** \defgroup hwlocality_tinker Tinker With Topologies.
+ * @{
+ */
 
 /** \brief Add a MISC object to the topology
  *
@@ -1079,6 +1189,15 @@ enum hwloc_restrict_flags_e {
  * \note This call may not be reverted by restricting back to a larger
  * cpuset. Once dropped during restriction, objects may not be brought
  * back, except by reloading the entire topology with hwloc_topology_load().
+ *
+ * \return 0 on success.
+ *
+ * \return -1 with errno set to EINVAL if the input cpuset is invalid.
+ * The topology is not modified in this case.
+ *
+ * \return -1 with errno set to ENOMEM on failure to allocate internal data.
+ * The topology is reinitialized in this case. It should be either
+ * destroyed with hwloc_topology_destroy() or configured and loaded again.
  */
 HWLOC_DECLSPEC int hwloc_topology_restrict(hwloc_topology_t __hwloc_restrict topology, hwloc_const_cpuset_t cpuset, unsigned long flags);
 

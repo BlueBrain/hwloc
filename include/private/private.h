@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009      CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  *
@@ -17,6 +17,9 @@
 #include <hwloc/bitmap.h>
 #include <private/debug.h>
 #include <sys/types.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -111,6 +114,9 @@ struct hwloc_topology {
   int (*free_membind)(hwloc_topology_t topology, void *addr, size_t len);
 
   struct hwloc_topology_support support;
+
+  void (*userdata_export_cb)(void *reserved, struct hwloc_topology *topology, struct hwloc_obj *obj);
+  void (*userdata_import_cb)(struct hwloc_topology *topology, struct hwloc_obj *obj, const char *name, const void *buffer, size_t length);
 
   struct hwloc_os_distances_s {
     hwloc_obj_type_t type;
@@ -306,9 +312,10 @@ hwloc_alloc_setup_object(hwloc_obj_type_t type, signed idx)
   /* do not allocate the cpuset here, let the caller do it */
   return obj;
 }
-
-extern void hwloc_free_unlinked_object(hwloc_obj_t obj);
 #endif
+
+/* Free obj and its attributes assuming it doesn't have any children/parent anymore */
+extern void hwloc_free_unlinked_object(hwloc_obj_t obj);
 
 /* This can be used for the alloc field to get allocated data that can be freed by free() */
 void *hwloc_alloc_heap(hwloc_topology_t topology, size_t len);
@@ -371,5 +378,28 @@ extern void hwloc_group_by_distances(struct hwloc_topology *topology);
 #if !HAVE_DECL_FABSF
 #define fabsf(f) fabs((double)(f))
 #endif
+
+#if HAVE_DECL__SC_PAGE_SIZE
+#define hwloc_getpagesize() sysconf(_SC_PAGE_SIZE)
+#elif HAVE_DECL__SC_PAGESIZE
+#define hwloc_getpagesize() sysconf(_SC_PAGESIZE)
+#elif defined HAVE_GETPAGESIZE
+#define hwloc_getpagesize() getpagesize()
+#else
+#undef hwloc_getpagesize
+#endif
+
+/* encode src buffer into target buffer.
+ * targsize must be at least 4*((srclength+2)/3)+1.
+ * target will be 0-terminated.
+ */
+extern int hwloc_encode_to_base64(const char *src, size_t srclength, char *target, size_t targsize);
+/* decode src buffer into target buffer.
+ * src is 0-terminated.
+ * targsize must be at least srclength*3/4+1 (srclength not including \0)
+ * but only srclength*3/4 characters will be meaningful
+ * (the next one may be partially written during decoding, but it should be ignored).
+ */
+extern int hwloc_decode_from_base64(char const *src, char *target, size_t targsize);
 
 #endif /* HWLOC_PRIVATE_H */

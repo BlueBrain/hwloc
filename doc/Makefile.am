@@ -1,4 +1,4 @@
-# Copyright © 2009-2012 inria.  All rights reserved.
+# Copyright © 2009-2012 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -84,7 +84,6 @@ dox_inputs = $(DOX_CONFIG) \
 # building standalone.
 #
 
-if HWLOC_BUILD_DOXYGEN
 BUILT_SOURCES = $(BUILT_IMAGES)
 
 images/diagram.png: $(srcdir)/images/diagram.fig
@@ -102,7 +101,6 @@ images/diagram.eps: $(srcdir)/images/diagram.fig
 	    exit 1; \
 	fi
 	$(FIG2DEV) -L eps $< $@
-endif
 
 #
 # Rules for running doxygen.  It depends on the built images and the
@@ -111,7 +109,6 @@ endif
 # of nested structurre/union declarations.
 #
 
-if HWLOC_BUILD_DOXYGEN
 $(DOX_TAG): $(BUILT_SOURCES) $(dox_inputs) $(PREBUILT_IMAGES)
 	rm -fr $(DOX_DIR)
 	$(DOXYGEN) $(DOX_CONFIG)
@@ -142,13 +139,10 @@ $(DOX_TAG): $(BUILT_SOURCES) $(dox_inputs) $(PREBUILT_IMAGES)
 	@mv $(DOX_MAN_DIR)/man3/hwloc* $(DOX_MAN_DIR)/man3/HWLOC* $(DOX_DIR)/man.tmp/
 	@rm -rf $(DOX_MAN_DIR)/man3
 	@mv $(DOX_DIR)/man.tmp $(DOX_MAN_DIR)/man3
-endif
 
 #
 # Rules for building the PDF
 #
-
-if HWLOC_BUILD_DOXYGEN
 
 # The Doxygen config is set to generate a4 latex -- no transformation
 # is necessary.
@@ -189,7 +183,6 @@ $(DOX_LETTERPDF): $(DOX_TAG)
 	   fi; \
 	done; \
 	mv letter-refman.pdf $(DOCDIR)/$(DOX_LETTERPDF)
-endif
 
 #
 # Note that we want to use our own doxygen.css file; not the one that
@@ -202,12 +195,10 @@ endif
 # pre-bundled in a tarball).
 #
 
-if HWLOC_BUILD_DOXYGEN
 all-local: $(DOX_TAG)
 	if test -d $(DOX_HTML_DIR) -a -f $(DOX_HTML_DIR)/doxygen.css; then \
 	    cp -f $(srcdir)/doxygen.css $(DOX_HTML_DIR); \
 	fi
-endif
 
 #
 # Un/install the generated PDF and man pages (just like BUILD_DOXYGEN,
@@ -235,6 +226,9 @@ if HWLOC_INSTALL_DOXYGEN
 # that the proper $mandir/man/man3 is created, and then put the rest
 # in _DATA suffix names, because AM won't allow us to do things like
 # man3_extra_MANS = ...group...
+
+# When adding a new _DATA line below, remember to add it to the
+# list of dependencies too.
 
 man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwlocality_api_version.3 \
@@ -345,12 +339,20 @@ man3_configuration_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_get_support.3
 
-man3_tinkerdir = $(man3dir)
-man3_tinker_DATA = \
-        $(DOX_MAN_DIR)/man3/hwlocality_tinker.3 \
+man3_xmlexportdir = $(man3dir)
+man3_xmlexport_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_xmlexport.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xml.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xmlbuffer.3 \
         $(DOX_MAN_DIR)/man3/hwloc_free_xmlbuffer.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_export_callback.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata_base64.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_import_callback.3
+
+man3_tinkerdir = $(man3dir)
+man3_tinker_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_tinker.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_insert_misc_object_by_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_insert_misc_object_by_parent.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES.3 \
@@ -659,10 +661,8 @@ man3_openfabrics_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev_by_name.3
 
-# end of manpages(3) if HWLOC_BUILD_DOXYGEN
+# end of manpages(3) if HWLOC_INSTALL_DOXYGEN
 endif
-
-if HWLOC_BUILD_DOXYGEN
 
 # Put in these rules to force the generation of the man pages and get
 # all the dependencies right.  Additionally, this forces a
@@ -671,6 +671,8 @@ if HWLOC_BUILD_DOXYGEN
 # *first* before we can try to process/install man pages, the HTML,
 # run pdflatex, .etc.).
 
+# The list below should match the list of _DATA lines above
+
 $(man3_MANS): $(DOX_TAG)
 $(man3_topology_DATA): $(DOX_TAG)
 $(man3_sets_DATA): $(DOX_TAG)
@@ -678,6 +680,7 @@ $(man3_types_DATA): $(DOX_TAG)
 $(man3_objects_DATA): $(DOX_TAG)
 $(man3_creation_DATA): $(DOX_TAG)
 $(man3_configuration_DATA): $(DOX_TAG)
+$(man3_xmlexport_DATA): $(DOX_TAG)
 $(man3_tinker_DATA): $(DOX_TAG)
 $(man3_information_DATA): $(DOX_TAG)
 $(man3_traversal_DATA): $(DOX_TAG)
@@ -689,8 +692,8 @@ $(man3_bitmap_DATA): $(DOX_TAG)
 $(man3_helper_types_DATA): $(DOX_TAG)
 $(man3_helper_traversal_basic_DATA): $(DOX_TAG)
 $(man3_helper_find_inside_DATA): $(DOX_TAG)
-$(man3_helper_find_coverings_DATA): $(DOX_TAG)
 $(man3_helper_find_covering_DATA): $(DOX_TAG)
+$(man3_helper_find_coverings_DATA): $(DOX_TAG)
 $(man3_helper_find_cache_DATA): $(DOX_TAG)
 $(man3_helper_traversal_DATA): $(DOX_TAG)
 $(man3_helper_binding_DATA): $(DOX_TAG)
@@ -715,16 +718,13 @@ $(DOX_MAN_DIR): $(DOX_TAG)
 # built at the same time during a parallel build (e.g., "make -j X").
 # So arbitrarily make the A4 PDF dependent upon the Letter PDF.
 $(DOX_A4PDF): $(DOX_TAG) $(DOX_LETTERPDF)
-endif
 
 #
 # Make sure that the documentation example works
 #
 
-if HWLOC_BUILD_TESTS
 TESTS = hwloc-hello hwloc-hello-cpp
 check_PROGRAMS = $(TESTS)
-endif HWLOC_BUILD_TESTS
 
 hwloc-hello-cpp.cpp: $(srcdir)/hwloc-hello.c
 	cp -f $(srcdir)/hwloc-hello.c $@

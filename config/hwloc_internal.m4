@@ -206,7 +206,7 @@ EOF
         add="$add -Wmissing-prototypes -Wstrict-prototypes"
         add="$add -Wcomment -pedantic"
 
-        CFLAGS="$CFLAGS $add"
+        HWLOC_CFLAGS="$HWLOC_CFLAGS $add"
     fi
 
     # Generate some files for the docs
@@ -225,8 +225,6 @@ AC_DEFUN([HWLOC_SETUP_UTILS],[
 ### Configuring hwloc command line utilities
 ###
 EOF
-
-    hwloc_build_utils=yes
 
     # Cairo support
     hwloc_cairo_happy=no
@@ -333,8 +331,6 @@ AC_DEFUN([HWLOC_SETUP_TESTS],[
 ###
 EOF
 
-    hwloc_build_tests=yes
-
     AC_CHECK_LIB([pthread], [pthread_self], [hwloc_have_pthread=yes])
 
     # linux-libnuma.h testing requires libnuma with numa_bitmask_alloc()
@@ -376,13 +372,14 @@ EOF
         hwloc_config_prefix[tests/linux/test-topology.sh]
         hwloc_config_prefix[tests/xml/test-topology.sh]
         hwloc_config_prefix[utils/hwloc-assembler-remote]
+        hwloc_config_prefix[utils/test-hwloc-annotate.sh]
         hwloc_config_prefix[utils/test-hwloc-assembler.sh]
         hwloc_config_prefix[utils/test-hwloc-calc.sh]
         hwloc_config_prefix[utils/test-hwloc-distances.sh]
         hwloc_config_prefix[utils/test-hwloc-distrib.sh]
         hwloc_config_prefix[utils/test-hwloc-ls.sh])
 
-    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh])
+    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-annotate.sh ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh])
 
     # These links are only needed in standalone mode.  It would
     # be nice to m4 foreach this somehow, but whenever I tried

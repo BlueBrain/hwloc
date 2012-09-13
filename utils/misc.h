@@ -12,7 +12,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <assert.h>
 
 extern void usage(const char *name, FILE *where);
@@ -142,15 +144,15 @@ hwloc_utils_enable_input_format(struct hwloc_topology *topology,
     int err;
     err = stat(input, &inputst);
     if (err < 0) {
-      if (verbose)
+      if (verbose > 0)
 	printf("assuming `%s' is a synthetic topology description\n", input);
       input_format = HWLOC_UTILS_INPUT_SYNTHETIC;
     } else if (S_ISDIR(inputst.st_mode)) {
-      if (verbose)
+      if (verbose > 0)
 	printf("assuming `%s' is a file-system root\n", input);
       input_format = HWLOC_UTILS_INPUT_FSROOT;
     } else if (S_ISREG(inputst.st_mode)) {
-      if (verbose)
+      if (verbose > 0)
 	printf("assuming `%s' is a XML file\n", input);
       input_format = HWLOC_UTILS_INPUT_XML;
     } else {
@@ -227,3 +229,22 @@ hwloc_utils_print_distance_matrix(hwloc_topology_t topology, hwloc_obj_t root, u
   }
 }
 
+static __hwloc_inline hwloc_pid_t
+hwloc_pid_from_number(int pid_number, int set_info __hwloc_attribute_unused)
+{
+  hwloc_pid_t pid;
+#ifdef HWLOC_WIN_SYS
+  pid = OpenProcess(set_info ? PROCESS_SET_INFORMATION : PROCESS_QUERY_INFORMATION, FALSE, pid_number);
+  if (!pid) {
+    DWORD error = GetLastError();
+    char *message;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                  NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *)&message, 0, NULL);
+    fprintf(stderr, "OpenProcess %d failed %ld: %s\n", pid_number, error, message);
+    exit(EXIT_FAILURE);
+  }
+#else
+  pid = pid_number;
+#endif
+  return pid;
+}

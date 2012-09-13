@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2010-2012 inria.  All rights reserved.
+ * Copyright © 2010-2012 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -136,6 +136,10 @@ extern "C" {
 #define hwloc_topology_export_xml HWLOC_NAME(topology_export_xml)
 #define hwloc_topology_export_xmlbuffer HWLOC_NAME(topology_export_xmlbuffer)
 #define hwloc_free_xmlbuffer HWLOC_NAME(free_xmlbuffer)
+#define hwloc_topology_set_userdata_export_callback HWLOC_NAME(topology_set_userdata_import_callback)
+#define hwloc_export_obj_userdata HWLOC_NAME(export_obj_userdata)
+#define hwloc_export_obj_userdata_base64 HWLOC_NAME(export_obj_userdata_base64)
+#define hwloc_topology_set_userdata_import_callback HWLOC_NAME(topology_set_userdata_export_callback)
 
 #define hwloc_topology_insert_misc_object_by_cpuset HWLOC_NAME(topology_insert_misc_object_by_cpuset)
 #define hwloc_topology_insert_misc_object_by_parent HWLOC_NAME(topology_insert_misc_object_by_parent)
@@ -313,6 +317,7 @@ extern "C" {
 #define hwloc_get_obj_inside_cpuset_by_type HWLOC_NAME(get_obj_inside_cpuset_by_type)
 #define hwloc_get_nbobjs_inside_cpuset_by_depth HWLOC_NAME(get_nbobjs_inside_cpuset_by_depth)
 #define hwloc_get_nbobjs_inside_cpuset_by_type HWLOC_NAME(get_nbobjs_inside_cpuset_by_type)
+#define hwloc_get_obj_index_inside_cpuset HWLOC_NAME(get_obj_index_inside_cpuset)
 #define hwloc_get_child_covering_cpuset HWLOC_NAME(get_child_covering_cpuset)
 #define hwloc_get_obj_covering_cpuset HWLOC_NAME(get_obj_covering_cpuset)
 #define hwloc_get_next_obj_covering_cpuset_by_depth HWLOC_NAME(get_next_obj_covering_cpuset_by_depth)
@@ -407,6 +412,15 @@ extern "C" {
 #define hwloc_cpuid HWLOC_NAME(cpuid)
 
 /* private/xml.h */
+
+#define hwloc__xml_verbose HWLOC_NAME(_xml_verbose)
+
+#define hwloc__xml_import_state_s HWLOC_NAME(_xml_import_state_s)
+#define hwloc__xml_import_state_t HWLOC_NAME(_xml_import_state_t)
+#define hwloc__xml_export_state_s HWLOC_NAME(_xml_export_state_s)
+#define hwloc__xml_export_state_t HWLOC_NAME(_xml_export_state_t)
+#define hwloc__xml_export_object HWLOC_NAME(_xml_export_object)
+
 #define hwloc_nolibxml_backend_init HWLOC_NAME(nolibxml_backend_init)
 #define hwloc_nolibxml_export_file HWLOC_NAME(nolibxml_export_file)
 #define hwloc_nolibxml_export_buffer HWLOC_NAME(nolibxml_export_buffer)
@@ -433,6 +447,7 @@ extern "C" {
 #define HWLOC_BACKEND_SYNTHETIC HWLOC_NAME_CAPS(BACKEND_SYNTHETIC)
 #define HWLOC_BACKEND_LINUXFS HWLOC_NAME_CAPS(BACKEND_LINUXFS)
 #define HWLOC_BACKEND_XML HWLOC_NAME_CAPS(BACKEND_XML)
+#define HWLOC_BACKEND_CUSTOM HWLOC_NAME_CAPS(BACKEND_CUSTOM)
 #define HWLOC_BACKEND_MAX HWLOC_NAME_CAPS(BACKEND_MAX)
 
 #define hwloc_backend_params_u HWLOC_NAME(backend_params_u)
@@ -521,6 +536,9 @@ extern "C" {
 #define hwloc_clear_object_distances HWLOC_NAME(clear_object_distances)
 #define hwloc_clear_object_distances_one HWLOC_NAME(clear_object_distances_one)
 #define hwloc_group_by_distances HWLOC_NAME(group_by_distances)
+
+#define hwloc_encode_to_base64 HWLOC_NAME(encode_to_base64)
+#define hwloc_decode_from_base64 HWLOC_NAME(decode_from_base64)
 
 #endif /* HWLOC_SYM_TRANSFORM */
 
