@@ -18,6 +18,13 @@ in v0.9.1).
 
 Version 1.6.0
 -------------
+* Major changes
+  + Reorganize the backend infrastructure to support dynamically
+    loaded plugins (not supported on AIX and Windows, disabled
+    by default on others).
+  + Add --enable-plugins configure options to build libxml2
+    and libpci support as separated modules. See the plugins
+    documentation for details.
 * XML
   + Add hwloc_topology_set_userdata_import/export_callback(),
     hwloc_export_obj_userdata() and _userdata_base64() to let
