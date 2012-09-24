@@ -782,6 +782,10 @@ EOF])
     AS_IF([test "x$enable_plugins" = "xyes" -a "x$hwloc_aix" = "xyes"],
       [AC_MSG_WARN([libltdl does not work on AIX, plugins support cannot be enabled.])
        AC_MSG_ERROR([Cannot continue])])
+    # posix linkers don't work well with plugins and windows dll constraints
+    AS_IF([test "x$enable_plugins" = "xyes" -a "x$hwloc_windows" = "xyes"],
+      [AC_MSG_WARN([Plugins not supported on non-native Windows build, plugins support cannot be enabled.])
+       AC_MSG_ERROR([Cannot continue])])
 
     AS_IF([test "x$enable_plugins" != "xno"], [hwloc_have_plugins=yes], [hwloc_have_plugins=no])
     AC_MSG_RESULT([$hwloc_have_plugins])
