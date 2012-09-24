@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -144,15 +144,15 @@ hwloc_utils_enable_input_format(struct hwloc_topology *topology,
     int err;
     err = stat(input, &inputst);
     if (err < 0) {
-      if (verbose)
+      if (verbose > 0)
 	printf("assuming `%s' is a synthetic topology description\n", input);
       input_format = HWLOC_UTILS_INPUT_SYNTHETIC;
     } else if (S_ISDIR(inputst.st_mode)) {
-      if (verbose)
+      if (verbose > 0)
 	printf("assuming `%s' is a file-system root\n", input);
       input_format = HWLOC_UTILS_INPUT_FSROOT;
     } else if (S_ISREG(inputst.st_mode)) {
-      if (verbose)
+      if (verbose > 0)
 	printf("assuming `%s' is a XML file\n", input);
       input_format = HWLOC_UTILS_INPUT_XML;
     } else {
