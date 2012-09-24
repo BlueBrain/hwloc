@@ -93,8 +93,11 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 
   /* dlopen and get the component structure */
   handle = lt_dlopenext(filename);
-  if (!handle)
+  if (!handle) {
+    if (verbose)
+      fprintf(stderr, "Failed to load plugin: %s\n", lt_dlerror());
     goto out_with_basename;
+  }
   componentsymbolname = malloc(6+strlen(basename)+10+1);
   sprintf(componentsymbolname, "hwloc_%s_component", basename);
   component = lt_dlsym(handle, componentsymbolname);
