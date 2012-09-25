@@ -18,7 +18,7 @@ AC_DEFUN([HWLOC_PREPARE_FILTER_COMPONENTS], [
 
 # HWLOC_FILTER_COMPONENTS
 #
-# Given class $1, for each component in hwloc_components,
+# For each component in hwloc_components,
 # check if hwloc_<name>_component_wantplugin=1 or enable_plugin=yes,
 # and check if hwloc_<name>_component_maybeplugin=1.
 # Add <name> to hwloc_[static|plugin]_components accordingly.

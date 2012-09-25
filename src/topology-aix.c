@@ -818,7 +818,7 @@ static struct hwloc_core_component hwloc_aix_core_component = {
   NULL
 };
 
-const struct hwloc_component hwloc_core_aix_component = {
+const struct hwloc_component hwloc_aix_component = {
   HWLOC_COMPONENT_ABI,
   HWLOC_COMPONENT_TYPE_CORE,
   0,

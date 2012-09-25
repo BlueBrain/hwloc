@@ -1609,25 +1609,38 @@ For reference, \ref hwloc_topology_t modification operations include
 
 hwloc is organized in components that are responsible for discovering
 objects.
-Most components are members of the <tt>core</tt> class.
-There is also a <tt>xml</tt> class that serves at virtualizing the XML
-supports (minimalistic or libxml2 implementation).
-The name of a component is always <tt>&lt;class&gt;_&lt;name&gt;</tt>.
-
 Depending on the topology configuration, some components will be used,
 some will be ignored.
-The usual default is to enable the operating system component
-(e.g. <tt>core_linux</tt> or <tt>core_solaris</tt>) and the
-<tt>core_libpci</tt> additional component.
-If a XML topology is loaded, <tt>core_xml</tt> will be used instead
-and a XML support such as <tt>xml_libxml</tt> will also be involved.
+The usual default is to enable the native operating system component
+(e.g. <tt>linux</tt> or <tt>solaris</tt>) and the
+<tt>libpci</tt> additional component.
+
+If a XML topology is loaded, the <tt>xml</tt> component will be used
+instead of the operating system one.
+It internally uses a specific class of components for the actual XML
+import/export routines (<tt>xml_libxml</tt> and <tt>xml_nolibxml</tt>)
+but these will not be discussed here.
+
+\section plugins_select Selecting which components to use
+
+The hwloc core uses the native operating system component when it exists
+(e.g. <tt>linux</tt> or <tt>aix</tt>).
+Otherwise, it falls back to a basic component (<tt>noos</tt>) that just 
+tries to discover the number of PUs in the system.
+
+If any configuration function such as hwloc_topology_set_xml() is used
+before loading the topology, the default component is replaced with
+the requested one.
+
+When available, additional plugins such as <tt>libpci</tt> are enabled
+as long as they do not explicitly conflict with the main component
+(XML and synthetic discovery disables additional components).
 
 \section plugins_config Building components as plugins
 
 Components may optionally be built as plugins so that the hwloc core
-library does not directly depend on their dependencies.
-Examples are <tt>core_libpci</tt> (which depends on <tt>libpci</tt>)
-and <tt>xml_libxml</tt> (which depends on <tt>libxml2</tt>).
+library does not directly depend on their dependencies (for instance
+the <tt>libpci</tt> library).
 Plugin support may be enabled with the <tt>--enable-plugins</tt>
 configure option.
 All components buildable as plugins will then be built as plugins.
@@ -1641,6 +1654,10 @@ All plugins found in this directory are loaded during
 A specific list of directories (colon-separated) to scan may be
 specified in the <tt>HWLOC_PLUGINS_PATH</tt> environment variable.
 
+Plugin filenames must start with <tt>hwloc_</tt>.
+For instance the <tt>libpci</tt> plugin is usually built as
+<tt>hwloc_libpci.so</tt>.
+
 Note that loading a plugin just means that the corresponding component
 is registered to the hwloc core.
 Components are then only enabled if the topology configuration
@@ -1650,15 +1667,15 @@ requests it.
 
 Each new component requires a new <tt>hwloc_component</tt>
 structure to be exported to the hwloc core with name
-<tt>hwloc_&lt;class&gt;_&lt;name&gt;_component</tt>.
+<tt>hwloc_&lt;name&gt;_component</tt>.
 The configure script should then be modified to add
-<tt>&lt;class&gt;_&lt;name&gt;</tt> to the <tt>hwloc_components</tt>
+<tt>&lt;name&gt;</tt> to the <tt>hwloc_components</tt>
 variable so that the component is actually available runtime.
 
 If the new component may be built as a plugin, the configure script
-should also define <tt>hwloc_&lt;class&gt;_&lt;name&gt;_component_maybeplugin=1</tt>.
-If the configure scripts decides to enabled the component as a plugin,
-the variable <tt>hwloc_&lt;class&gt;_&lt;name&gt;_component</tt>
+should also define <tt>hwloc_&lt;name&gt;_component_maybeplugin=1</tt>.
+If the configure scripts decides to enable the component as a plugin,
+the variable <tt>hwloc_&lt;name&gt;_component</tt>
 will be set to <tt>plugin</tt>.
 The build system may then use this variable to actually
 change the way the component is built.

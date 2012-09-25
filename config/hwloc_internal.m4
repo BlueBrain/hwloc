@@ -72,7 +72,7 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
 
     # Plugins
     AC_ARG_ENABLE([plugins],
-                  AS_HELP_STRING([--enable-plugins=class_name,...],
+                  AS_HELP_STRING([--enable-plugins=name,...],
                                  [Build the given components as dynamically-loaded plugins]))
 
 ])dnl

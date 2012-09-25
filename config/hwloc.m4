@@ -165,7 +165,7 @@ EOF])
     # List of components to be built, either statically or dynamically.
     # To be enlarged below.
     #
-    hwloc_components="core_noos core_xml core_synthetic core_custom xml_nolibxml"
+    hwloc_components="noos xml synthetic custom xml_nolibxml"
 
     #
     # Check OS support
@@ -176,7 +176,7 @@ EOF])
         AC_DEFINE(HWLOC_LINUX_SYS, 1, [Define to 1 on Linux])
         hwloc_linux=yes
         AC_MSG_RESULT([Linux])
-        hwloc_components="$hwloc_components core_linux"
+        hwloc_components="$hwloc_components linux"
         ;;
       *-*-irix*)
         AC_DEFINE(HWLOC_IRIX_SYS, 1, [Define to 1 on Irix])
@@ -188,43 +188,43 @@ EOF])
         AC_DEFINE(HWLOC_DARWIN_SYS, 1, [Define to 1 on Darwin])
         hwloc_darwin=yes
         AC_MSG_RESULT([Darwin])
-        hwloc_components="$hwloc_components core_darwin"
+        hwloc_components="$hwloc_components darwin"
         ;;
       *-*-solaris*)
         AC_DEFINE(HWLOC_SOLARIS_SYS, 1, [Define to 1 on Solaris])
         hwloc_solaris=yes
         AC_MSG_RESULT([Solaris])
-        hwloc_components="$hwloc_components core_solaris"
+        hwloc_components="$hwloc_components solaris"
         ;;
       *-*-aix*)
         AC_DEFINE(HWLOC_AIX_SYS, 1, [Define to 1 on AIX])
         hwloc_aix=yes
         AC_MSG_RESULT([AIX])
-        hwloc_components="$hwloc_components core_aix"
+        hwloc_components="$hwloc_components aix"
         ;;
       *-*-osf*)
         AC_DEFINE(HWLOC_OSF_SYS, 1, [Define to 1 on OSF])
         hwloc_osf=yes
         AC_MSG_RESULT([OSF])
-        hwloc_components="$hwloc_components core_osf"
+        hwloc_components="$hwloc_components osf"
         ;;
       *-*-hpux*)
         AC_DEFINE(HWLOC_HPUX_SYS, 1, [Define to 1 on HP-UX])
         hwloc_hpux=yes
         AC_MSG_RESULT([HP-UX])
-        hwloc_components="$hwloc_components core_hpux"
+        hwloc_components="$hwloc_components hpux"
         ;;
       *-*-mingw*|*-*-cygwin*)
         AC_DEFINE(HWLOC_WIN_SYS, 1, [Define to 1 on WINDOWS])
         hwloc_windows=yes
         AC_MSG_RESULT([Windows])
-        hwloc_components="$hwloc_components core_windows"
+        hwloc_components="$hwloc_components windows"
         ;;
       *-*-*freebsd*)
         AC_DEFINE(HWLOC_FREEBSD_SYS, 1, [Define to 1 on *FREEBSD])
         hwloc_freebsd=yes
         AC_MSG_RESULT([FreeBSD])
-        hwloc_components="$hwloc_components core_freebsd"
+        hwloc_components="$hwloc_components freebsd"
         ;;
       *)
         AC_MSG_RESULT([Unsupported! ($target)])
@@ -716,8 +716,8 @@ EOF])
       CFLAGS="$tmp_save_CFLAGS"
       LIBS="$tmp_save_LIBS"
 
-      hwloc_components="$hwloc_components core_libpci"
-      hwloc_core_libpci_component_maybeplugin=1
+      hwloc_components="$hwloc_components libpci"
+      hwloc_libpci_component_maybeplugin=1
     else
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
     fi
@@ -798,9 +798,9 @@ EOF])
     hwloc_static_components_file=${hwloc_static_components_dir}/static-components.h
     rm -f ${hwloc_static_components_file}
 
-    # Make $enable_plugins easier to use (it contains either "yes" (all) or a list of <class>-<name>)
+    # Make $enable_plugins easier to use (it contains either "yes" (all) or a list of <name>)
     HWLOC_PREPARE_FILTER_COMPONENTS([$enable_plugins])
-    # Now we have some hwloc_<class>_<name>_component_wantplugin=1
+    # Now we have some hwloc_<name>_component_wantplugin=1
 
     # See which core components want plugin and support it
     HWLOC_FILTER_COMPONENTS
@@ -812,7 +812,7 @@ EOF])
     AC_MSG_CHECKING([components to build as plugins])
     AC_MSG_RESULT([$hwloc_plugin_components])
 
-    AS_IF([test "$hwloc_core_libpci_component" = "static"],
+    AS_IF([test "$hwloc_libpci_component" = "static"],
           [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_PCI_LIBS"
            HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_PCI_CFLAGS"])
     AS_IF([test "$hwloc_xml_libxml_component" = "static"],
@@ -947,7 +947,7 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_CPUID], [test "x$hwloc_have_cpuid" = "xyes"])
 
         AM_CONDITIONAL([HWLOC_HAVE_PLUGINS], [test "x$hwloc_have_plugins" = "xyes"])
-        AM_CONDITIONAL([HWLOC_CORE_LIBPCI_BUILD_STATIC], [test "x$hwloc_core_libpci_component" = "xstatic"])
+        AM_CONDITIONAL([HWLOC_LIBPCI_BUILD_STATIC], [test "x$hwloc_libpci_component" = "xstatic"])
         AM_CONDITIONAL([HWLOC_XML_LIBXML_BUILD_STATIC], [test "x$hwloc_xml_libxml_component" = "xstatic"])
     ])
     hwloc_did_am_conditionals=yes

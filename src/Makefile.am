@@ -48,21 +48,21 @@ if HWLOC_HAVE_LIBXML2
 if HWLOC_XML_LIBXML_BUILD_STATIC
 sources += topology-xml-libxml.c
 else
-plugins_LTLIBRARIES += xml_libxml.la
-xml_libxml_la_SOURCES = topology-xml-libxml.c
-xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS)
-xml_libxml_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_LIBXML2_LIBS)
+plugins_LTLIBRARIES += hwloc_xml_libxml.la
+hwloc_xml_libxml_la_SOURCES = topology-xml-libxml.c
+hwloc_xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS)
+hwloc_xml_libxml_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_LIBXML2_LIBS)
 endif
 endif HWLOC_HAVE_LIBXML2
 
 if HWLOC_HAVE_LIBPCI
-if HWLOC_CORE_LIBPCI_BUILD_STATIC
+if HWLOC_LIBPCI_BUILD_STATIC
 sources += topology-libpci.c
 else
-plugins_LTLIBRARIES += core_libpci.la
-core_libpci_la_SOURCES = topology-libpci.c
-core_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS)
-core_libpci_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_PCI_LIBS)
+plugins_LTLIBRARIES += hwloc_libpci.la
+hwloc_libpci_la_SOURCES = topology-libpci.c
+hwloc_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS)
+hwloc_libpci_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_PCI_LIBS)
 endif
 endif HWLOC_HAVE_LIBPCI
 
@@ -163,7 +163,7 @@ endif
 DISTCLEANFILES = static-components.h
 
 if HWLOC_HAVE_PLUGINS
-check_LTLIBRARIES = core_fake.la
-core_fake_la_SOURCES = topology-fake.c
-core_fake_la_LDFLAGS = $(plugins_ldflags) -rpath /nowhere # force libtool to build a shared-library even it's check-only
+check_LTLIBRARIES = hwloc_fake.la
+hwloc_fake_la_SOURCES = topology-fake.c
+hwloc_fake_la_LDFLAGS = $(plugins_ldflags) -rpath /nowhere # force libtool to build a shared-library even it's check-only
 endif

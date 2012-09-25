@@ -87,7 +87,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
     goto out;
   }
   componentsymbolname = malloc(6+strlen(basename)+10+1);
-  sprintf(componentsymbolname, "hwloc_%s_component", basename);
+  sprintf(componentsymbolname, "%s_component", basename);
   component = lt_dlsym(handle, componentsymbolname);
   if (!component) {
     if (verbose)
@@ -108,13 +108,13 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   componentsymbolname = NULL;
 
   if (HWLOC_COMPONENT_TYPE_CORE == component->type) {
-    if (strncmp(basename, "core_", 5)) {
+    if (strncmp(basename, "hwloc_", 6)) {
       if (verbose)
 	fprintf(stderr, "Plugin name `%s' doesn't match its type CORE\n", basename);
       goto out_with_handle;
     }
   } else if (HWLOC_COMPONENT_TYPE_XML == component->type) {
-    if (strncmp(basename, "xml_", 4)) {
+    if (strncmp(basename, "hwloc_xml_", 10)) {
       if (verbose)
 	fprintf(stderr, "Plugin name `%s' doesn't match its type XML\n", basename);
       goto out_with_handle;
