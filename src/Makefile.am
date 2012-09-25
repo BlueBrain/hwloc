@@ -50,7 +50,6 @@ sources += topology-xml-libxml.c
 else
 plugins_LTLIBRARIES += xml_libxml.la
 xml_libxml_la_SOURCES = topology-xml-libxml.c
-xml_libxml_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
 xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS)
 xml_libxml_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_LIBXML2_LIBS)
 endif
@@ -62,7 +61,6 @@ sources += topology-libpci.c
 else
 plugins_LTLIBRARIES += core_libpci.la
 core_libpci_la_SOURCES = topology-libpci.c
-core_libpci_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
 core_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS)
 core_libpci_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_PCI_LIBS)
 endif
@@ -167,6 +165,5 @@ DISTCLEANFILES = static-components.h
 if HWLOC_HAVE_PLUGINS
 check_LTLIBRARIES = core_fake.la
 core_fake_la_SOURCES = topology-fake.c
-core_fake_la_CPPFLAGS = $(AM_CPPFLAGS) -DHWLOC_BUILD_PLUGIN
 core_fake_la_LDFLAGS = $(plugins_ldflags) -rpath /nowhere # force libtool to build a shared-library even it's check-only
 endif
