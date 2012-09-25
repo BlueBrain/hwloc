@@ -64,8 +64,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 {
   struct hwloc__dlforeach_cbdata *cbdata = _data;
   int verbose = cbdata->verbose;
-  const char *_basename, *sep;
-  char *basename;
+  const char *basename;
   lt_dlhandle handle;
   char *componentsymbolname = NULL;
   struct hwloc_component *component;
@@ -74,30 +73,18 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   if (verbose)
     fprintf(stderr, "Plugin dlforeach found `%s'\n", filename);
 
-  _basename = strrchr(filename, '/');
-  if (!_basename)
-    _basename = filename;
-  else
-    _basename++;
-
-  /* format must be <class>_<name> */
-  sep = strchr(_basename, '_');
-  if (!sep)
-    goto out;
-  if (strchr(sep+1, '_'))
-    goto out;
-  if (verbose)
-    fprintf(stderr, "Plugin basename `%s' matches expected format\n", _basename);
-  basename = strdup(_basename);
+  basename = strrchr(filename, '/');
   if (!basename)
-    goto out;
+    basename = filename;
+  else
+    basename++;
 
   /* dlopen and get the component structure */
   handle = lt_dlopenext(filename);
   if (!handle) {
     if (verbose)
       fprintf(stderr, "Failed to load plugin: %s\n", lt_dlerror());
-    goto out_with_basename;
+    goto out;
   }
   componentsymbolname = malloc(6+strlen(basename)+10+1);
   sprintf(componentsymbolname, "hwloc_%s_component", basename);
@@ -145,7 +132,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   desc = malloc(sizeof(*desc));
   if (!desc)
     goto out_with_handle;
-  desc->name = basename;
+  desc->name = strdup(basename);
   desc->component = component;
   desc->handle = handle;
   if (verbose)
@@ -160,8 +147,6 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
  out_with_handle:
   lt_dlclose(handle);
   free(componentsymbolname); /* NULL if already freed */
- out_with_basename:
-  free(basename);
  out:
   return 0;
 }
