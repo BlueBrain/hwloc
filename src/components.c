@@ -120,6 +120,27 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   free(componentsymbolname);
   componentsymbolname = NULL;
 
+  if (HWLOC_COMPONENT_TYPE_CORE == component->type) {
+    if (strncmp(basename, "core_", 5)) {
+      if (verbose)
+	fprintf(stderr, "Plugin name `%s' doesn't match its type CORE\n", basename);
+      goto out_with_handle;
+    }
+  } else if (HWLOC_COMPONENT_TYPE_XML == component->type) {
+    if (strncmp(basename, "xml_", 4)) {
+      if (verbose)
+	fprintf(stderr, "Plugin name `%s' doesn't match its type XML\n", basename);
+      goto out_with_handle;
+    }
+  } else {
+    if (verbose)
+      fprintf(stderr, "Plugin name `%s' has invalid type %u\n",
+	      basename, (unsigned) component->type);
+    goto out_with_handle;
+  }
+
+  /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
+
   /* allocate a plugin_desc and queue it */
   desc = malloc(sizeof(*desc));
   if (!desc)
@@ -130,22 +151,12 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   if (verbose)
     fprintf(stderr, "Plugin descriptor `%s' ready\n", basename);
 
-  /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
-  if (!strncmp(basename, "core_", 5))
-    assert(HWLOC_COMPONENT_TYPE_CORE == desc->component->type);
-  else if (!strncmp(basename, "xml_", 4))
-    assert(HWLOC_COMPONENT_TYPE_XML == desc->component->type);
-  else
-    goto out_with_desc;
-
   desc->next = hwloc_plugins;
   hwloc_plugins = desc;
   if (verbose)
     fprintf(stderr, "Plugin descriptor `%s' queued\n", basename);
   return 0;
 
- out_with_desc:
-  free(desc);
  out_with_handle:
   lt_dlclose(handle);
   free(componentsymbolname); /* NULL if already freed */
