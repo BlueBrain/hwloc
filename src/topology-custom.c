@@ -13,6 +13,7 @@ hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwlo
   hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
   obj->attr->group.depth = groupdepth;
 
+  /* FIXME: retrieve the backend instead of assuming it's the first one */
   if (!topology->backend->is_custom || topology->is_loaded) {
     errno = EINVAL;
     return NULL;
@@ -29,6 +30,7 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 			     struct hwloc_topology *oldtopology,
 			     struct hwloc_obj *oldroot)
 {
+  /* FIXME: retrieve the backend instead of assuming it's the first one */
   if (!newtopology->backend->is_custom || newtopology->is_loaded || !oldtopology->is_loaded) {
     errno = EINVAL;
     return -1;
@@ -39,7 +41,7 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 }
 
 static int
-hwloc_look_custom(struct hwloc_topology *topology __hwloc_attribute_unused)
+hwloc_look_custom(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   if (!topology->levels[0][0]->first_child) {
     errno = EINVAL;

@@ -11,7 +11,7 @@
 #include <private/private.h>
 
 static int
-hwloc_look_noos(struct hwloc_topology *topology)
+hwloc_look_noos(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
   hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));

@@ -425,12 +425,12 @@ hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_o
 
   backend = topology->backend;
   if (backend->notify_new_object)
-    res += backend->notify_new_object(topology, obj);
+    res += backend->notify_new_object(topology, backend, obj);
 
   backend = topology->additional_backends;
   while (NULL != backend) {
     if (backend->notify_new_object)
-      res += backend->notify_new_object(topology, obj);
+      res += backend->notify_new_object(topology, backend, obj);
     backend = backend->next;
   }
 

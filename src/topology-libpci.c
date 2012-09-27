@@ -221,7 +221,8 @@ hwloc_pci_add_object(struct hwloc_obj *root, struct hwloc_obj *new)
 }
 
 static struct hwloc_obj *
-hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_obj *hostbridge, int *created)
+hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology,
+				 struct hwloc_obj *hostbridge, int *created)
 {
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
   struct hwloc_obj *parent;
@@ -241,8 +242,9 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_o
     /* get the hostbridge cpuset by acking the OS backend.
      * it's not a PCI device, so we use its first child locality info.
      */
+    /* FIXME: retrieve the backend instead of assuming it's the first one */
     if (topology->backend->get_obj_cpuset)
-      err = topology->backend->get_obj_cpuset(topology, hostbridge->first_child, cpuset);
+      err = topology->backend->get_obj_cpuset(topology, topology->backend, hostbridge->first_child, cpuset);
     else
       err = -1;
     if (err < 0)
@@ -306,7 +308,7 @@ hwloc_pci_warning(char *msg __hwloc_attribute_unused, ...)
 }
 
 static int
-hwloc_look_libpci(struct hwloc_topology *topology)
+hwloc_look_libpci(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   struct pci_access *pciaccess;
   struct pci_dev *pcidev;

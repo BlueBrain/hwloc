@@ -65,14 +65,14 @@ struct hwloc_backend {
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
    * maybe NULL if type is HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL. */
-  int (*discover)(struct hwloc_topology *topology);
+  int (*discover)(struct hwloc_topology *topology, struct hwloc_backend *backend);
 
   /* used by the libpci backend to retrieve pci device locality from the OS backend */
-  int (*get_obj_cpuset)(struct hwloc_topology *topology, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */
+  int (*get_obj_cpuset)(struct hwloc_topology *topology, struct hwloc_backend *backend, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */
 
   /* used by additional backends to notify other backend when new objects are added.
    * returns > 0 if it modified the topology tree, 0 otherwise. */
-  int (*notify_new_object)(struct hwloc_topology *topology, struct hwloc_obj *obj); /* may be NULL */
+  int (*notify_new_object)(struct hwloc_topology *topology, struct hwloc_backend *backend, struct hwloc_obj *obj); /* may be NULL */
 
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
   void * private_data;

@@ -473,7 +473,7 @@ hwloc_win_get_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, c
 }
 
 static int
-hwloc_look_windows(struct hwloc_topology *topology)
+hwloc_look_windows(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   BOOL (WINAPI *GetLogicalProcessorInformationProc)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnLength);
   BOOL (WINAPI *GetLogicalProcessorInformationExProc)(LOGICAL_PROCESSOR_RELATIONSHIP relationship, PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Buffer, PDWORD ReturnLength);

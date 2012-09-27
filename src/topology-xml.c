@@ -413,10 +413,12 @@ hwloc__xml_import_pagetype(hwloc_topology_t topology __hwloc_attribute_unused, h
 }
 
 static int
-hwloc__xml_import_distances(hwloc_topology_t topology, hwloc_obj_t obj,
+hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused,
+			    struct hwloc_backend *backend,
+			    hwloc_obj_t obj,
 			    hwloc__xml_import_state_t state)
 {
-  struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_xml_backend_data_s *data = backend->private_data;
   unsigned long reldepth = 0, nbobjs = 0;
   float latbase = 0;
   char *tag;
@@ -548,7 +550,9 @@ hwloc__xml_import_userdata(hwloc_topology_t topology __hwloc_attribute_unused, h
 }
 
 static int
-hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
+hwloc__xml_import_object(hwloc_topology_t topology,
+			 struct hwloc_backend *backend,
+			 hwloc_obj_t obj,
 			 hwloc__xml_import_state_t state)
 {
   /* process attributes */
@@ -583,13 +587,13 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
     if (!strcmp(tag, "object")) {
       hwloc_obj_t childobj = hwloc_alloc_setup_object(HWLOC_OBJ_TYPE_MAX, -1);
       hwloc_insert_object_by_parent(topology, obj, childobj);
-      ret = hwloc__xml_import_object(topology, childobj, &childstate);
+      ret = hwloc__xml_import_object(topology, backend, childobj, &childstate);
     } else if (!strcmp(tag, "page_type")) {
       ret = hwloc__xml_import_pagetype(topology, obj, &childstate);
     } else if (!strcmp(tag, "info")) {
       ret = hwloc__xml_import_info(topology, obj, &childstate);
     } else if (!strcmp(tag, "distances")) {
-      ret = hwloc__xml_import_distances(topology, obj, &childstate);
+      ret = hwloc__xml_import_distances(topology, backend, obj, &childstate);
     } else if (!strcmp(tag, "userdata")) {
       ret = hwloc__xml_import_userdata(topology, obj, &childstate);
     } else
@@ -609,9 +613,10 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
  ***********************************/
 
 static void
-hwloc_xml__handle_distances(struct hwloc_topology *topology)
+hwloc_xml__handle_distances(struct hwloc_topology *topology,
+			    struct hwloc_backend *backend)
 {
-  struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_xml_backend_data_s *data = backend->private_data;
   struct hwloc_xml_imported_distances_s *xmldist, *next = data->first_distances;
 
   if (!next)
@@ -654,9 +659,9 @@ hwloc_xml__handle_distances(struct hwloc_topology *topology)
 
 /* this canNOT be the first XML call */
 static int
-hwloc_look_xml(struct hwloc_topology *topology)
+hwloc_look_xml(struct hwloc_topology *topology, struct hwloc_backend *backend)
 {
-  struct hwloc_xml_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_xml_backend_data_s *data = backend->private_data;
   struct hwloc__xml_import_state_s state, childstate;
   char *tag;
   hwloc_localeswitch_declare;
@@ -666,7 +671,7 @@ hwloc_look_xml(struct hwloc_topology *topology)
 
   data->first_distances = data->last_distances = NULL;
 
-  ret = data->look(topology, &state);
+  ret = data->look_init(topology, backend, &state);
   if (ret < 0)
     goto failed;
 
@@ -674,7 +679,7 @@ hwloc_look_xml(struct hwloc_topology *topology)
   ret = state.find_child(&state, &childstate, &tag);
   if (ret < 0 || !ret || strcmp(tag, "object"))
     goto failed;
-  ret = hwloc__xml_import_object(topology, topology->levels[0][0], &childstate);
+  ret = hwloc__xml_import_object(topology, backend, topology->levels[0][0], &childstate);
   if (ret < 0)
     goto failed;
   state.close_child(&childstate);
@@ -686,7 +691,7 @@ hwloc_look_xml(struct hwloc_topology *topology)
   /* we could add "BackendSource=XML" to notify that XML was used between the actual backend and here */
 
   /* if we added some distances, we must check them, and make them groupable */
-  hwloc_xml__handle_distances(topology);
+  hwloc_xml__handle_distances(topology, backend);
   data->first_distances = data->last_distances = NULL;
   topology->support.discovery->pu = 1;
 
@@ -695,7 +700,7 @@ hwloc_look_xml(struct hwloc_topology *topology)
 
  failed:
   if (data->look_failed)
-    data->look_failed(topology);
+    data->look_failed(topology, backend);
   hwloc_localeswitch_fini();
   return -1;
 }
@@ -1071,7 +1076,7 @@ hwloc_xml_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unus
 			  struct hwloc_backend *backend)
 {
   struct hwloc_xml_backend_data_s *data = backend->private_data;
-  data->backend_exit(topology);
+  data->backend_exit(topology, backend);
   free(data);
 }
 

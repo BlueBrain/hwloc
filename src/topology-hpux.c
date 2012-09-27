@@ -162,7 +162,7 @@ hwloc_hpux_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_node
 #endif /* MAP_MEM_FIRST_TOUCH */
 
 static int
-hwloc_look_hpux(struct hwloc_topology *topology)
+hwloc_look_hpux(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   int has_numa = sysconf(_SC_CCNUMA_SUPPORT) == 1;
   hwloc_obj_t *nodes = NULL, obj;

@@ -153,10 +153,11 @@ hwloc__libxml_import_close_content(hwloc__xml_import_state_t state __hwloc_attri
 }
 
 static int
-hwloc_libxml_look(struct hwloc_topology *topology,
-		  struct hwloc__xml_import_state_s *state)
+hwloc_libxml_look_init(struct hwloc_topology *topology __hwloc_attribute_unused,
+		       struct hwloc_backend *backend,
+		       struct hwloc__xml_import_state_s *state)
 {
-  struct hwloc_xml_backend_data_s *bdata = topology->backend->private_data;
+  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   hwloc__libxml_import_state_data_t lstate = (void*) state->data;
   xmlNode* root_node;
   xmlDtd *dtd;
@@ -203,9 +204,10 @@ hwloc_libxml_look(struct hwloc_topology *topology,
  ********************/
 
 static void
-hwloc_libxml_backend_exit(struct hwloc_topology *topology)
+hwloc_libxml_backend_exit(struct hwloc_topology *topology __hwloc_attribute_unused,
+			  struct hwloc_backend *backend)
 {
-  struct hwloc_xml_backend_data_s *bdata = topology->backend->private_data;
+  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   xmlFreeDoc((xmlDoc*)bdata->data);
 }
 
@@ -234,7 +236,7 @@ hwloc_libxml_backend_init(struct hwloc_topology *topology __hwloc_attribute_unus
     return -1;
   }
 
-  bdata->look = hwloc_libxml_look;
+  bdata->look_init = hwloc_libxml_look_init;
   bdata->look_failed = NULL;
   bdata->backend_exit = hwloc_libxml_backend_exit;
   bdata->data = doc;

@@ -2158,7 +2158,7 @@ hwloc_discover(struct hwloc_topology *topology)
   assert(topology->backend);
   assert(topology->backend->discover);
 
-  if (topology->backend->discover(topology) < 0)
+  if (topology->backend->discover(topology, topology->backend) < 0)
     return -1;
 
   /*
@@ -2258,7 +2258,7 @@ hwloc_discover(struct hwloc_topology *topology)
       int err;
       if (!backend->discover)
 	continue;
-      err = backend->discover(topology);
+      err = backend->discover(topology, backend);
       if (err >= 0)
 	gotsomeio += err;
       print_objects(topology, 0, topology->levels[0][0]);

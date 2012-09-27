@@ -709,7 +709,7 @@ hwloc_look_kstat(struct hwloc_topology *topology)
 #endif /* LIBKSTAT */
 
 static int
-hwloc_look_solaris(struct hwloc_topology *topology)
+hwloc_look_solaris(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors (topology);
 

@@ -45,9 +45,10 @@ struct hwloc_osf_backend_data_s {
  */
 
 static int
-prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t hwloc_set)
+prepare_radset(struct hwloc_backend *backend,
+	       radset_t *radset, hwloc_const_bitmap_t hwloc_set)
 {
-  struct hwloc_osf_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_osf_backend_data_s *data = backend->private_data;
   unsigned cpu;
   cpuset_t target_cpuset;
   cpuset_t cpuset, xor_cpuset;
@@ -109,7 +110,8 @@ hwloc_osf_set_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t thread, h
     return -1;
   }
 
-  if (!prepare_radset(topology, &radset, hwloc_set))
+  /* retrieve the "bind" backend instead of assuming it's the first one */
+  if (!prepare_radset(topology->backend, &radset, hwloc_set))
     return -1;
 
   if (flags & HWLOC_CPUBIND_STRICT) {
@@ -141,7 +143,8 @@ hwloc_osf_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_con
     return -1;
   }
 
-  if (!prepare_radset(topology, &radset, hwloc_set))
+  /* retrieve the "bind" backend instead of assuming it's the first one */
+  if (!prepare_radset(topology->backend, &radset, hwloc_set))
     return -1;
 
   if (flags & HWLOC_CPUBIND_STRICT) {
@@ -242,9 +245,9 @@ hwloc_osf_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nodes
 }
 
 static int
-hwloc_look_osf(struct hwloc_topology *topology)
+hwloc_look_osf(struct hwloc_topology *topology, struct hwloc_backend *backend)
 {
-  struct hwloc_osf_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_osf_backend_data_s *data = backend->private_data;
   cpu_cursor_t cursor;
   unsigned nbnodes;
   radid_t radid, radid2;

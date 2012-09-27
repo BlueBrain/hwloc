@@ -345,9 +345,9 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
 }
 
 static int
-hwloc_look_synthetic(struct hwloc_topology *topology)
+hwloc_look_synthetic(struct hwloc_topology *topology, struct hwloc_backend *backend)
 {
-  struct hwloc_synthetic_backend_data_s *data = topology->backend->private_data;
+  struct hwloc_synthetic_backend_data_s *data = backend->private_data;
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
   unsigned first_cpu = 0, i;
 
