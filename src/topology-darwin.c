@@ -269,8 +269,7 @@ hwloc_darwin_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     return -1;
   backend->discover = hwloc_look_darwin;
-  hwloc_backend_enable(topology, backend);
-  return 0;
+  return hwloc_backend_enable(topology, backend);
 }
 
 static struct hwloc_core_component hwloc_darwin_core_component = {

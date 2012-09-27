@@ -90,7 +90,7 @@ struct hwloc_backend {
 HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_core_component *component);
 
 /* Enable a previously allocated and setup backend. */
-HWLOC_DECLSPEC void hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
+HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 
 /* Used by backends discovery callbacks to notify other backends
  * that they are adding a new object.

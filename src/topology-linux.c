@@ -3774,8 +3774,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
 #endif
   data->root_fd = root;
 
-  hwloc_backend_enable(topology, backend);
-  return 0;
+  return hwloc_backend_enable(topology, backend);
 
  out_with_data:
   free(data);

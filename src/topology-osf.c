@@ -386,8 +386,7 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology,
   backend->private_data = data;
   backend->discover = hwloc_look_osf;
   backend->disable = hwloc_osf_backend_disable;
-  hwloc_backend_enable(topology, backend);
-  return 0;
+  return hwloc_backend_enable(topology, backend);
 
  out_with_data:
   free(backend);

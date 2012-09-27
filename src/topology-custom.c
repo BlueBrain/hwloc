@@ -66,8 +66,7 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 
   backend->discover = hwloc_look_custom;
   backend->is_custom = 1;
-  hwloc_backend_enable(topology, backend);
-  return 0;
+  return hwloc_backend_enable(topology, backend);
 
  out:
   free(backend);

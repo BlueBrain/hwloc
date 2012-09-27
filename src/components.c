@@ -368,7 +368,7 @@ hwloc_backend_disable(struct hwloc_topology *topology, struct hwloc_backend *bac
   free(backend);
 }
 
-void
+int
 hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend)
 {
   switch (backend->component->type) {
@@ -393,11 +393,24 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 	fprintf(stderr, "Enabling %s component `%s'\n",
 		hwloc_core_component_type_string(backend->component->type), backend->component->name);
     }
+    /* we keep a single of these, no need to check for duplicates */
     topology->backend = backend;
     break;
 
   case HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL: {
     struct hwloc_backend **pprev = &topology->additional_backends;
+    /* make sure we didn't already enable this backend, we don't want duplicates */
+    while (NULL != *pprev) {
+      if ((*pprev)->component == backend->component) {
+	if (hwloc_components_verbose)
+	  fprintf(stderr, "Cannot enable %s component `%s' twice\n",
+		  hwloc_core_component_type_string(backend->component->type), backend->component->name);
+	hwloc_backend_disable(topology, backend);
+	errno = EBUSY;
+        return -1;
+      }
+      pprev = &((*pprev)->next);
+    }
     if (hwloc_components_verbose)
       fprintf(stderr, "Enabling %s component `%s'\n",
 	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
@@ -414,6 +427,8 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
   default:
     assert(0);
   }
+
+  return 0;
 }
 
 int

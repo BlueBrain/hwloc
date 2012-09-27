@@ -769,8 +769,7 @@ hwloc_solaris_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     return -1;
   backend->discover = hwloc_look_solaris;
-  hwloc_backend_enable(topology, backend);
-  return 0;
+  return hwloc_backend_enable(topology, backend);
 }
 
 static struct hwloc_core_component hwloc_solaris_core_component = {

@@ -1124,8 +1124,7 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 
   topology->is_thissystem = 0;
 
-  hwloc_backend_enable(topology, backend);
-  return 0;
+  return hwloc_backend_enable(topology, backend);
 
  out_with_data:
   free(data);
