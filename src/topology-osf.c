@@ -259,7 +259,7 @@ hwloc_look_osf(struct hwloc_topology *topology, struct hwloc_backend *backend)
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
-  data->nbnodes = nbnodes = rad_get_num();
+  nbnodes = data->nbnodes;
 
   cpusetcreate(&cpuset);
   radsetcreate(&radset);
@@ -387,6 +387,8 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology,
     errno = ENOMEM;
     goto out_with_backend;
   }
+
+  data->nbnodes = rad_get_num();
 
   backend->private_data = data;
   backend->discover = hwloc_look_osf;
