@@ -375,24 +375,10 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 
   case HWLOC_CORE_COMPONENT_TYPE_OS:
   case HWLOC_CORE_COMPONENT_TYPE_GLOBAL:
-    if (NULL != topology->backend) {
-      if (hwloc_components_verbose)
-        fprintf(stderr, "Enabling %s component `%s' (instead of %s component `%s')\n",
-		hwloc_core_component_type_string(backend->component->type), backend->component->name,
-		hwloc_core_component_type_string(topology->backend->component->type), topology->backend->component->name);
-      /* only one base/global backend simultaneously */
-      hwloc_backend_disable(topology, topology->backend);
-      if (topology->is_loaded) {
-	hwloc_topology_clear(topology);
-	hwloc_distances_destroy(topology);
-	hwloc_topology_setup_defaults(topology);
-	topology->is_loaded = 0;
-      }
-    } else {
-      if (hwloc_components_verbose)
-	fprintf(stderr, "Enabling %s component `%s'\n",
-		hwloc_core_component_type_string(backend->component->type), backend->component->name);
-    }
+    assert(NULL == topology->backend);
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Enabling %s component `%s'\n",
+	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
     /* we keep a single of these, no need to check for duplicates */
     topology->backend = backend;
     break;
@@ -458,13 +444,32 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
 
   if (NULL != (backend = topology->backend)) {
     assert(NULL == backend->next);
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Disabling %s component `%s'\n",
+	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
     hwloc_backend_disable(topology, backend);
-    topology->backend = NULL;
   }
+  topology->backend = NULL;
 
   while (NULL != (backend = topology->additional_backends)) {
     struct hwloc_backend *next = backend->next;
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Disabling %s component `%s'\n",
+	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
     hwloc_backend_disable(topology, backend);
     topology->additional_backends = next;
+  }
+  topology->additional_backends = NULL;
+}
+
+void
+hwloc_backends_reset(struct hwloc_topology *topology)
+{
+  hwloc_backends_disable_all(topology);
+  if (topology->is_loaded) {
+    hwloc_topology_clear(topology);
+    hwloc_distances_destroy(topology);
+    hwloc_topology_setup_defaults(topology);
+    topology->is_loaded = 0;
   }
 }

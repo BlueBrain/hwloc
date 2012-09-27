@@ -444,6 +444,7 @@ extern "C" {
 #define hwloc_backend HWLOC_NAME(backend)
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
 #define hwloc_backend_enable HWLOC_NAME(backend_enable)
+#define hwloc_backends_reset HWLOC_NAME(backends_reset)
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
 #define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
 

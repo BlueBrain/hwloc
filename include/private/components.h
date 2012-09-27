@@ -97,6 +97,8 @@ HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct 
  */
 HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
 
+/* Reset the list of currently enabled backend */
+extern void hwloc_backends_reset(struct hwloc_topology *topology);
 /* Disable and destroy all backends used by a topology */
 extern void hwloc_backends_disable_all(struct hwloc_topology *topology);
 

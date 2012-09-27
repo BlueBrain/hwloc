@@ -2495,9 +2495,11 @@ hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_pa
   }
 
   backend = comp->instantiate(topology, comp, fsroot_path, NULL, NULL);
-  if (backend)
+  if (backend) {
+    if (topology->backend)
+      hwloc_backends_reset(topology);
     return hwloc_backend_enable(topology, backend);
-  else
+  } else
     return -1;
 }
 
@@ -2514,9 +2516,11 @@ hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *descri
   }
 
   backend = comp->instantiate(topology, comp, description, NULL, NULL);
-  if (backend)
+  if (backend) {
+    if (topology->backend)
+      hwloc_backends_reset(topology);
     return hwloc_backend_enable(topology, backend);
-  else
+  } else
     return -1;
 }
 
@@ -2534,9 +2538,11 @@ hwloc_topology_set_xml(struct hwloc_topology *topology,
   }
 
   backend = comp->instantiate(topology, comp, xmlpath, NULL, NULL);
-  if (backend)
+  if (backend) {
+    if (topology->backend)
+      hwloc_backends_reset(topology);
     return hwloc_backend_enable(topology, backend);
-  else
+  } else
     return -1;
 }
 
@@ -2553,9 +2559,11 @@ hwloc_topology_set_custom(struct hwloc_topology *topology)
   }
 
   backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
-  if (backend)
+  if (backend) {
+    if (topology->backend)
+      hwloc_backends_reset(topology);
     return hwloc_backend_enable(topology, backend);
-  else
+  } else
     return -1;
 }
 
@@ -2574,9 +2582,11 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology,
   }
 
   backend = comp->instantiate(topology, comp, NULL, xmlbuffer, (void*) (uintptr_t) size);
-  if (backend)
+  if (backend) {
+    if (topology->backend)
+      hwloc_backends_reset(topology);
     return hwloc_backend_enable(topology, backend);
-  else
+  } else
     return -1;
 }
 
