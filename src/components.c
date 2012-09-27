@@ -360,6 +360,14 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
   return backend;
 }
 
+static void
+hwloc_backend_disable(struct hwloc_topology *topology, struct hwloc_backend *backend)
+{
+  if (backend->disable)
+    backend->disable(topology, backend);
+  free(backend);
+}
+
 void
 hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend)
 {
@@ -373,9 +381,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 		hwloc_core_component_type_string(backend->component->type), backend->component->name,
 		hwloc_core_component_type_string(topology->backend->component->type), topology->backend->component->name);
       /* only one base/global backend simultaneously */
-      if (topology->backend->disable)
-	topology->backend->disable(topology, topology->backend);
-      free(topology->backend);
+      hwloc_backend_disable(topology, topology->backend);
       if (topology->is_loaded) {
 	hwloc_topology_clear(topology);
 	hwloc_distances_destroy(topology);
@@ -437,17 +443,13 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
 
   if (NULL != (backend = topology->backend)) {
     assert(NULL == backend->next);
-    if (backend->disable)
-      backend->disable(topology, backend);
-    free(backend);
+    hwloc_backend_disable(topology, backend);
     topology->backend = NULL;
   }
 
   while (NULL != (backend = topology->additional_backends)) {
     struct hwloc_backend *next = backend->next;
-    if (backend->disable)
-     backend->disable(topology, backend);
-    free(backend);
+    hwloc_backend_disable(topology, backend);
     topology->additional_backends = next;
   }
 }
