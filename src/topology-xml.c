@@ -1096,6 +1096,11 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
     goto out;
   }
 
+  if (!xmlpath && !xmlbuffer) {
+    errno = EINVAL;
+    goto out;
+  }
+
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     goto out;

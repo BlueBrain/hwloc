@@ -394,6 +394,11 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
   struct hwloc_synthetic_backend_data_s *data;
   int err;
 
+  if (!_data1) {
+    errno = EINVAL;
+    goto out;
+  }
+
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     goto out;
