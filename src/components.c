@@ -17,6 +17,10 @@ static struct hwloc_core_component * hwloc_core_components = NULL;
 
 static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
 
+#ifdef HWLOC_HAVE_PLUGINS
+static int hwloc_plugins_verbose = 0;
+#endif
+
 #ifdef HWLOC_WIN_SYS
 /* Basic mutex on top of InterlockedCompareExchange() on windows,
  * Far from perfect, but easy to maintain, and way enough given that this code will never be needed for real. */
@@ -55,22 +59,16 @@ static struct hwloc__plugin_desc {
   struct hwloc__plugin_desc *next;
 } *hwloc_plugins = NULL;
 
-struct hwloc__dlforeach_cbdata {
-  int verbose;
-};
-
 static int
-hwloc__dlforeach_cb(const char *filename, void *_data)
+hwloc__dlforeach_cb(const char *filename, void *_data __hwloc_attribute_unused)
 {
-  struct hwloc__dlforeach_cbdata *cbdata = _data;
-  int verbose = cbdata->verbose;
   const char *basename;
   lt_dlhandle handle;
   char *componentsymbolname = NULL;
   struct hwloc_component *component;
   struct hwloc__plugin_desc *desc;
 
-  if (verbose)
+  if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin dlforeach found `%s'\n", filename);
 
   basename = strrchr(filename, '/');
@@ -82,7 +80,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   /* dlopen and get the component structure */
   handle = lt_dlopenext(filename);
   if (!handle) {
-    if (verbose)
+    if (hwloc_plugins_verbose)
       fprintf(stderr, "Failed to load plugin: %s\n", lt_dlerror());
     goto out;
   }
@@ -90,18 +88,18 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   sprintf(componentsymbolname, "%s_component", basename);
   component = lt_dlsym(handle, componentsymbolname);
   if (!component) {
-    if (verbose)
+    if (hwloc_plugins_verbose)
       fprintf(stderr, "Failed to find component symbol `%s'\n",
 	      componentsymbolname);
     goto out_with_handle;
   }
   if (component->abi != HWLOC_COMPONENT_ABI) {
-    if (verbose)
+    if (hwloc_plugins_verbose)
       fprintf(stderr, "Plugin symbol ABI %u instead of %u\n",
 	      component->abi, HWLOC_COMPONENT_ABI);
     goto out_with_handle;
   }
-  if (verbose)
+  if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin contains expected symbol `%s'\n",
 	    componentsymbolname);
   free(componentsymbolname);
@@ -109,18 +107,18 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 
   if (HWLOC_COMPONENT_TYPE_CORE == component->type) {
     if (strncmp(basename, "hwloc_", 6)) {
-      if (verbose)
+      if (hwloc_plugins_verbose)
 	fprintf(stderr, "Plugin name `%s' doesn't match its type CORE\n", basename);
       goto out_with_handle;
     }
   } else if (HWLOC_COMPONENT_TYPE_XML == component->type) {
     if (strncmp(basename, "hwloc_xml_", 10)) {
-      if (verbose)
+      if (hwloc_plugins_verbose)
 	fprintf(stderr, "Plugin name `%s' doesn't match its type XML\n", basename);
       goto out_with_handle;
     }
   } else {
-    if (verbose)
+    if (hwloc_plugins_verbose)
       fprintf(stderr, "Plugin name `%s' has invalid type %u\n",
 	      basename, (unsigned) component->type);
     goto out_with_handle;
@@ -135,12 +133,12 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
   desc->name = strdup(basename);
   desc->component = component;
   desc->handle = handle;
-  if (verbose)
+  if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin descriptor `%s' ready\n", basename);
 
   desc->next = hwloc_plugins;
   hwloc_plugins = desc;
-  if (verbose)
+  if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin descriptor `%s' queued\n", basename);
   return 0;
 
@@ -154,11 +152,9 @@ hwloc__dlforeach_cb(const char *filename, void *_data)
 static void
 hwloc_plugins_exit(void)
 {
-  char *verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
-  int verbose = verboseenv ? atoi(verboseenv) : 0;
   struct hwloc__plugin_desc *desc, *next;
 
-  if (verbose)
+  if (hwloc_plugins_verbose)
     fprintf(stderr, "Closing all plugins\n");
 
   desc = hwloc_plugins;
@@ -177,12 +173,13 @@ hwloc_plugins_exit(void)
 static int
 hwloc_plugins_init(void)
 {
-  struct hwloc__dlforeach_cbdata cbdata;
-  char *verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
-  int verbose = verboseenv ? atoi(verboseenv) : 0;
+  char *verboseenv;
   char *path = HWLOC_PLUGINS_DIR;
   char *env;
   int err;
+
+  verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
+  hwloc_plugins_verbose = verboseenv ? atoi(verboseenv) : 0;
 
   err = lt_dlinit();
   if (err)
@@ -194,10 +191,9 @@ hwloc_plugins_init(void)
 
   hwloc_plugins = NULL;
 
-  if (verbose)
+  if (hwloc_plugins_verbose)
     fprintf(stderr, "Starting plugin dlforeach in %s\n", path);
-  cbdata.verbose = verbose;
-  err = lt_dlforeachfile(path, hwloc__dlforeach_cb, &cbdata);
+  err = lt_dlforeachfile(path, hwloc__dlforeach_cb, NULL);
   if (err)
     goto out_with_init;
 
