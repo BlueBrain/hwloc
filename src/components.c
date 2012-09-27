@@ -125,8 +125,6 @@ hwloc__dlforeach_cb(const char *filename, void *_data __hwloc_attribute_unused)
     goto out_with_handle;
   }
 
-  /* FIXME disallow multiple plugins with same name? or just disallow multiple components? */
-
   /* allocate a plugin_desc and queue it */
   desc = malloc(sizeof(*desc));
   if (!desc)
@@ -224,8 +222,19 @@ hwloc_core_component_register(struct hwloc_core_component *component)
 {
   struct hwloc_core_component **prev;
 
-  /* FIXME disallow multiple components with same name?
-   * in case they insert same objects twice */
+  prev = &hwloc_core_components;
+  while (NULL != *prev) {
+    if (!strcmp((*prev)->name, component->name)) {
+      if (hwloc_components_verbose)
+	fprintf(stderr, "Multiple `%s' components, only registering the first one\n",
+		component->name);
+      return -1;
+    }
+    prev = &((*prev)->next);
+  }
+  if (hwloc_components_verbose)
+    fprintf(stderr, "Registered %s component `%s'\n",
+	    hwloc_core_component_type_string(component->type), component->name);
 
   prev = &hwloc_core_components;
   while (NULL != *prev) {
