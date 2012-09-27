@@ -33,7 +33,7 @@ typedef enum hwloc_core_component_type_e {
 struct hwloc_core_component {
   hwloc_core_component_type_t type;
   const char *name;
-  int (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
+  struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
   void (*set_hooks)(struct hwloc_topology *topology); /* only used if HWLOC_COMPONENT_TYPE_OS */
 
   unsigned priority; /* used to sort topology->components and topology->additional_backends, higher priority first */

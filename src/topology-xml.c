@@ -1075,7 +1075,7 @@ hwloc_xml_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unus
   free(data);
 }
 
-static int
+static struct hwloc_backend *
 hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 				struct hwloc_core_component *component,
 				const void *_data1,
@@ -1106,8 +1106,10 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
     goto out;
 
   data = malloc(sizeof(*data));
-  if (!data)
+  if (!data) {
+    errno = ENOMEM;
     goto out_with_backend;
+  }
 
   backend->private_data = data;
   backend->discover = hwloc_look_xml;
@@ -1124,14 +1126,14 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 
   topology->is_thissystem = 0;
 
-  return hwloc_backend_enable(topology, backend);
+  return backend;
 
  out_with_data:
   free(data);
  out_with_backend:
   free(backend);
  out:
-  return -1;
+  return NULL;
 }
 
 static struct hwloc_core_component hwloc_xml_core_component = {

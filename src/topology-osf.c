@@ -365,7 +365,7 @@ hwloc_osf_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unus
   free(data);
 }
 
-static int
+static struct hwloc_backend *
 hwloc_osf_component_instantiate(struct hwloc_topology *topology,
 				struct hwloc_core_component *component,
 				const void *_data1 __hwloc_attribute_unused,
@@ -380,18 +380,20 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology,
     goto out;
 
   data = malloc(sizeof(*data));
-  if (!data)
-    goto out_with_data;
+  if (!data) {
+    errno = ENOMEM;
+    goto out_with_backend;
+  }
 
   backend->private_data = data;
   backend->discover = hwloc_look_osf;
   backend->disable = hwloc_osf_backend_disable;
-  return hwloc_backend_enable(topology, backend);
+  return backend;
 
- out_with_data:
+ out_with_backend:
   free(backend);
  out:
-  return -1;
+  return NULL;
 }
 
 static struct hwloc_core_component hwloc_osf_core_component = {

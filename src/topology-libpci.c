@@ -543,7 +543,7 @@ hwloc_look_libpci(struct hwloc_topology *topology)
   return 1;
 }
 
-static int
+static struct hwloc_backend *
 hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
                                 struct hwloc_core_component *component,
                                 const void *_data1 __hwloc_attribute_unused,
@@ -553,18 +553,18 @@ hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
   struct hwloc_backend *backend;
 
   if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
-    return 0;
+    return NULL;
 
   if (!topology->is_thissystem) {
     hwloc_debug("%s", "\nno PCI detection (not thissystem)\n");
-    return 0;
+    return NULL;
   }
 
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    return -1;
+    return NULL;
   backend->discover = hwloc_look_libpci;
-  return hwloc_backend_enable(topology, backend);
+  return backend;
 }
 
 static struct hwloc_core_component hwloc_libpci_core_component = {

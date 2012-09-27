@@ -51,7 +51,7 @@ hwloc_look_custom(struct hwloc_topology *topology __hwloc_attribute_unused)
   return 1;
 }
 
-static int
+static struct hwloc_backend *
 hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 				   struct hwloc_core_component *component,
 				   const void *_data1 __hwloc_attribute_unused,
@@ -59,18 +59,12 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 				   const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
-
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    goto out;
-
+    return NULL;
   backend->discover = hwloc_look_custom;
   backend->is_custom = 1;
-  return hwloc_backend_enable(topology, backend);
-
- out:
-  free(backend);
-  return -1;
+  return backend;
 }
 
 static struct hwloc_core_component hwloc_custom_core_component = {

@@ -793,7 +793,7 @@ hwloc_set_aix_hooks(struct hwloc_topology *topology)
 #endif /* P_DEFAULT */
 }
 
-static int
+static struct hwloc_backend *
 hwloc_aix_component_instantiate(struct hwloc_topology *topology,
 				struct hwloc_core_component *component,
 				const void *_data1 __hwloc_attribute_unused,
@@ -803,9 +803,9 @@ hwloc_aix_component_instantiate(struct hwloc_topology *topology,
   struct hwloc_backend *backend;
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    return -1;
+    return NULL;
   backend->discover = hwloc_look_aix;
-  return hwloc_backend_enable(topology, backend);
+  return backend;
 }
 
 static struct hwloc_core_component hwloc_aix_core_component = {

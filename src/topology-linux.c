@@ -3726,7 +3726,7 @@ hwloc_linux_backend_disable(struct hwloc_topology *topology __hwloc_attribute_un
   free(data);
 }
 
-static int
+static struct hwloc_backend *
 hwloc_linux_component_instantiate(struct hwloc_topology *topology,
 				  struct hwloc_core_component *component,
 				  const void *_data1,
@@ -3743,8 +3743,10 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
     goto out;
 
   data = malloc(sizeof(*data));
-  if (!data)
+  if (!data) {
+    errno = ENOMEM;
     goto out_with_backend;
+  }
 
   backend->private_data = data;
   backend->discover = hwloc_look_linuxfs;
@@ -3774,14 +3776,14 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
 #endif
   data->root_fd = root;
 
-  return hwloc_backend_enable(topology, backend);
+  return backend;
 
  out_with_data:
   free(data);
  out_with_backend:
   free(backend);
  out:
-  return -1;
+  return NULL;
 }
 
 static struct hwloc_core_component hwloc_linux_core_component = {

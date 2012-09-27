@@ -2485,50 +2485,78 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path)
 {
-  struct hwloc_core_component *comp = hwloc_core_component_find(HWLOC_CORE_COMPONENT_TYPE_OS, "linux");
+  struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
+
+  comp = hwloc_core_component_find(HWLOC_CORE_COMPONENT_TYPE_OS, "linux");
   if (!comp) {
     errno = ENOSYS;
     return -1;
   }
 
-  return comp->instantiate(topology, comp, fsroot_path, NULL, NULL);
+  backend = comp->instantiate(topology, comp, fsroot_path, NULL, NULL);
+  if (backend)
+    return hwloc_backend_enable(topology, backend);
+  else
+    return -1;
 }
 
 int
 hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *description)
 {
-  struct hwloc_core_component *comp = hwloc_core_component_find(-1, "synthetic");
+  struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
+
+  comp = hwloc_core_component_find(-1, "synthetic");
   if (!comp) {
     errno = ENOSYS;
     return -1;
   }
 
-  return comp->instantiate(topology, comp, description, NULL, NULL);
+  backend = comp->instantiate(topology, comp, description, NULL, NULL);
+  if (backend)
+    return hwloc_backend_enable(topology, backend);
+  else
+    return -1;
 }
 
 int
 hwloc_topology_set_xml(struct hwloc_topology *topology,
 		       const char *xmlpath)
 {
-  struct hwloc_core_component *comp = hwloc_core_component_find(-1, "xml");
+  struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
+
+  comp = hwloc_core_component_find(-1, "xml");
   if (!comp) {
     errno = ENOSYS;
     return -1;
   }
 
-  return comp->instantiate(topology, comp, xmlpath, NULL, NULL);
+  backend = comp->instantiate(topology, comp, xmlpath, NULL, NULL);
+  if (backend)
+    return hwloc_backend_enable(topology, backend);
+  else
+    return -1;
 }
 
 int
 hwloc_topology_set_custom(struct hwloc_topology *topology)
 {
-  struct hwloc_core_component *comp = hwloc_core_component_find(-1, "custom");
+  struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
+
+  comp = hwloc_core_component_find(-1, "custom");
   if (!comp) {
     errno = ENOSYS;
     return -1;
   }
 
-  return comp->instantiate(topology, comp, NULL, NULL, NULL);
+  backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
+  if (backend)
+    return hwloc_backend_enable(topology, backend);
+  else
+    return -1;
 }
 
 int
@@ -2536,13 +2564,20 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology,
                              const char *xmlbuffer,
                              int size)
 {
-  struct hwloc_core_component *comp = hwloc_core_component_find(-1, "xml");
+  struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
+
+  comp = hwloc_core_component_find(-1, "xml");
   if (!comp) {
     errno = ENOSYS;
     return -1;
   }
 
-  return comp->instantiate(topology, comp, NULL, xmlbuffer, (void*) (uintptr_t) size);
+  backend = comp->instantiate(topology, comp, NULL, xmlbuffer, (void*) (uintptr_t) size);
+  if (backend)
+    return hwloc_backend_enable(topology, backend);
+  else
+    return -1;
 }
 
 int
@@ -2656,6 +2691,7 @@ int
 hwloc_topology_load (struct hwloc_topology *topology)
 {
   struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
   char *local_env;
   int err;
 
@@ -2699,15 +2735,23 @@ hwloc_topology_load (struct hwloc_topology *topology)
   if (!topology->backend) {
     comp = hwloc_core_component_find(HWLOC_CORE_COMPONENT_TYPE_OS, NULL);
     assert(comp);
-    err = comp->instantiate(topology, comp, NULL, NULL, NULL);
+    backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
+    if (!backend) {
+      err = -1;
+      goto out;
+    }
+    err = hwloc_backend_enable(topology, backend);
     if (err < 0)
       goto out;
   }
 
   /* instantiate additional backends now */
   comp = NULL;
-  while (NULL != (comp = hwloc_core_component_find_next(HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, NULL, comp)))
-    comp->instantiate(topology, comp, NULL, NULL, NULL);
+  while (NULL != (comp = hwloc_core_component_find_next(HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, NULL, comp))) {
+    backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
+    if (backend)
+      hwloc_backend_enable(topology, backend);
+  }
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.
    * indexes will be converted into objects later once the tree will be filled

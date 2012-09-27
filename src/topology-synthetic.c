@@ -383,7 +383,7 @@ hwloc_synthetic_backend_disable(struct hwloc_topology *topology __hwloc_attribut
   free(data);
 }
 
-static int
+static struct hwloc_backend *
 hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
 				      struct hwloc_core_component *component,
 				      const void *_data1,
@@ -404,8 +404,10 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
     goto out;
 
   data = malloc(sizeof(*data));
-  if (!data)
+  if (!data) {
+    errno = ENOMEM;
     goto out_with_backend;
+  }
 
   err = hwloc_backend_synthetic_init(topology, data, (const char *) _data1);
   if (err < 0)
@@ -414,14 +416,14 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
   backend->private_data = data;
   backend->discover = hwloc_look_synthetic;
   backend->disable = hwloc_synthetic_backend_disable;
-  return hwloc_backend_enable(topology, backend);
+  return backend;
 
  out_with_data:
   free(data);
  out_with_backend:
   free(backend);
  out:
-  return -1;
+  return NULL;
 }
 
 static struct hwloc_core_component hwloc_synthetic_core_component = {

@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 
-static int
+static struct hwloc_backend *
 hwloc_fake_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
 				 struct hwloc_core_component *component __hwloc_attribute_unused,
 				 const void *_data1 __hwloc_attribute_unused,
@@ -18,7 +18,7 @@ hwloc_fake_component_instantiate(struct hwloc_topology *topology __hwloc_attribu
 {
   if (getenv("HWLOC_DEBUG_FAKE_COMPONENT"))
     printf("fake component instantiated\n");
-  return 0;
+  return NULL;
 }
 
 static struct hwloc_core_component hwloc_fake_core_component = {
