@@ -17,6 +17,7 @@ static struct hwloc_core_component * hwloc_core_components = NULL;
 
 static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
 
+static int hwloc_components_verbose = 0;
 #ifdef HWLOC_HAVE_PLUGINS
 static int hwloc_plugins_verbose = 0;
 #endif
@@ -207,6 +208,17 @@ hwloc_plugins_init(void)
 
 #endif /* HWLOC_HAVE_PLUGINS */
 
+static const char *
+hwloc_core_component_type_string(hwloc_core_component_type_t type)
+{
+  switch (type) {
+  case HWLOC_CORE_COMPONENT_TYPE_OS: return "OS";
+  case HWLOC_CORE_COMPONENT_TYPE_GLOBAL: return "global";
+  case HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL: return "additional";
+  default: return "Unknown";
+  }
+}
+
 static int
 hwloc_core_component_register(struct hwloc_core_component *component)
 {
@@ -234,6 +246,7 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 #ifdef HWLOC_HAVE_PLUGINS
   struct hwloc__plugin_desc *desc;
 #endif
+  char *verboseenv;
   unsigned i;
 
   HWLOC_COMPONENTS_LOCK();
@@ -242,6 +255,9 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
     HWLOC_COMPONENTS_UNLOCK();
     return;
   }
+
+  verboseenv = getenv("HWLOC_COMPONENTS_VERBOSE");
+  hwloc_components_verbose = verboseenv ? atoi(verboseenv) : 0;
 
 #ifdef HWLOC_HAVE_PLUGINS
   hwloc_plugins_init();
@@ -343,6 +359,10 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
   case HWLOC_CORE_COMPONENT_TYPE_OS:
   case HWLOC_CORE_COMPONENT_TYPE_GLOBAL:
     if (NULL != topology->backend) {
+      if (hwloc_components_verbose)
+        fprintf(stderr, "Enabling %s component `%s' (instead of %s component `%s')\n",
+		hwloc_core_component_type_string(backend->component->type), backend->component->name,
+		hwloc_core_component_type_string(topology->backend->component->type), topology->backend->component->name);
       /* only one base/global backend simultaneously */
       if (topology->backend->disable)
 	topology->backend->disable(topology, topology->backend);
@@ -353,12 +373,19 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 	hwloc_topology_setup_defaults(topology);
 	topology->is_loaded = 0;
       }
+    } else {
+      if (hwloc_components_verbose)
+	fprintf(stderr, "Enabling %s component `%s'\n",
+		hwloc_core_component_type_string(backend->component->type), backend->component->name);
     }
     topology->backend = backend;
     break;
 
   case HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL: {
     struct hwloc_backend **pprev = &topology->additional_backends;
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Enabling %s component `%s'\n",
+	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
     while (NULL != *pprev) {
       if ((*pprev)->component->priority < backend->component->priority)
         break;
