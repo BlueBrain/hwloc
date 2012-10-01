@@ -356,6 +356,7 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
   backend->notify_new_object = NULL;
   backend->disable = NULL;
   backend->is_custom = 0;
+  backend->is_thissystem = -1;
   backend->next = NULL;
   return backend;
 }
@@ -365,6 +366,8 @@ hwloc_backend_disable(struct hwloc_topology *topology, struct hwloc_backend *bac
 {
   if (backend->disable)
     backend->disable(topology, backend);
+  if (backend->is_thissystem != -1)
+    topology->is_thissystem = 1;
   free(backend);
 }
 
@@ -412,6 +415,11 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 
   default:
     assert(0);
+  }
+
+  if (backend->is_thissystem != -1) {
+    assert(topology->is_thissystem == 1);
+    topology->is_thissystem = backend->is_thissystem;
   }
 
   return 0;

@@ -1119,6 +1119,7 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
   backend->private_data = data;
   backend->discover = hwloc_look_xml;
   backend->disable = hwloc_xml_backend_disable;
+  backend->is_thissystem = 0;
 
   env = getenv("HWLOC_NO_LIBXML_IMPORT");
   force_nolibxml = (env && atoi(env));
@@ -1128,8 +1129,6 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
     err = hwloc_libxml_callbacks->backend_init(topology, backend, xmlpath, xmlbuffer, xmlbuflen);
   if (err < 0)
     goto out_with_data;
-
-  topology->is_thissystem = 0;
 
   return backend;
 

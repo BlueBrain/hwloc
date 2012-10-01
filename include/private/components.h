@@ -77,6 +77,7 @@ struct hwloc_backend {
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
+  int is_thissystem; /* -1 if doesn't matter, 0 or 1 if should enforce thissystem when enabling */
 
   struct hwloc_backend * next; /* Used internally to list additional backends by priority on topology->additional_backends.
 				* unused (NULL) for other backends (on topology->backend).

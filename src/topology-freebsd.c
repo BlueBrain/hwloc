@@ -236,6 +236,7 @@ hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     return NULL;
   backend->discover = hwloc_look_freebsd;
+  backend->is_thissystem = 1;
   return backend;
 }
 

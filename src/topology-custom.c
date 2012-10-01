@@ -49,7 +49,6 @@ hwloc_look_custom(struct hwloc_topology *topology, struct hwloc_backend *backend
   }
 
   topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
-  topology->is_thissystem = 0;
   return 1;
 }
 
@@ -66,6 +65,7 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
     return NULL;
   backend->discover = hwloc_look_custom;
   backend->is_custom = 1;
+  backend->is_thissystem = 0;
   return backend;
 }
 

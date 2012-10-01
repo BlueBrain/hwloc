@@ -32,7 +32,7 @@ struct hwloc_synthetic_backend_data_s {
    topology and update `topology->synthetic_description' accordingly.  On
    success, return zero.  */
 static int
-hwloc_backend_synthetic_init(struct hwloc_topology *topology,
+hwloc_backend_synthetic_init(struct hwloc_topology *topology __hwloc_attribute_unused,
 			     struct hwloc_synthetic_backend_data_s *data,
 			     const char *description)
 {
@@ -219,7 +219,6 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology,
 
   data->string = strdup(description);
   data->arity[count-1] = 0;
-  topology->is_thissystem = 0;
 
   return 0;
 }
@@ -416,6 +415,8 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
   backend->private_data = data;
   backend->discover = hwloc_look_synthetic;
   backend->disable = hwloc_synthetic_backend_disable;
+  backend->is_thissystem = 0;
+
   return backend;
 
  out_with_data:

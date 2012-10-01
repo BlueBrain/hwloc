@@ -280,6 +280,7 @@ hwloc_hpux_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     return NULL;
   backend->discover = hwloc_look_hpux;
+  backend->is_thissystem = 1;
   return backend;
 }
 

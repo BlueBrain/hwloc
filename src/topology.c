@@ -2293,9 +2293,6 @@ hwloc_discover(struct hwloc_topology *topology)
    * hooks.
    */
 
-  if (topology->flags & HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM)
-    topology->is_thissystem = 1;
-
   if (topology->is_thissystem) {
     /* use the OS component set_hooks if thissystem, without caring about the used backend */
     struct hwloc_core_component * comp = hwloc_core_component_find(HWLOC_CORE_COMPONENT_TYPE_OS, NULL);
@@ -2712,6 +2709,15 @@ hwloc_topology_load (struct hwloc_topology *topology)
     topology->is_loaded = 0;
   }
 
+  /* Apply is_thissystem topology flag before we enforce envvar backends.
+   * If the application changed the backend with set_foo(),
+   * it may use set_flags() update the is_thissystem flag here.
+   * If it changes the backend with environment variables below,
+   * it may use HWLOC_THISSYSTEM envvar below as well.
+   */
+  if (topology->flags & HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM)
+    topology->is_thissystem = 1;
+
   /* enforce backend anyway if a FORCE variable was given */
   {
     char *fsroot_path_env = getenv("HWLOC_FORCE_FSROOT");
@@ -2736,11 +2742,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
       hwloc_topology_set_xml(topology, xmlpath_env);
   }
 
-  /* always apply non-FORCE THISSYSTEM since it was explicitly designed to override setups from other backends */
-  local_env = getenv("HWLOC_THISSYSTEM");
-  if (local_env)
-    topology->is_thissystem = atoi(local_env);
-
   /* if we haven't chosen the backend, set the OS-specific one if needed */
   if (!topology->backend) {
     comp = hwloc_core_component_find(HWLOC_CORE_COMPONENT_TYPE_OS, NULL);
@@ -2754,6 +2755,10 @@ hwloc_topology_load (struct hwloc_topology *topology)
     if (err < 0)
       goto out;
   }
+
+  local_env = getenv("HWLOC_THISSYSTEM");
+  if (local_env)
+    topology->is_thissystem = atoi(local_env);
 
   /* instantiate additional backends now */
   comp = NULL;
@@ -2772,11 +2777,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
   err = hwloc_discover(topology);
   if (err < 0)
     goto out;
-
-  /* enforce THISSYSTEM if given in a FORCE variable */
-  local_env = getenv("HWLOC_FORCE_THISSYSTEM");
-  if (local_env)
-    topology->is_thissystem = atoi(local_env);
 
 #ifndef HWLOC_DEBUG
   if (getenv("HWLOC_DEBUG_CHECK"))

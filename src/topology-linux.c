@@ -3764,6 +3764,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
   backend->get_obj_cpuset = hwloc_linux_backend_get_obj_cpuset;
   backend->notify_new_object = hwloc_linux_backend_notify_new_object;
   backend->disable = hwloc_linux_backend_disable;
+  backend->is_thissystem = 1;
 
   if (!fsroot_path)
     fsroot_path = "/";
@@ -3774,7 +3775,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
     goto out_with_data;
 
   if (strcmp(fsroot_path, "/"))
-    topology->is_thissystem = 0;
+    backend->is_thissystem = 0;
 
   data->root_path = strdup(fsroot_path);
 #else
