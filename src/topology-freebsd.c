@@ -181,6 +181,9 @@ static int
 hwloc_look_freebsd(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
+#ifdef HAVE_CPUSET_SETID
+  cpusetid_t setid;
+#endif
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
@@ -189,7 +192,19 @@ hwloc_look_freebsd(struct hwloc_topology *topology, struct hwloc_backend *backen
 #endif
 
   hwloc_set_freebsd_hooks(topology);
+
+  /* temporary make all cpus available during x86 discovery */
+#ifdef HAVE_CPUSET_SETID
+  cpuset_getid(CPU_LEVEL_CPUSET, CPU_WHICH_PID, -1, &setid);
+  cpuset_setid(CPU_WHICH_PID, -1, 0);
+#endif
+
   hwloc_look_x86(topology, nbprocs);
+
+  /* restore initial cpuset */
+#ifdef HAVE_CPUSET_SETID
+  cpuset_setid(CPU_WHICH_PID, -1, setid);
+#endif
 
   hwloc_setup_pu_level(topology, nbprocs);
 

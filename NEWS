@@ -25,6 +25,9 @@ Version 1.6.0
   + Add --enable-plugins configure options to build libxml2
     and libpci support as separated modules. See the plugins
     documentation for details.
+* Backends
+  + Fix detection on FreeBSD in case of cpuset restriction. Thanks to
+    Sebastian Kuzminsky for reporting the problem.
 * XML
   + Add hwloc_topology_set_userdata_import/export_callback(),
     hwloc_export_obj_userdata() and _userdata_base64() to let
@@ -39,6 +42,28 @@ Version 1.6.0
     messages.
   + Fix command-line pid support in windows tools.
   + All programs accept --verbose as a synonym to -v.
+  + Add --pid-cmd to hwloc-ps to append the output of a command to each
+    PID line. May be used for showing Open MPI process ranks, see the
+    hwloc-ps(1) manpage for details.
+* Misc
+  + Add some GUID- and LID-related info attributes to OpenFabrics
+    OS devices.
+
+
+Version 1.5.1
+-------------
+* Fix block OS device detection on Linux kernel 3.3 and later.
+  Thanks to Guy Streeter for reporting the problem and testing the fix.
+* Fix the cpuid code in the x86 backend (for FreeBSD). Thanks to
+  Sebastian Kuzminsky for reporting problems and testing patches.
+* Fix 64bit detection on FreeBSD.
+* Fix some corner cases in the management of the thissystem flag with
+  respect to topology flags and environment variables.
+* Fix some corner cases in command-line parsing checks in hwloc-distrib
+  and hwloc-distances.
+* Make sure we do not miss some block OS devices on old Linux kernels
+  when a single PCI device has multiple IDE hosts/devices behind it.
+* Do not disable I/O devices or instruction caches in hwloc-assembler output.
 
 
 Version 1.5.0

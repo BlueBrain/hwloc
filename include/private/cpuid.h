@@ -53,22 +53,30 @@ static __hwloc_inline void hwloc_cpuid(unsigned *eax, unsigned *ebx, unsigned *e
 {
 #ifdef HWLOC_X86_64_ARCH
   unsigned long sav_ebx;
-#endif
   asm(
-#ifdef HWLOC_X86_32_ARCH
-  "push %%ebx\n\t"
-#else
+  /* Note: can't easily use stack since the compiler assumes we don't touch the redzone */
   "mov %%rbx,%2\n\t"
-#endif
   "cpuid\n\t"
-#ifdef HWLOC_X86_32_ARCH
-  "mov %%ebx,%1\n\t"
-  "pop %%ebx\n\t"
+  "xchg %2,%%rbx\n\t"
+  "movl %k2,%1\n\t"
+  : "+a" (*eax), "=m" (*ebx), "=&r"(sav_ebx),
+    "+c" (*ecx), "=&d" (*edx));
+#elif defined(HWLOC_X86_32_ARCH)
+  asm(
+  /* Note: gcc might want to use ebx for %1 addressing :/ */
+  "push %%ebx\n\t"
+  "cpuid\n\t"
+  "push %%eax\n\t"
+  "mov %%ebx,%%eax\n\t"
+  "mov 4(%%esp),%%ebx\n\t"
+  "mov %%eax,%1\n\t"
+  "pop %%eax\n\t"
+  "add $4,%%esp\n\t"
+  : "+a" (*eax), "=m" (*ebx),
+    "+c" (*ecx), "=&d" (*edx));
 #else
-  "mov %%ebx,%1\n\t"
-  "mov %2,%%rbx\n\t"
+#error unknown architecture
 #endif
-  : "+a" (*eax), "=r" (*ebx), "=r"(sav_ebx), "+c" (*ecx), "=d" (*edx));
 }
 
 #endif /* HWLOC_PRIVATE_CPUID_H */
