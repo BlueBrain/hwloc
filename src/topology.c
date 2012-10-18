@@ -2706,6 +2706,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
     hwloc_topology_clear(topology);
     hwloc_distances_clear(topology);
     hwloc_topology_setup_defaults(topology);
+    topology->is_thissystem = 1;
     topology->is_loaded = 0;
   }
 
