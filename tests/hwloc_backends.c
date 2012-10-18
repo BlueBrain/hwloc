@@ -91,6 +91,7 @@ int main(void)
   printf("switching sysfs fsroot to // and loading...\n");
   err = hwloc_topology_set_fsroot(topology2, "//"); /* valid path that won't be recognized as '/' */
   hwloc_topology_load(topology2);
+  hwloc_topology_check(topology2);
   assert(!hwloc_topology_is_thissystem(topology2) == !err); /* thissystem only changed if set_fsroot worked (i.e. on Linux) */
   printf("switching sysfs fsroot to / and loading...\n");
   hwloc_topology_set_fsroot(topology2, "/");
