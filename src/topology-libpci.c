@@ -320,6 +320,14 @@ hwloc_look_libpci(struct hwloc_backend *backend)
   unsigned current_hostbridge;
   int createdgroups = 0;
 
+  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
+    return 0;
+
+  if (!topology->is_thissystem) {
+    hwloc_debug("%s", "\nno PCI detection (not thissystem)\n");
+    return 0;
+  }
+
   fakehostbridge.first_child = NULL;
   fakehostbridge.last_child = NULL;
 
@@ -558,13 +566,7 @@ hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
 {
   struct hwloc_backend *backend;
 
-  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
-    return NULL;
-
-  if (!topology->is_thissystem) {
-    hwloc_debug("%s", "\nno PCI detection (not thissystem)\n");
-    return NULL;
-  }
+  /* thissystem may not be fully initialized yet, we'll check flags in discover() */
 
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
