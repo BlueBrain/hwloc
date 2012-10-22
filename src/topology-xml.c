@@ -672,7 +672,7 @@ hwloc_look_xml(struct hwloc_backend *backend)
 
   data->first_distances = data->last_distances = NULL;
 
-  ret = data->look_init(topology, backend, &state);
+  ret = data->look_init(backend, &state);
   if (ret < 0)
     goto failed;
 
@@ -701,7 +701,7 @@ hwloc_look_xml(struct hwloc_backend *backend)
 
  failed:
   if (data->look_failed)
-    data->look_failed(topology, backend);
+    data->look_failed(backend);
   hwloc_localeswitch_fini();
   return -1;
 }
@@ -1076,7 +1076,7 @@ static void
 hwloc_xml_backend_disable(struct hwloc_backend *backend)
 {
   struct hwloc_xml_backend_data_s *data = backend->private_data;
-  data->backend_exit(backend->topology, backend);
+  data->backend_exit(backend);
   free(data);
 }
 
@@ -1124,9 +1124,9 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
   env = getenv("HWLOC_NO_LIBXML_IMPORT");
   force_nolibxml = (env && atoi(env));
   if (!hwloc_libxml_callbacks || (hwloc_nolibxml_callbacks && force_nolibxml))
-    err = hwloc_nolibxml_callbacks->backend_init(topology, backend, xmlpath, xmlbuffer, xmlbuflen);
+    err = hwloc_nolibxml_callbacks->backend_init(backend, xmlpath, xmlbuffer, xmlbuflen);
   else
-    err = hwloc_libxml_callbacks->backend_init(topology, backend, xmlpath, xmlbuffer, xmlbuflen);
+    err = hwloc_libxml_callbacks->backend_init(backend, xmlpath, xmlbuffer, xmlbuflen);
   if (err < 0)
     goto out_with_data;
 

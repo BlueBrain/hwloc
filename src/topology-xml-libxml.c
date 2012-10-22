@@ -153,8 +153,7 @@ hwloc__libxml_import_close_content(hwloc__xml_import_state_t state __hwloc_attri
 }
 
 static int
-hwloc_libxml_look_init(struct hwloc_topology *topology __hwloc_attribute_unused,
-		       struct hwloc_backend *backend,
+hwloc_libxml_look_init(struct hwloc_backend *backend,
 		       struct hwloc__xml_import_state_s *state)
 {
   struct hwloc_xml_backend_data_s *bdata = backend->private_data;
@@ -204,16 +203,14 @@ hwloc_libxml_look_init(struct hwloc_topology *topology __hwloc_attribute_unused,
  ********************/
 
 static void
-hwloc_libxml_backend_exit(struct hwloc_topology *topology __hwloc_attribute_unused,
-			  struct hwloc_backend *backend)
+hwloc_libxml_backend_exit(struct hwloc_backend *backend)
 {
   struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   xmlFreeDoc((xmlDoc*)bdata->data);
 }
 
 static int
-hwloc_libxml_backend_init(struct hwloc_topology *topology __hwloc_attribute_unused,
-			  struct hwloc_backend *backend,
+hwloc_libxml_backend_init(struct hwloc_backend *backend,
 			  const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
   struct hwloc_xml_backend_data_s *bdata = backend->private_data;
