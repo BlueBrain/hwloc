@@ -3856,8 +3856,7 @@ hwloc_linux_backend_get_obj_cpuset(struct hwloc_backend *backend,
 }
 
 static void
-hwloc_linux_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unused,
-			    struct hwloc_backend *backend)
+hwloc_linux_backend_disable(struct hwloc_backend *backend)
 {
   struct hwloc_linux_backend_data_s *data = backend->private_data;
 #ifdef HAVE_OPENAT

@@ -1073,11 +1073,10 @@ hwloc_topology_set_userdata_import_callback(hwloc_topology_t topology,
  ***************************************/
 
 static void
-hwloc_xml_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unused,
-			  struct hwloc_backend *backend)
+hwloc_xml_backend_disable(struct hwloc_backend *backend)
 {
   struct hwloc_xml_backend_data_s *data = backend->private_data;
-  data->backend_exit(topology, backend);
+  data->backend_exit(backend->topology, backend);
   free(data);
 }
 

@@ -375,8 +375,7 @@ hwloc_look_synthetic(struct hwloc_backend *backend)
 }
 
 static void
-hwloc_synthetic_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unused,
-				struct hwloc_backend *backend)
+hwloc_synthetic_backend_disable(struct hwloc_backend *backend)
 {
   struct hwloc_synthetic_backend_data_s *data = backend->private_data;
   free(data->string);

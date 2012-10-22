@@ -75,7 +75,7 @@ struct hwloc_backend {
    * returns > 0 if it modified the topology tree, 0 otherwise. */
   int (*notify_new_object)(struct hwloc_backend *backend, struct hwloc_backend *caller, struct hwloc_obj *obj); /* may be NULL */
 
-  void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
+  void (*disable)(struct hwloc_backend *backend); /* may be NULL */
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
   int is_thissystem; /* -1 if doesn't matter, 0 or 1 if should enforce thissystem when enabling */

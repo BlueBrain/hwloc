@@ -363,12 +363,12 @@ hwloc_backend_alloc(struct hwloc_topology *topology,
 }
 
 static void
-hwloc_backend_disable(struct hwloc_topology *topology, struct hwloc_backend *backend)
+hwloc_backend_disable(struct hwloc_backend *backend)
 {
   if (backend->disable)
-    backend->disable(topology, backend);
+    backend->disable(backend);
   if (backend->is_thissystem != -1)
-    topology->is_thissystem = 1;
+    backend->topology->is_thissystem = 1;
   free(backend);
 }
 
@@ -395,7 +395,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 	if (hwloc_components_verbose)
 	  fprintf(stderr, "Cannot enable %s component `%s' twice\n",
 		  hwloc_core_component_type_string(backend->component->type), backend->component->name);
-	hwloc_backend_disable(topology, backend);
+	hwloc_backend_disable(backend);
 	errno = EBUSY;
         return -1;
       }
@@ -456,7 +456,7 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
     if (hwloc_components_verbose)
       fprintf(stderr, "Disabling %s component `%s'\n",
 	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
-    hwloc_backend_disable(topology, backend);
+    hwloc_backend_disable(backend);
   }
   topology->backend = NULL;
 
@@ -465,7 +465,7 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
     if (hwloc_components_verbose)
       fprintf(stderr, "Disabling %s component `%s'\n",
 	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
-    hwloc_backend_disable(topology, backend);
+    hwloc_backend_disable(backend);
     topology->additional_backends = next;
   }
   topology->additional_backends = NULL;
