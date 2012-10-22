@@ -341,7 +341,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
 }
 
 struct hwloc_backend *
-hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
+hwloc_backend_alloc(struct hwloc_topology *topology,
 		    struct hwloc_core_component *component)
 {
   struct hwloc_backend * backend = malloc(sizeof(*backend));
@@ -350,6 +350,7 @@ hwloc_backend_alloc(struct hwloc_topology *topology __hwloc_attribute_unused,
     return NULL;
   }
   backend->component = component;
+  backend->topology = topology;
   backend->flags = 0;
   backend->discover = NULL;
   backend->get_obj_cpuset = NULL;

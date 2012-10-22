@@ -59,6 +59,7 @@ extern struct hwloc_core_component * hwloc_core_component_find_next(int type, co
 
 struct hwloc_backend {
   struct hwloc_core_component * component; /* Reserved for the core */
+  struct hwloc_topology * topology;
 
   unsigned long flags; /* unused for now */
 
