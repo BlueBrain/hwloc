@@ -31,10 +31,6 @@
 #include <cpuset.h>
 #include <sys/mman.h>
 
-struct hwloc_osf_backend_data_s {
-  int nbnodes;
-};
-
 /*
  * TODO
  *
@@ -45,16 +41,16 @@ struct hwloc_osf_backend_data_s {
  */
 
 static int
-prepare_radset(struct hwloc_backend *backend,
+prepare_radset(struct hwloc_topology *topology __hwloc_attribute_unused,
 	       radset_t *radset, hwloc_const_bitmap_t hwloc_set)
 {
-  struct hwloc_osf_backend_data_s *data = backend->private_data;
   unsigned cpu;
   cpuset_t target_cpuset;
   cpuset_t cpuset, xor_cpuset;
   radid_t radid;
   int ret = 0;
   int ret_errno = 0;
+  int nbnodes = rad_get_num();
 
   cpusetcreate(&target_cpuset);
   cpuemptyset(target_cpuset);
@@ -64,7 +60,7 @@ prepare_radset(struct hwloc_backend *backend,
 
   cpusetcreate(&cpuset);
   cpusetcreate(&xor_cpuset);
-  for (radid = 0; radid < data->nbnodes; radid++) {
+  for (radid = 0; radid < nbnodes; radid++) {
     cpuemptyset(cpuset);
     if (rad_get_cpus(radid, cpuset)==-1) {
       fprintf(stderr,"rad_get_cpus(%d) failed: %s\n",radid,strerror(errno));
@@ -110,8 +106,7 @@ hwloc_osf_set_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t thread, h
     return -1;
   }
 
-  /* retrieve the "bind" backend instead of assuming it's the first one */
-  if (!prepare_radset(topology->backend, &radset, hwloc_set))
+  if (!prepare_radset(topology, &radset, hwloc_set))
     return -1;
 
   if (flags & HWLOC_CPUBIND_STRICT) {
@@ -143,8 +138,7 @@ hwloc_osf_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_con
     return -1;
   }
 
-  /* retrieve the "bind" backend instead of assuming it's the first one */
-  if (!prepare_radset(topology->backend, &radset, hwloc_set))
+  if (!prepare_radset(topology, &radset, hwloc_set))
     return -1;
 
   if (flags & HWLOC_CPUBIND_STRICT) {
@@ -248,7 +242,6 @@ static int
 hwloc_look_osf(struct hwloc_backend *backend)
 {
   struct hwloc_topology *topology = backend->topology;
-  struct hwloc_osf_backend_data_s *data = backend->private_data;
   cpu_cursor_t cursor;
   unsigned nbnodes;
   radid_t radid, radid2;
@@ -260,7 +253,7 @@ hwloc_look_osf(struct hwloc_backend *backend)
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
-  nbnodes = data->nbnodes;
+  nbnodes = rad_get_num();
 
   cpusetcreate(&cpuset);
   radsetcreate(&radset);
@@ -361,14 +354,6 @@ hwloc_set_osf_hooks(struct hwloc_topology *topology)
   topology->support.membind->replicate_membind = 1;
 }
 
-static void
-hwloc_osf_backend_disable(struct hwloc_topology *topology __hwloc_attribute_unused,
-			  struct hwloc_backend *backend)
-{
-  struct hwloc_osf_backend_data_s *data = backend->private_data;
-  free(data);
-}
-
 static struct hwloc_backend *
 hwloc_osf_component_instantiate(struct hwloc_topology *topology,
 				struct hwloc_core_component *component,
@@ -377,30 +362,11 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology,
 				const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
-  struct hwloc_osf_backend_data_s *data;
-
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
-    goto out;
-
-  data = malloc(sizeof(*data));
-  if (!data) {
-    errno = ENOMEM;
-    goto out_with_backend;
-  }
-
-  data->nbnodes = rad_get_num();
-
-  backend->private_data = data;
+    return NULL;
   backend->discover = hwloc_look_osf;
-  backend->disable = hwloc_osf_backend_disable;
-  backend->is_thissystem = 1;
   return backend;
-
- out_with_backend:
-  free(backend);
- out:
-  return NULL;
 }
 
 static struct hwloc_core_component hwloc_osf_core_component = {
