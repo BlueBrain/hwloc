@@ -345,8 +345,13 @@ hwloc_linux_find_kernel_nr_cpus(hwloc_topology_t topology)
     /* already computed */
     return nr_cpus;
 
-  /* start with a nr_cpus that may contain the whole topology */
-  nr_cpus = hwloc_bitmap_last(topology->levels[0][0]->complete_cpuset) + 1;
+  if (topology->levels[0][0]->complete_cpuset)
+    /* start with a nr_cpus that may contain the whole topology */
+    nr_cpus = hwloc_bitmap_last(topology->levels[0][0]->complete_cpuset) + 1;
+  else
+    /* start from scratch, the topology isn't ready yet */
+    nr_cpus = 1;
+
   while (1) {
     cpu_set_t *set = CPU_ALLOC(nr_cpus);
     size_t setsize = CPU_ALLOC_SIZE(nr_cpus);
@@ -385,7 +390,11 @@ hwloc_linux_get_tid_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, 
     return -1;
   }
 
-  last = hwloc_bitmap_last(topology->levels[0][0]->complete_cpuset);
+  if (topology->levels[0][0]->complete_cpuset)
+    last = hwloc_bitmap_last(topology->levels[0][0]->complete_cpuset);
+  else
+    /* use the maximal supported nr_cpus if the topology isn't ready yet */
+    last = kernel_nr_cpus-1;
   assert(last != -1);
 
   hwloc_bitmap_zero(hwloc_set);
