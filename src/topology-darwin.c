@@ -23,8 +23,9 @@
 #include <private/debug.h>
 
 static int
-hwloc_look_darwin(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_look_darwin(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   int64_t _nprocs;
   unsigned nprocs;
   int64_t _npackages;

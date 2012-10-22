@@ -3225,8 +3225,9 @@ hwloc_linux_fallback_pu_level(struct hwloc_topology *topology)
 }
 
 static int
-hwloc_look_linuxfs(struct hwloc_topology *topology, struct hwloc_backend *backend)
+hwloc_look_linuxfs(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   struct hwloc_linux_backend_data_s *data = backend->private_data;
   DIR *nodes_dir;
   unsigned nbnodes;

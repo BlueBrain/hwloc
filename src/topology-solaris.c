@@ -709,8 +709,9 @@ hwloc_look_kstat(struct hwloc_topology *topology)
 #endif /* LIBKSTAT */
 
 static int
-hwloc_look_solaris(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_look_solaris(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   unsigned nbprocs = hwloc_fallback_nbprocessors (topology);
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);

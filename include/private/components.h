@@ -66,7 +66,7 @@ struct hwloc_backend {
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
    * maybe NULL if type is HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL. */
-  int (*discover)(struct hwloc_topology *topology, struct hwloc_backend *backend);
+  int (*discover)(struct hwloc_backend *backend);
 
   /* used by the libpci backend to retrieve pci device locality from the OS backend */
   int (*get_obj_cpuset)(struct hwloc_topology *topology, struct hwloc_backend *backend, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */

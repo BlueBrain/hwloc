@@ -245,8 +245,9 @@ hwloc_osf_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nodes
 }
 
 static int
-hwloc_look_osf(struct hwloc_topology *topology, struct hwloc_backend *backend)
+hwloc_look_osf(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   struct hwloc_osf_backend_data_s *data = backend->private_data;
   cpu_cursor_t cursor;
   unsigned nbnodes;

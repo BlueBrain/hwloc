@@ -41,8 +41,10 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 }
 
 static int
-hwloc_look_custom(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_look_custom(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
+
   if (!topology->levels[0][0]->first_child) {
     errno = EINVAL;
     return -1;

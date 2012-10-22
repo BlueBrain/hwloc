@@ -659,8 +659,9 @@ hwloc_xml__handle_distances(struct hwloc_topology *topology,
 
 /* this canNOT be the first XML call */
 static int
-hwloc_look_xml(struct hwloc_topology *topology, struct hwloc_backend *backend)
+hwloc_look_xml(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   struct hwloc_xml_backend_data_s *data = backend->private_data;
   struct hwloc__xml_import_state_s state, childstate;
   char *tag;

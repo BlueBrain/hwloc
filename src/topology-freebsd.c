@@ -178,8 +178,9 @@ static void
 hwloc_set_freebsd_hooks(struct hwloc_topology *topology);
 
 static int
-hwloc_look_freebsd(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_look_freebsd(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
 #ifdef HAVE_CPUSET_SETID
   cpusetid_t setid;

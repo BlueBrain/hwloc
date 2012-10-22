@@ -675,8 +675,9 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
 }
 
 static int
-hwloc_look_aix(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_look_aix(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   int i;
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);

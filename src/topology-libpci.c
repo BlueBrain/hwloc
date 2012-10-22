@@ -308,8 +308,9 @@ hwloc_pci_warning(char *msg __hwloc_attribute_unused, ...)
 }
 
 static int
-hwloc_look_libpci(struct hwloc_topology *topology, struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_look_libpci(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   struct pci_access *pciaccess;
   struct pci_dev *pcidev;
   struct hwloc_obj fakehostbridge; /* temporary object covering the whole PCI hierarchy until its complete */
