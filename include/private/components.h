@@ -69,7 +69,7 @@ struct hwloc_backend {
   int (*discover)(struct hwloc_backend *backend);
 
   /* used by the libpci backend to retrieve pci device locality from the OS backend */
-  int (*get_obj_cpuset)(struct hwloc_topology *topology, struct hwloc_backend *backend, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */
+  int (*get_obj_cpuset)(struct hwloc_backend *backend, struct hwloc_backend *caller, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */
 
   /* used by additional backends to notify other backend when new objects are added.
    * returns > 0 if it modified the topology tree, 0 otherwise. */

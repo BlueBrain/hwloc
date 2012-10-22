@@ -224,7 +224,7 @@ hwloc_pci_add_object(struct hwloc_obj *root, struct hwloc_obj *new)
 }
 
 static struct hwloc_obj *
-hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology,
+hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_backend *backend,
 				 struct hwloc_obj *hostbridge, int *created)
 {
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
@@ -247,7 +247,7 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology,
      */
     /* FIXME: retrieve the backend instead of assuming it's the first one */
     if (topology->backend->get_obj_cpuset)
-      err = topology->backend->get_obj_cpuset(topology, topology->backend, hostbridge->first_child, cpuset);
+      err = topology->backend->get_obj_cpuset(topology->backend, backend, hostbridge->first_child, cpuset);
     else
       err = -1;
     if (err < 0)
@@ -539,7 +539,7 @@ hwloc_look_libpci(struct hwloc_backend *backend)
 		current_domain, current_bus, current_subordinate);
 
     /* attach the hostbridge where it belongs */
-    parent = hwloc_pci_find_hostbridge_parent(topology, hostbridge, &createdgroups);
+    parent = hwloc_pci_find_hostbridge_parent(topology, backend, hostbridge, &createdgroups);
     hwloc_insert_object_by_parent(topology, parent, hostbridge);
   }
 
