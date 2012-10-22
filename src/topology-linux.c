@@ -3787,8 +3787,10 @@ hwloc_linux_lookup_block_class(struct hwloc_topology *topology, struct hwloc_obj
 }
 
 static int
-hwloc_linux_backend_notify_new_object(struct hwloc_topology *topology, struct hwloc_backend *backend, struct hwloc_obj *obj)
+hwloc_linux_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_backend *caller __hwloc_attribute_unused,
+				      struct hwloc_obj *obj)
 {
+  struct hwloc_topology *topology = backend->topology;
   struct hwloc_linux_backend_data_s *data = backend->private_data;
   char pcidevpath[256];
   int res = 0;

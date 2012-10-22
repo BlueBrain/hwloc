@@ -73,7 +73,7 @@ struct hwloc_backend {
 
   /* used by additional backends to notify other backend when new objects are added.
    * returns > 0 if it modified the topology tree, 0 otherwise. */
-  int (*notify_new_object)(struct hwloc_topology *topology, struct hwloc_backend *backend, struct hwloc_obj *obj); /* may be NULL */
+  int (*notify_new_object)(struct hwloc_backend *backend, struct hwloc_backend *caller, struct hwloc_obj *obj); /* may be NULL */
 
   void (*disable)(struct hwloc_topology *topology, struct hwloc_backend *backend); /* may be NULL */
   void * private_data;
@@ -94,10 +94,10 @@ HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology 
 /* Enable a previously allocated and setup backend. */
 HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 
-/* Used by backends discovery callbacks to notify other backends
+/* Used by backends discovery callbacks to notify other backends (all but caller)
  * that they are adding a new object.
  */
-HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_topology *topology, struct hwloc_obj *obj);
+HWLOC_DECLSPEC int hwloc_backends_notify_new_object(struct hwloc_backend *caller, struct hwloc_obj *obj);
 
 /* Reset the list of currently enabled backend */
 extern void hwloc_backends_reset(struct hwloc_topology *topology);
