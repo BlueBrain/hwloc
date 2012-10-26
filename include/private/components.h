@@ -94,6 +94,10 @@ HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology 
 /* Enable a previously allocated and setup backend. */
 HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
 
+/* Used by backends discovery callbacks to request information from others.
+ */
+HWLOC_DECLSPEC int hwloc_backends_get_obj_cpuset(struct hwloc_backend *caller, struct hwloc_obj *obj, hwloc_bitmap_t cpuset);
+
 /* Used by backends discovery callbacks to notify other backends (all but caller)
  * that they are adding a new object.
  */

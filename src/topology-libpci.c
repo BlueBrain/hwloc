@@ -245,11 +245,7 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_b
     /* get the hostbridge cpuset by acking the OS backend.
      * it's not a PCI device, so we use its first child locality info.
      */
-    /* FIXME: retrieve the backend instead of assuming it's the first one */
-    if (topology->backend->get_obj_cpuset)
-      err = topology->backend->get_obj_cpuset(topology->backend, backend, hostbridge->first_child, cpuset);
-    else
-      err = -1;
+    err = hwloc_backends_get_obj_cpuset(backend, hostbridge->first_child, cpuset);
     if (err < 0)
       /* if we got nothing, assume the hostbridge is attached to the top of hierarchy */
       hwloc_bitmap_copy(cpuset, hwloc_topology_get_topology_cpuset(topology));

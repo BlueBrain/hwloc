@@ -427,6 +427,16 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 }
 
 int
+hwloc_backends_get_obj_cpuset(struct hwloc_backend *caller, struct hwloc_obj *obj, hwloc_bitmap_t cpuset)
+{
+  struct hwloc_topology *topology = caller->topology;
+  /* FIXME: retrieve the backend instead of assuming it's the first one */
+  if (topology->backend->get_obj_cpuset)
+    return topology->backend->get_obj_cpuset(topology->backend, caller, obj, cpuset);
+  return -1;
+}
+
+int
 hwloc_backends_notify_new_object(struct hwloc_backend *caller, struct hwloc_obj *obj)
 {
   struct hwloc_backend *backend;
