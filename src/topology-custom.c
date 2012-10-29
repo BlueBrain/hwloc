@@ -75,7 +75,6 @@ static struct hwloc_core_component hwloc_custom_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   "custom",
   hwloc_custom_component_instantiate,
-  NULL, /* no hooks for HWLOC_CORE_COMPONENT_TYPE_GLOBAL */
   10,
   NULL
 };

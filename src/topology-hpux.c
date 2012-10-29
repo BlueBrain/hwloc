@@ -250,22 +250,23 @@ hwloc_look_hpux(struct hwloc_backend *backend)
   return 1;
 }
 
-static void
-hwloc_set_hpux_hooks(struct hwloc_topology *topology)
+void
+hwloc_set_hpux_hooks(struct hwloc_binding_hooks *hooks,
+		     struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
-  topology->set_proc_cpubind = hwloc_hpux_set_proc_cpubind;
-  topology->set_thisproc_cpubind = hwloc_hpux_set_thisproc_cpubind;
+  hooks->set_proc_cpubind = hwloc_hpux_set_proc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_hpux_set_thisproc_cpubind;
 #ifdef hwloc_thread_t
-  topology->set_thread_cpubind = hwloc_hpux_set_thread_cpubind;
-  topology->set_thisthread_cpubind = hwloc_hpux_set_thisthread_cpubind;
+  hooks->set_thread_cpubind = hwloc_hpux_set_thread_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_hpux_set_thisthread_cpubind;
 #endif
 #ifdef MAP_MEM_FIRST_TOUCH
-  topology->alloc_membind = hwloc_hpux_alloc_membind;
-  topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_free_mmap;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
+  hooks->alloc_membind = hwloc_hpux_alloc_membind;
+  hooks->alloc = hwloc_alloc_mmap;
+  hooks->free_membind = hwloc_free_mmap;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
 #endif /* MAP_MEM_FIRST_TOUCH */
 }
 
@@ -289,7 +290,6 @@ static struct hwloc_core_component hwloc_hpux_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "hpux",
   hwloc_hpux_component_instantiate,
-  hwloc_set_hpux_hooks,
   10,
   NULL
 };

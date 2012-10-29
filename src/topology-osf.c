@@ -337,21 +337,22 @@ hwloc_look_osf(struct hwloc_backend *backend)
   return 1;
 }
 
-static void
-hwloc_set_osf_hooks(struct hwloc_topology *topology)
+void
+hwloc_set_osf_hooks(struct hwloc_binding_hooks *hooks,
+		    struct hwloc_topology_support *support)
 {
-  topology->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
-  topology->set_thisthread_cpubind = hwloc_osf_set_thisthread_cpubind;
-  topology->set_proc_cpubind = hwloc_osf_set_proc_cpubind;
-  topology->set_thisproc_cpubind = hwloc_osf_set_thisproc_cpubind;
-  topology->set_area_membind = hwloc_osf_set_area_membind;
-  topology->alloc_membind = hwloc_osf_alloc_membind;
-  topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_free_mmap;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
-  topology->support.membind->replicate_membind = 1;
+  hooks->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_osf_set_thisthread_cpubind;
+  hooks->set_proc_cpubind = hwloc_osf_set_proc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_osf_set_thisproc_cpubind;
+  hooks->set_area_membind = hwloc_osf_set_area_membind;
+  hooks->alloc_membind = hwloc_osf_alloc_membind;
+  hooks->alloc = hwloc_alloc_mmap;
+  hooks->free_membind = hwloc_free_mmap;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
+  support->membind->replicate_membind = 1;
 }
 
 static struct hwloc_backend *
@@ -373,7 +374,6 @@ static struct hwloc_core_component hwloc_osf_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "osf",
   hwloc_osf_component_instantiate,
-  hwloc_set_osf_hooks,
   10,
   NULL
 };

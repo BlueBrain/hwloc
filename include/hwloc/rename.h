@@ -501,6 +501,19 @@ extern "C" {
 #define hwloc_topology_setup_defaults HWLOC_NAME(topology_setup_defaults)
 #define hwloc_topology_clear HWLOC_NAME(topology_clear)
 
+#define hwloc_binding_hooks HWLOC_NAME(binding_hooks)
+#define hwloc_set_native_binding_hooks HWLOC_NAME(set_native_binding_hooks)
+#define hwloc_set_binding_hooks HWLOC_NAME(set_binding_hooks)
+
+#define hwloc_set_linuxfs_hooks HWLOC_NAME(set_linuxfs_hooks)
+#define hwloc_set_solaris_hooks HWLOC_NAME(set_solaris_hooks)
+#define hwloc_set_aix_hooks HWLOC_NAME(set_aix_hooks)
+#define hwloc_set_osf_hooks HWLOC_NAME(set_osf_hooks)
+#define hwloc_set_windows_hooks HWLOC_NAME(set_windows_hooks)
+#define hwloc_set_darwin_hooks HWLOC_NAME(set_darwin_hooks)
+#define hwloc_set_freebsd_hooks HWLOC_NAME(set_freebsd_hooks)
+#define hwloc_set_hpux_hooks HWLOC_NAME(set_hpux_hooks)
+
 #define hwloc_look_x86 HWLOC_NAME(look_x86)
 
 #define hwloc_insert_object_by_cpuset HWLOC_NAME(insert_object_by_cpuset)

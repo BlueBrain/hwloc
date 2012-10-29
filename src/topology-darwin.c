@@ -261,8 +261,9 @@ hwloc_look_darwin(struct hwloc_backend *backend)
   return 1;
 }
 
-static void
-hwloc_set_darwin_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
+void
+hwloc_set_darwin_hooks(struct hwloc_binding_hooks *hooks __hwloc_attribute_unused,
+		       struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
 }
 
@@ -286,7 +287,6 @@ static struct hwloc_core_component hwloc_darwin_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "darwin",
   hwloc_darwin_component_instantiate,
-  hwloc_set_darwin_hooks,
   10,
   NULL
 };

@@ -18,7 +18,6 @@ struct hwloc_backend;
 
 typedef enum hwloc_core_component_type_e {
   HWLOC_CORE_COMPONENT_TYPE_OS, /* OS backend, and no-OS support.
-		       * that's where we take hooks from when is_this_system=1.
 		       */
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL, /* xml, synthetic or custom.
 			   * no additional backend is used.
@@ -34,7 +33,6 @@ struct hwloc_core_component {
   hwloc_core_component_type_t type;
   const char *name;
   struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
-  void (*set_hooks)(struct hwloc_topology *topology); /* only used if HWLOC_COMPONENT_TYPE_OS */
 
   unsigned priority; /* used to sort topology->components and topology->additional_backends, higher priority first */
   struct hwloc_core_component * next; /* used internally to list components by priority on topology->components */

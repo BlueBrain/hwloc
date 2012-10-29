@@ -37,16 +37,10 @@ hwloc_noos_component_instantiate(struct hwloc_topology *topology,
   return backend;
 }
 
-static void
-hwloc_set_noos_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
-{
-}
-
 static struct hwloc_core_component hwloc_noos_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "no_os",
   hwloc_noos_component_instantiate,
-  hwloc_set_noos_hooks,
   0, /* lowest priority */
   NULL
 };
