@@ -89,15 +89,15 @@ int main(void)
   hwloc_topology_check(topology2);
   assert(!hwloc_topology_is_thissystem(topology2));
   printf("switching sysfs fsroot to // and loading...\n");
-  err = hwloc_topology_set_fsroot(topology2, "//"); /* valid path that won't be recognized as '/' */
+  hwloc_topology_set_fsroot(topology2, "//"); /* valid path that won't be recognized as '/' */
   hwloc_topology_load(topology2);
   hwloc_topology_check(topology2);
-  assert(!hwloc_topology_is_thissystem(topology2) == !err); /* thissystem only changed if set_fsroot worked (i.e. on Linux) */
+  assert(!hwloc_topology_is_thissystem(topology2)); /* earlier fsroot worked, or we're still synthetic */
   printf("switching sysfs fsroot to / and loading...\n");
-  hwloc_topology_set_fsroot(topology2, "/");
+  err = hwloc_topology_set_fsroot(topology2, "/");
   hwloc_topology_load(topology2);
   hwloc_topology_check(topology2);
-  assert(hwloc_topology_is_thissystem(topology2)); /* on Linux, '/' is recognized as thissystem. on !Linux, set_fsroot() failed and we went back to the default backend */
+  assert(hwloc_topology_is_thissystem(topology2) == !err); /* on Linux, '/' is recognized as thissystem. on !Linux, set_fsroot() failed and we went back to synthetic */
 
   printf("switching to synthetic...\n");
   hwloc_topology_set_synthetic(topology2, "machine:2 node:3 cache:2 pu:4");
