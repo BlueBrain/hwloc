@@ -13,8 +13,8 @@ hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwlo
   hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
   obj->attr->group.depth = groupdepth;
 
-  /* FIXME: retrieve the backend instead of assuming it's the first one */
-  if (!topology->backend->is_custom || topology->is_loaded) {
+  /* must be called between set_custom() and load(), so there's a single backend, the custom one */
+  if (topology->is_loaded || !topology->backends || !topology->backends->is_custom) {
     errno = EINVAL;
     return NULL;
   }
@@ -30,8 +30,13 @@ hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
 			     struct hwloc_topology *oldtopology,
 			     struct hwloc_obj *oldroot)
 {
-  /* FIXME: retrieve the backend instead of assuming it's the first one */
-  if (!newtopology->backend->is_custom || newtopology->is_loaded || !oldtopology->is_loaded) {
+  /* must be called between set_custom() and load(), so there's a single backend, the custom one */
+  if (newtopology->is_loaded || !newtopology->backends || !newtopology->backends->is_custom) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (!oldtopology->is_loaded) {
     errno = EINVAL;
     return -1;
   }

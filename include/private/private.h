@@ -124,13 +124,8 @@ struct hwloc_topology {
     struct hwloc_os_distances_s *prev, *next;
   } *first_osdist, *last_osdist;
 
-  /* single base or global backend.
-   */
-  struct hwloc_backend * backend;
-  /* list of additional backends, sorted by their component's priority, higher priority first.
-   * libpci has priority 10.
-   */
-  struct hwloc_backend * additional_backends; /* higher priority first. libpci has priority 10. */
+  /* list of enabled backends. */
+  struct hwloc_backend * backends;
 };
 
 extern void hwloc_alloc_obj_cpusets(hwloc_obj_t obj);

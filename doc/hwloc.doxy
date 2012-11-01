@@ -983,9 +983,20 @@ following environment variables.
   and which components are successfully loaded.
   </dd>
 
+<dt>HWLOC_COMPONENTS=list,of,components</dt>
+  <dd>forces a list of components to enable.
+  Enable the given comma-separated list of components.
+  Once the end of the list is reached, hwloc will fallback to
+  trying to enable all remaining components.
+  If <tt>stop</tt> is met, the enabling immediately stops.
+  See \ref plugins for details.
+  </dd>
+
 <dt>HWLOC_COMPONENTS_VERBOSE=1</dt>
   <dd>display verbose information about components.
-  Display messages when components are enqueued or replaced.
+  Display messages when components are registered or enabled.
+  This is the recommended way to list the available components
+  with their priority.
   </dd>
 
 </dl>
@@ -1642,7 +1653,15 @@ as long as they do not explicitly conflict with the main component
 (XML and synthetic discovery disables additional components).
 
 The environment variable <tt>HWLOC_COMPONENTS_VERBOSE</tt> may be set
-to get verbose messages about component selection.
+to get verbose messages about component registration (including their
+priority) and enabling.
+
+The <tt>HWLOC_COMPONENTS</tt> variable may be use to change the default
+component enabling order. For instance, specifying <tt>no_os</tt>
+will cause <tt>no_os</tt> to take precedence over any other component,
+including the native operating system component.
+Specifying <tt>xml=file.xml,stop</tt> will load the XML component using
+the given file and then stop loading any other component.
 
 \section plugins_config Building components as plugins
 

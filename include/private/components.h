@@ -35,7 +35,7 @@ struct hwloc_core_component {
   unsigned excludes; /* ORed set of (1<<HWLOC_CORE_COMPONENT_TYPE_*) */
   struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
 
-  unsigned priority; /* used to sort topology->components and topology->additional_backends, higher priority first.
+  unsigned priority; /* used to sort topology->components, higher priority first.
 		      * 50 for native OS components,
 		      * 40 for no-OS fallback,
 		      * 30 for global components (xml/synthetic/custom),
@@ -51,6 +51,7 @@ extern int hwloc_core_component_force_enable(struct hwloc_topology *topology,
 					     int envvar_forced, /* 1 if forced through envvar, 0 if forced through API */
 					     int type, const char *name,
 					     const void *data1, const void *data2, const void *data3);
+extern void hwloc_core_components_enable_others(struct hwloc_topology *topology);
 
 /************
  * Backends *
@@ -90,8 +91,7 @@ struct hwloc_backend {
 
   int envvar_forced; /* 1 if forced through envvar, 0 otherwise */
 
-  struct hwloc_backend * next; /* Used internally to list additional backends by priority on topology->additional_backends.
-				* unused (NULL) for other backends (on topology->backend).
+  struct hwloc_backend * next; /* Used internally to list backends topology->backends.
 				* Reserved for the core.
 				*/
 };
@@ -103,6 +103,9 @@ HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology 
 
 /* Enable a previously allocated and setup backend. */
 HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
+
+/* Compute the topology is_thissystem flag based on enabled backends */
+HWLOC_DECLSPEC void hwloc_backends_is_thissystem(struct hwloc_topology *topology);
 
 /* Used by backends discovery callbacks to request information from others.
  */

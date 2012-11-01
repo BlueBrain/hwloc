@@ -441,12 +441,14 @@ extern "C" {
 #define hwloc_core_component_find HWLOC_NAME(core_component_find)
 #define hwloc_core_component_find_next HWLOC_NAME(core_component_find_next)
 #define hwloc_core_component_force_enable HWLOC_NAME(core_component_force_enable)
+#define hwloc_core_components_enable_others HWLOC_NAME(core_components_instantiate_others)
 
 #define hwloc_backend HWLOC_NAME(backend)
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
 #define hwloc_backend_enable HWLOC_NAME(backend_enable)
 #define hwloc_backends_reset HWLOC_NAME(backends_reset)
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
+#define hwloc_backends_is_thissystem HWLOC_NAME(backends_is_thissystem)
 #define hwloc_backends_get_obj_cpuset HWLOC_NAME(backends_get_obj_cpuset)
 #define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
 

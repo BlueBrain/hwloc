@@ -2009,7 +2009,9 @@ void hwloc_alloc_obj_cpusets(hwloc_obj_t obj)
 static int
 hwloc_discover(struct hwloc_topology *topology)
 {
+  struct hwloc_backend *backend;
   int gotsomeio = 0;
+  unsigned discoveries = 0;
 
   /* Raw detection, from coarser levels to finer levels for more efficiency.  */
 
@@ -2057,16 +2059,36 @@ hwloc_discover(struct hwloc_topology *topology)
    * set_cpubind one
    */
 
-  assert(topology->backend);
-  assert(topology->backend->discover);
-
-  if (topology->backend->discover(topology->backend) < 0)
-    return -1;
-
   /*
-   * Now that backends have detected objects, sort them and establish pointers.
+   * Discover CPUs first
    */
-  print_objects(topology, 0, topology->levels[0][0]);
+  backend = topology->backends;
+  while (NULL != backend) {
+    int err;
+    if (backend->component->type != HWLOC_CORE_COMPONENT_TYPE_OS
+	&& backend->component->type != HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
+      /* not yet */
+      goto next_cpubackend;
+    if (!backend->discover)
+      goto next_cpubackend;
+
+    err = backend->discover(backend);
+    if (err >= 0) {
+      if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
+        gotsomeio += err;
+      discoveries++;
+    }
+    print_objects(topology, 0, topology->levels[0][0]);
+
+next_cpubackend:
+    backend = backend->next;
+  }
+
+  if (!discoveries) {
+    hwloc_debug("%s", "No CPU backend enabled\n");
+    errno = EINVAL;
+    return -1;
+  }
 
   /*
    * Group levels by distances
@@ -2147,25 +2169,25 @@ hwloc_discover(struct hwloc_topology *topology)
   propagate_total_memory(topology->levels[0][0]);
 
   /*
-   * Additional backends.
+   * Discovery with additional backends
    */
+  backend = topology->backends;
+  while (NULL != backend) {
+    int err;
+    if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_OS
+	|| backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
+      /* already done above */
+      goto next_noncpubackend;
+    if (!backend->discover)
+      goto next_noncpubackend;
 
-  if (topology->backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL) {
-    /* The main backend already imported some I/O devices, disable additional backends */
-    gotsomeio = 1;
-  } else {
-    /* Discovery with additional backends */
-    struct hwloc_backend *backend = topology->additional_backends;
-    while (NULL != backend) {
-      int err;
-      if (!backend->discover)
-	continue;
-      err = backend->discover(backend);
-      if (err >= 0)
-	gotsomeio += err;
-      print_objects(topology, 0, topology->levels[0][0]);
-      backend = backend->next;
-    }
+    err = backend->discover(backend);
+    if (err >= 0)
+      gotsomeio += err;
+    print_objects(topology, 0, topology->levels[0][0]);
+
+next_noncpubackend:
+    backend = backend->next;
   }
 
   /* if we got anything, filter interesting objects and update the tree */
@@ -2248,8 +2270,6 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
     return -1;
 
   hwloc_components_init(topology);
-  topology->backend = NULL;
-  topology->additional_backends = NULL;
 
   /* Setup topology context */
   topology->is_loaded = 0;
@@ -2450,9 +2470,6 @@ hwloc_topology_destroy (struct hwloc_topology *topology)
 int
 hwloc_topology_load (struct hwloc_topology *topology)
 {
-  struct hwloc_core_component *comp;
-  struct hwloc_backend *backend;
-  char *local_env;
   int err;
 
   if (topology->is_loaded) {
@@ -2462,15 +2479,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
     topology->is_thissystem = 1;
     topology->is_loaded = 0;
   }
-
-  /* Apply is_thissystem topology flag before we enforce envvar backends.
-   * If the application changed the backend with set_foo(),
-   * it may use set_flags() update the is_thissystem flag here.
-   * If it changes the backend with environment variables below,
-   * it may use HWLOC_THISSYSTEM envvar below as well.
-   */
-  if (topology->flags & HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM)
-    topology->is_thissystem = 1;
 
   /* enforce backend anyway if a FORCE variable was given */
   {
@@ -2491,7 +2499,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
   }
 
   /* only apply non-FORCE variables if we have not changed the backend yet */
-  if (!topology->backend) {
+  if (!topology->backends) {
     char *fsroot_path_env = getenv("HWLOC_FSROOT");
     if (fsroot_path_env)
       hwloc_core_component_force_enable(topology,
@@ -2499,7 +2507,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
 					HWLOC_CORE_COMPONENT_TYPE_OS, "linux",
 					fsroot_path_env, NULL, NULL);
   }
-  if (!topology->backend) {
+  if (!topology->backends) {
     char *xmlpath_env = getenv("HWLOC_XMLFILE");
     if (xmlpath_env)
       hwloc_core_component_force_enable(topology,
@@ -2508,31 +2516,10 @@ hwloc_topology_load (struct hwloc_topology *topology)
 					xmlpath_env, NULL, NULL);
   }
 
-  /* if we haven't chosen the backend, set the OS-specific one if needed */
-  if (!topology->backend) {
-    comp = hwloc_core_component_find(HWLOC_CORE_COMPONENT_TYPE_OS, NULL);
-    assert(comp);
-    backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
-    if (!backend) {
-      err = -1;
-      goto out;
-    }
-    err = hwloc_backend_enable(topology, backend);
-    if (err < 0)
-      goto out;
-  }
-
-  local_env = getenv("HWLOC_THISSYSTEM");
-  if (local_env)
-    topology->is_thissystem = atoi(local_env);
-
-  /* instantiate additional backends now */
-  comp = NULL;
-  while (NULL != (comp = hwloc_core_component_find_next(HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, NULL, comp))) {
-    backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
-    if (backend)
-      hwloc_backend_enable(topology, backend);
-  }
+  /* instantiate all possible other backends now */
+  hwloc_core_components_enable_others(topology);
+  /* now that backends are enabled, update the thissystem flag */
+  hwloc_backends_is_thissystem(topology);
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.
    * indexes will be converted into objects later once the tree will be filled
