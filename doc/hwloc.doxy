@@ -985,22 +985,29 @@ following environment variables.
 
 <dt>HWLOC_COMPONENTS=list,of,components</dt>
   <dd>forces a list of components to enable.
-  Enable the given comma-separated list of components.
-  Once the end of the list is reached, hwloc will fallback to
-  trying to enable all remaining components.
-  If <tt>stop</tt> is met, the enabling immediately stops.
-  See \ref plugins for details.
-  The <tt>xml</tt> component may be followed by a XML file to load
-  (<tt>xml=file.xml</tt>).
+  Enable the given comma-separated list of components
+   (if they do not conflict with each other).
+  Once the end of the list is reached, hwloc falls back to
+  enabling the remaining components (sorted by priority) that do not
+  conflict with the already enabled ones.
+  If <tt>stop</tt> is met, the enabling loop immediately stops, no
+  more component is enabled.
+  If the variable is set to an empty string, no specific component is
+  loaded first, all components are loaded in priority order,
+  this is strictly identical to not specifying any variable.
+  The <tt>xml</tt> component name may be followed by a XML file to
+  load (<tt>xml=file.xml</tt>).
   The synthetic component may be followed by a synthetic topology
   description (<tt>synthetic=node:2 pu:3</tt>).
+  See \ref plugins for details.
   </dd>
 
 <dt>HWLOC_COMPONENTS_VERBOSE=1</dt>
   <dd>display verbose information about components.
   Display messages when components are registered or enabled.
   This is the recommended way to list the available components
-  with their priority.
+  with their priority
+  (all of them are <em>registered</em> at startup).
   </dd>
 
 </dl>
@@ -1631,41 +1638,86 @@ hwloc is organized in components that are responsible for discovering
 objects.
 Depending on the topology configuration, some components will be used,
 some will be ignored.
-The usual default is to enable the native operating system component
+The usual default is to enable the native operating system component,
 (e.g. <tt>linux</tt> or <tt>solaris</tt>) and the
 <tt>libpci</tt> additional component.
+If available, an architecture-specific component (such as <tt>x86</tt>)
+may also improve the topology detection.
 
 If a XML topology is loaded, the <tt>xml</tt> component will be used
-instead of the operating system one.
+instead of all other components.
 It internally uses a specific class of components for the actual XML
 import/export routines (<tt>xml_libxml</tt> and <tt>xml_nolibxml</tt>)
 but these will not be discussed here.
 
+\section plugins_default Components enabled by default
+
+The hwloc core contains a list of components sorted by priority.
+Each one is enabled as long as it does not conflict with the
+previously enabled ones.
+This includes native operating system components,
+architecture-specific ones, and if available, I/O components
+such as <tt>libpci</tt>.
+
+Usually the native operating system component
+(when it exists, e.g. <tt>linux</tt> or <tt>aix</tt>)
+is enabled first.
+Then hwloc looks for an architecture specific component
+(e.g. <tt>x86</tt>).
+Finally these also exist a basic component (<tt>no_os</tt>)
+that just  tries to discover the number of PUs in the system.
+Each component discovers as much topology information as possible,
+some are also able to complete what others discovered
+(for instance <tt>x86</tt> and <tt>FreeBSD</tt>).
+
+Default priorities ensure that clever components are invoked first.
+If the operating system (for instance FreeBSD) offers very few
+topology information, its native component priority is lowered so
+that the architecture specific component (e.g. <tt>x86</tt>)
+is used first.
+
+If any configuration function such as hwloc_topology_set_xml()
+is used before loading the topology, the corresponding component
+is enabled first.
+Then, as usual, hwloc enables any other component (based on
+priorities) that does not conflict.
+
+Certain components that manage a virtual topology, for instance XML
+topology import, synthetic topology description, or custom building,
+conflict with all other components.
+Therefore, one of them may only be loaded
+(e.g. with <tt>hwloc_topology_set_xml()</tt>)
+if no other component is enabled.
+
+The environment variable <tt>HWLOC_COMPONENTS_VERBOSE</tt>
+may be set to get verbose messages about component registration
+(including their priority) and enabling.
+
 \section plugins_select Selecting which components to use
 
-The hwloc core uses the native operating system component when it exists
-(e.g. <tt>linux</tt> or <tt>aix</tt>).
-Otherwise, it falls back to a basic component (<tt>noos</tt>) that just 
-tries to discover the number of PUs in the system.
+Aside from topology configuration function such as
+<tt>hwloc_topology_set_custom()</tt>, the default priority order may
+be changed through the  <tt>HWLOC_COMPONENTS</tt> environment
+variable.
 
-If any configuration function such as hwloc_topology_set_xml() is used
-before loading the topology, the default component is replaced with
-the requested one.
-
-When available, additional plugins such as <tt>libpci</tt> are enabled
-as long as they do not explicitly conflict with the main component
-(XML and synthetic discovery disables additional components).
-
-The environment variable <tt>HWLOC_COMPONENTS_VERBOSE</tt> may be set
-to get verbose messages about component registration (including their
-priority) and enabling.
-
-The <tt>HWLOC_COMPONENTS</tt> variable may be use to change the default
-component enabling order. For instance, specifying <tt>no_os</tt>
-will cause <tt>no_os</tt> to take precedence over any other component,
+Specifying <tt>x86</tt> in this variable will cause the <tt>x86</tt>
+component to take precedence over any other component,
 including the native operating system component.
-Specifying <tt>xml=file.xml,stop</tt> will load the XML component using
-the given file and then stop loading any other component.
+It is therefore loaded first, before hwloc tries to load all remaining
+non-conflicting components.
+In this case, <tt>x86</tt> would take care of discovering everything
+it supports, instead of only completing what the native OS information.
+This may be useful if the native component is buggy on some platforms.
+
+It is possible to prevent all remaining components from being loaded
+by placing <tt>stop</tt> in the environment variable.
+Only the components listed before this keyword will be enabled.
+
+Certain component names (<tt>xml</tt> and <tt>synthetic</tt>)
+accept an argument (e.g. <tt>xml=file.xml</tt>).
+These arguments behave exactly as if the corresponding string had
+been passed to <tt>hwloc_topology_set_xml()</tt>
+or <tt>hwloc_topology_set_synthetic()</tt>.
 
 \section plugins_config Building components as plugins
 
