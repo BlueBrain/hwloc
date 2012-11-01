@@ -46,9 +46,6 @@ struct hwloc_core_component {
   struct hwloc_core_component * next; /* used internally to list components by priority on topology->components */
 };
 
-/* Used by the core to decide which component to instantiate */
-extern struct hwloc_core_component * hwloc_core_component_find(int type, const char *name);
-extern struct hwloc_core_component * hwloc_core_component_find_next(int type, const char *name, struct hwloc_core_component *prev);
 extern int hwloc_core_component_force_enable(struct hwloc_topology *topology,
 					     int envvar_forced, /* 1 if forced through envvar, 0 if forced through API */
 					     int type, const char *name,

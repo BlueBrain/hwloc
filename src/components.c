@@ -298,14 +298,11 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   topology->backends = NULL;
 }
 
-struct hwloc_core_component *
-hwloc_core_component_find_next(int type /* hwloc_core_component_type_t or -1 if any */,
-			       const char *name /* name of NULL if any */,
-			       struct hwloc_core_component *prev)
+static struct hwloc_core_component *
+hwloc_core_component_find(int type /* hwloc_component_type_t or -1 if any */,
+			  const char *name /* name of NULL if any */)
 {
-  /* FIXME: can be static */
-  struct hwloc_core_component *comp;
-  comp = prev ? prev->next : hwloc_core_components;
+  struct hwloc_core_component *comp = hwloc_core_components;
   while (NULL != comp) {
     if ((-1 == type || type == (int) comp->type)
        && (NULL == name || !strcmp(name, comp->name)))
@@ -313,14 +310,6 @@ hwloc_core_component_find_next(int type /* hwloc_core_component_type_t or -1 if 
     comp = comp->next;
   }
   return NULL;
-}
-
-struct hwloc_core_component *
-hwloc_core_component_find(int type /* hwloc_component_type_t or -1 if any */,
-			  const char *name /* name of NULL if any */)
-{
-  /* FIXME: drop find_next, unused */
-  return hwloc_core_component_find_next(type, name, NULL);
 }
 
 /* used by set_xml(), set_synthetic(), ... environment variables, ... to force the first backend */
