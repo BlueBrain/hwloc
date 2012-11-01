@@ -18,7 +18,8 @@ LDADD =
 
 TESTS_ENVIRONMENT = $(builddir)/wrapper.sh
 
-check_PROGRAMS = hwloc_bitmap \
+check_PROGRAMS = hwloc_list_components \
+        hwloc_bitmap \
 	hwloc_bitmap_string \
 	hwloc_get_closest_objs \
 	hwloc_get_obj_covering_cpuset \
