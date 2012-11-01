@@ -20,7 +20,6 @@
 #include <private/debug.h>
 #include <private/misc.h>
 
-#if defined(HWLOC_HAVE_CPUID)
 #include <private/cpuid.h>
 
 #define has_topoext(features) ((features)[6] & (1 << 22))
@@ -845,7 +844,6 @@ out_with_infos:
 out:
   return ret;
 }
-#endif /* HWLOC_HAVE_CPUID */
 
 static int
 hwloc_x86_discover(struct hwloc_backend *backend)
@@ -869,10 +867,8 @@ hwloc_x86_discover(struct hwloc_backend *backend)
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
-#if defined(HWLOC_HAVE_CPUID)
   hwloc_look_x86(topology, nbprocs, 1);
   /* if failed, just continue and create PUs */
-#endif
 
   hwloc_setup_pu_level(topology, nbprocs);
 

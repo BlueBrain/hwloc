@@ -165,8 +165,7 @@ EOF])
     # List of components to be built, either statically or dynamically.
     # To be enlarged below.
     #
-    hwloc_components="noos x86 xml synthetic custom xml_nolibxml"
-# FIXME disable x86 if hwloc_have_cpuid!=yes?
+    hwloc_components="noos xml synthetic custom xml_nolibxml"
 
     #
     # Check OS support
@@ -746,6 +745,31 @@ EOF])
     fi
     # don't add LIBS/CFLAGS yet, depends on plugins
 
+    # Try to compile the cpuid inlines
+    AC_MSG_CHECKING([for cpuid])
+    old_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -I$HWLOC_top_srcdir/include"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+        #include <stdio.h>
+        #define __hwloc_inline
+        #include <private/cpuid.h>
+      ]], [[
+        if (hwloc_have_cpuid()) {
+          unsigned eax = 0, ebx, ecx = 0, edx;
+          hwloc_cpuid(&eax, &ebx, &ecx, &edx);
+          printf("highest cpuid %x\n", eax);
+          return 0;
+        }
+      ]])],
+      [AC_MSG_RESULT([yes])
+       AC_DEFINE(HWLOC_HAVE_CPUID, 1, [Define to 1 if you have cpuid])
+       hwloc_have_cpuid=yes],
+      [AC_MSG_RESULT([no])])
+    if test "x$hwloc_have_cpuid" = xyes; then
+      hwloc_components="$hwloc_components x86"
+    fi
+    CPPFLAGS="$old_CPPFLAGS"
+
     # Plugins require pthread_mutex, see if it needs -lpthread
     hwloc_pthread_mutex_happy=no
     # Try without explicit -lpthread first
@@ -850,28 +874,6 @@ EOF])
     AC_SUBST(HWLOC_EMBEDDED_CPPFLAGS)
     AC_SUBST(HWLOC_EMBEDDED_LDADD)
     AC_SUBST(HWLOC_EMBEDDED_LIBS)
-
-    # Try to compile the cpuid inlines
-    AC_MSG_CHECKING([for cpuid])
-    old_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -I$HWLOC_top_srcdir/include"
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-        #include <stdio.h>
-        #define __hwloc_inline
-        #include <private/cpuid.h>
-      ]], [[
-        if (hwloc_have_cpuid()) {
-          unsigned eax = 0, ebx, ecx = 0, edx;
-          hwloc_cpuid(&eax, &ebx, &ecx, &edx);
-          printf("highest cpuid %x\n", eax);
-          return 0;
-        }
-      ]])],
-      [AC_MSG_RESULT([yes])
-       AC_DEFINE(HWLOC_HAVE_CPUID, 1, [Define to 1 if you have cpuid])
-       hwloc_have_cpuid=yes],
-      [AC_MSG_RESULT([no])])
-    CPPFLAGS="$old_CPPFLAGS"
 
     # Always generate these files
     AC_CONFIG_FILES(
