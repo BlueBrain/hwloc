@@ -38,7 +38,6 @@ hwloc_noos_component_instantiate(struct hwloc_topology *topology,
   if (!backend)
     return NULL;
   backend->discover = hwloc_look_noos;
-  backend->is_thissystem = 1;
   return backend;
 }
 
