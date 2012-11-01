@@ -352,6 +352,7 @@ hwloc_core_component_force_enable(struct hwloc_topology *topology,
 static int
 hwloc_core_component_try_enable(struct hwloc_topology *topology,
 				struct hwloc_core_component *comp,
+				const char *comparg,
 				unsigned *excludes,
 				int envvar_forced,
 				int verbose_errors)
@@ -366,7 +367,7 @@ hwloc_core_component_try_enable(struct hwloc_topology *topology,
     return -1;
   }
 
-  backend = comp->instantiate(topology, comp, NULL, NULL, NULL);
+  backend = comp->instantiate(topology, comp, comparg, NULL, NULL);
   if (!backend) {
     if (verbose_errors)
       fprintf(stderr, "Failed to instantiate component `%s'\n", comp->name);
@@ -404,6 +405,7 @@ hwloc_core_components_enable_others(struct hwloc_topology *topology)
     while (*env) {
       s = strcspn(env, ",");
       if (s) {
+	char *arg;
 	char c;
 	/* save the last char and replace with \0 */
 	c = env[s];
@@ -414,9 +416,15 @@ hwloc_core_components_enable_others(struct hwloc_topology *topology)
 	  break;
 	}
 
+	arg = strchr(env, '=');
+	if (arg) {
+	  *arg = '\0';
+	  arg++;
+	}
+
 	comp = hwloc_core_component_find(-1, env);
 	if (comp) {
-	  hwloc_core_component_try_enable(topology, comp, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings on conflicts */);
+	  hwloc_core_component_try_enable(topology, comp, arg, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings on conflicts */);
 	} else {
 	  fprintf(stderr, "Cannot find component `%s'\n", env);
 	}
@@ -435,7 +443,7 @@ hwloc_core_components_enable_others(struct hwloc_topology *topology)
   if (tryall) {
     comp = hwloc_core_components;
     while (NULL != comp) {
-      hwloc_core_component_try_enable(topology, comp, &excludes, 0 /* defaults, not envvar forced */, 0 /* defaults don't need warnings on conflicts */);
+      hwloc_core_component_try_enable(topology, comp, NULL, &excludes, 0 /* defaults, not envvar forced */, 0 /* defaults don't need warnings on conflicts */);
       comp = comp->next;
     }
   }

@@ -990,6 +990,10 @@ following environment variables.
   trying to enable all remaining components.
   If <tt>stop</tt> is met, the enabling immediately stops.
   See \ref plugins for details.
+  The <tt>xml</tt> component may be followed by a XML file to load
+  (<tt>xml=file.xml</tt>).
+  The synthetic component may be followed by a synthetic topology
+  description (<tt>synthetic=node:2 pu:3</tt>).
   </dd>
 
 <dt>HWLOC_COMPONENTS_VERBOSE=1</dt>
