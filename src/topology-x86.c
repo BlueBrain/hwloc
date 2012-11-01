@@ -354,11 +354,13 @@ static void look_proc(struct procinfo *infos, unsigned highest_cpuid, unsigned h
     infos->otherids = NULL;
 }
 
-/* Analyse information stored in infos, and build topology levels accordingly */
-static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigned nbprocs)
+/* Analyse information stored in infos, and build/annotate topology levels accordingly */
+static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigned nbprocs,
+		      int fulldiscovery)
 {
   hwloc_bitmap_t complete_cpuset = hwloc_bitmap_alloc();
   unsigned i, j, l, level, type;
+  unsigned nbsockets = 0;
   int one = -1;
 
   for (i = 0; i < nbprocs; i++)
@@ -372,8 +374,13 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
     return;
   }
 
+  /* Ideally, when fulldiscovery=0, we could add any object that doesn't exist yet.
+   * But what if the x86 and the native backends disagree because one is buggy? Which one to trust?
+   * Only annotate existing objects for now.
+   */
+
   /* Look for sockets */
-  {
+  if (fulldiscovery) {
     hwloc_bitmap_t sockets_cpuset = hwloc_bitmap_dup(complete_cpuset);
     hwloc_bitmap_t socket_cpuset;
     hwloc_obj_t socket;
@@ -399,12 +406,65 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
       hwloc_debug_1arg_bitmap("os socket %u has cpuset %s\n",
           socketid, socket_cpuset);
       hwloc_insert_object_by_cpuset(topology, socket);
+      nbsockets++;
     }
     hwloc_bitmap_free(sockets_cpuset);
+
+  } else {
+    /* Annotate sockets previously-existing sockets */
+    hwloc_obj_t socket = NULL;
+    int same = 1;
+    nbsockets = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_SOCKET);
+    /* check whether all sockets have the same info */
+    for(i=1; i<nbprocs; i++) {
+      if (strcmp(infos[i].cpumodel, infos[0].cpumodel)) {
+	same = 0;
+	break;
+      }
+    }
+    /* now iterate over sockets and annotate them */
+    while ((socket = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_SOCKET, socket)) != NULL) {
+      if (socket->os_index == (unsigned) -1) {
+	/* try to fix the socket OS index if unknown.
+	 * FIXME: ideally, we should check all bits in case x86 and the native backend disagree.
+	 */
+	for(i=0; i<nbprocs; i++) {
+	  if (hwloc_bitmap_isset(socket->cpuset, i)) {
+	    socket->os_index = infos[i].socketid;
+	    break;
+	  }
+	}
+      }
+      if (!hwloc_obj_get_info_by_name(socket, "CPUModel")) {
+	/* add a CPUModel info */
+	for(i=0; i<nbprocs; i++)
+	  /* if there's a single socket, it's the one we want.
+	   * if the index is ok, it's the one we want.
+	   * if the index is unknown but all sockets have the same id, that's fine
+	   */
+	  if (nbsockets == 1 || infos[i].socketid == socket->os_index || (same && socket->os_index == (unsigned) -1)) {
+	    if (infos[i].cpumodel[0]) {
+	      const char *c = infos[i].cpumodel;
+	      while (*c == ' ')
+		c++;
+	      hwloc_obj_add_info(socket, "CPUModel", c);
+	    }
+	    break;
+	  }
+      }
+    }
+  }
+  /* If there was no socket, annotate the Machine instead */
+  if ((!nbsockets) && infos[0].cpumodel[0]) {
+    const char *c = infos[0].cpumodel;
+    while (*c == ' ')
+      c++;
+    hwloc_obj_add_info(hwloc_get_root_obj(topology), "CPUModel", c);
   }
 
+
   /* Look for Numa nodes inside sockets */
-  {
+  if (fulldiscovery) {
     hwloc_bitmap_t nodes_cpuset = hwloc_bitmap_dup(complete_cpuset);
     hwloc_bitmap_t node_cpuset;
     hwloc_obj_t node;
@@ -440,7 +500,7 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
   }
 
   /* Look for Compute units inside sockets */
-  {
+  if (fulldiscovery) {
     hwloc_bitmap_t units_cpuset = hwloc_bitmap_dup(complete_cpuset);
     hwloc_bitmap_t unit_cpuset;
     hwloc_obj_t unit;
@@ -506,7 +566,7 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
   }
 
   /* Look for cores */
-  {
+  if (fulldiscovery) {
     hwloc_bitmap_t cores_cpuset = hwloc_bitmap_dup(complete_cpuset);
     hwloc_bitmap_t core_cpuset;
     hwloc_obj_t core;
@@ -550,7 +610,7 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
         level = infos[i].cache[j].level;
 
   /* Look for known types */
-  while (level > 0) {
+  if (fulldiscovery) while (level > 0) {
     for (type = 1; type <= 3; type++) {
       /* Look for caches of that type at level level */
       {
@@ -660,7 +720,7 @@ static void hwloc_x86_os_state_restore(hwloc_x86_os_state_t *state __hwloc_attri
 #define AMD_ECX ('c' | ('A'<<8) | ('M'<<16) | ('D'<<24))
 
 static
-int hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs)
+int hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs, int fulldiscovery)
 {
   unsigned eax, ebx, ecx = 0, edx;
   hwloc_bitmap_t orig_cpuset;
@@ -747,8 +807,8 @@ int hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs)
       hwloc_bitmap_free(cpuset);
       hooks.set_thisthread_cpubind(topology, orig_cpuset, 0);
       hwloc_bitmap_free(orig_cpuset);
-      summarize(topology, infos, nbprocs);
-      ret = 1; /* success */
+      summarize(topology, infos, nbprocs, fulldiscovery);
+      ret = fulldiscovery; /* success, but objects added only if fulldiscovery */
       goto out_with_os_state;
     }
   }
@@ -767,8 +827,8 @@ int hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs)
       hwloc_bitmap_free(cpuset);
       hooks.set_thisproc_cpubind(topology, orig_cpuset, 0);
       hwloc_bitmap_free(orig_cpuset);
-      summarize(topology, infos, nbprocs);
-      ret = 1; /* success */
+      summarize(topology, infos, nbprocs, fulldiscovery);
+      ret = fulldiscovery; /* success, but objects added only if fulldiscovery */
       goto out_with_os_state;
     }
   }
@@ -792,20 +852,25 @@ hwloc_x86_discover(struct hwloc_backend *backend)
 {
   struct hwloc_topology *topology = backend->topology;
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
+  int ret;
 
   if (!topology->is_thissystem) {
     hwloc_debug("%s", "\nno x86 detection (not thissystem)\n");
     return 0;
   }
 
-  if (topology->levels[0][0]->cpuset)
-    /* somebody discovered things */
+  if (topology->levels[0][0]->cpuset) {
+    /* somebody discovered things, just add some infos to it */
+    ret = hwloc_look_x86(topology, nbprocs, 0);
+    if (ret)
+      hwloc_obj_add_info(topology->levels[0][0], "Backend", "x86");
     return 0;
+  }
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
 #if defined(HWLOC_HAVE_CPUID)
-  hwloc_look_x86(topology, nbprocs);
+  hwloc_look_x86(topology, nbprocs, 1);
   /* if failed, just continue and create PUs */
 #endif
 
@@ -826,6 +891,7 @@ hwloc_x86_component_instantiate(struct hwloc_topology *topology,
   backend = hwloc_backend_alloc(topology, component);
   if (!backend)
     return NULL;
+  backend->flags = HWLOC_BACKEND_FLAG_NEED_LEVELS;
   backend->discover = hwloc_x86_discover;
   return backend;
 }
