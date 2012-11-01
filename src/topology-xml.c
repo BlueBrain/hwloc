@@ -1145,6 +1145,7 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_xml_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   "xml",
+  HWLOC_CORE_COMPONENT_TYPE_OS | HWLOC_CORE_COMPONENT_TYPE_GLOBAL | HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
   hwloc_xml_component_instantiate,
   30,
   NULL

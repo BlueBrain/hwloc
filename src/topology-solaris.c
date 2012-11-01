@@ -782,6 +782,7 @@ hwloc_solaris_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_solaris_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "solaris",
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_solaris_component_instantiate,
   50,
   NULL

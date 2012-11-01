@@ -377,6 +377,7 @@ hwloc_osf_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_osf_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "osf",
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_osf_component_instantiate,
   50,
   NULL

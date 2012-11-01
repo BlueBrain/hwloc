@@ -3947,6 +3947,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_linux_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "linux",
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_linux_component_instantiate,
   50,
   NULL

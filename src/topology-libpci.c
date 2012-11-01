@@ -574,6 +574,7 @@ hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_libpci_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
   "libpci",
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_libpci_component_instantiate,
   20,
   NULL

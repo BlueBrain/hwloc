@@ -76,6 +76,7 @@ hwloc_custom_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_custom_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   "custom",
+  HWLOC_CORE_COMPONENT_TYPE_OS | HWLOC_CORE_COMPONENT_TYPE_GLOBAL | HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
   hwloc_custom_component_instantiate,
   30,
   NULL

@@ -293,6 +293,7 @@ hwloc_hpux_component_instantiate(struct hwloc_topology *topology,
 static struct hwloc_core_component hwloc_hpux_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "hpux",
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_hpux_component_instantiate,
   50,
   NULL

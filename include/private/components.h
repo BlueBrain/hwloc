@@ -17,13 +17,13 @@ struct hwloc_backend;
  */
 
 typedef enum hwloc_core_component_type_e {
-  HWLOC_CORE_COMPONENT_TYPE_OS, /* OS backend, and no-OS support.
-		       */
-  HWLOC_CORE_COMPONENT_TYPE_GLOBAL, /* xml, synthetic or custom.
-			   * no additional backend is used.
-			   */
-  HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, /* pci, etc.
-			       */
+  HWLOC_CORE_COMPONENT_TYPE_OS = (1<<0), /* OS backend, and no-OS support.
+					  */
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL = (1<<1), /* xml, synthetic or custom.
+					      * no additional backend is used.
+					      */
+  HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL = (1<<2), /* pci, etc.
+						  */
   /* This value is only here so that we can end the enum list without
      a comma (thereby preventing compiler warnings) */
   HWLOC_CORE_COMPONENT_TYPE_MAX
@@ -32,6 +32,7 @@ typedef enum hwloc_core_component_type_e {
 struct hwloc_core_component {
   hwloc_core_component_type_t type;
   const char *name;
+  unsigned excludes; /* ORed set of (1<<HWLOC_CORE_COMPONENT_TYPE_*) */
   struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
 
   unsigned priority; /* used to sort topology->components and topology->additional_backends, higher priority first.
