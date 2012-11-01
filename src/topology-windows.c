@@ -486,6 +486,10 @@ hwloc_look_windows(struct hwloc_backend *backend)
 
   HMODULE kernel32;
 
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
   GetSystemInfo(&SystemInfo);

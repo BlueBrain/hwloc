@@ -45,6 +45,8 @@ hwloc_look_custom(struct hwloc_backend *backend)
 {
   struct hwloc_topology *topology = backend->topology;
 
+  assert(!topology->levels[0][0]->cpuset);
+
   if (!topology->levels[0][0]->first_child) {
     errno = EINVAL;
     return -1;

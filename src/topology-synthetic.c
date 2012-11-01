@@ -351,6 +351,8 @@ hwloc_look_synthetic(struct hwloc_backend *backend)
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
   unsigned first_cpu = 0, i;
 
+  assert(!topology->levels[0][0]->cpuset);
+
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
   topology->support.discovery->pu = 1;

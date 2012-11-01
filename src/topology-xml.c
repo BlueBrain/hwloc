@@ -668,6 +668,8 @@ hwloc_look_xml(struct hwloc_backend *backend)
   hwloc_localeswitch_declare;
   int ret;
 
+  assert(!topology->levels[0][0]->cpuset);
+
   hwloc_localeswitch_init();
 
   data->first_distances = data->last_distances = NULL;
