@@ -318,6 +318,32 @@ hwloc_core_component_find(int type /* hwloc_component_type_t or -1 if any */,
   return hwloc_core_component_find_next(type, name, NULL);
 }
 
+/* used by set_xml(), set_synthetic(), ... environment variables, ... to force the first backend */
+int
+hwloc_core_component_force_enable(struct hwloc_topology *topology,
+				  int envvar_forced,
+				  int type, const char *name,
+				  const void *data1, const void *data2, const void *data3)
+{
+  struct hwloc_core_component *comp;
+  struct hwloc_backend *backend;
+
+  comp = hwloc_core_component_find(type, name);
+  if (!comp) {
+    errno = ENOSYS;
+    return -1;
+  }
+
+  backend = comp->instantiate(topology, comp, data1, data2, data3);
+  if (backend) {
+    backend->envvar_forced = envvar_forced;
+    if (topology->backend)
+      hwloc_backends_reset(topology);
+    return hwloc_backend_enable(topology, backend);
+  } else
+    return -1;
+}
+
 void
 hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
@@ -359,6 +385,7 @@ hwloc_backend_alloc(struct hwloc_topology *topology,
   backend->is_custom = 0;
   backend->is_thissystem = -1;
   backend->next = NULL;
+  backend->envvar_forced = 0;
   return backend;
 }
 

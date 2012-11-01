@@ -440,6 +440,7 @@ extern "C" {
 
 #define hwloc_core_component_find HWLOC_NAME(core_component_find)
 #define hwloc_core_component_find_next HWLOC_NAME(core_component_find_next)
+#define hwloc_core_component_force_enable HWLOC_NAME(core_component_force_enable)
 
 #define hwloc_backend HWLOC_NAME(backend)
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)

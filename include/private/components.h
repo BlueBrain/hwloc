@@ -41,6 +41,10 @@ struct hwloc_core_component {
 /* Used by the core to decide which component to instantiate */
 extern struct hwloc_core_component * hwloc_core_component_find(int type, const char *name);
 extern struct hwloc_core_component * hwloc_core_component_find_next(int type, const char *name, struct hwloc_core_component *prev);
+extern int hwloc_core_component_force_enable(struct hwloc_topology *topology,
+					     int envvar_forced, /* 1 if forced through envvar, 0 if forced through API */
+					     int type, const char *name,
+					     const void *data1, const void *data2, const void *data3);
 
 /************
  * Backends *
@@ -77,6 +81,8 @@ struct hwloc_backend {
   void * private_data;
   int is_custom; /* shortcut on !strcmp(..->component->name, "custom") */
   int is_thissystem; /* -1 if doesn't matter, 0 or 1 if should enforce thissystem when enabling */
+
+  int envvar_forced; /* 1 if forced through envvar, 0 otherwise */
 
   struct hwloc_backend * next; /* Used internally to list additional backends by priority on topology->additional_backends.
 				* unused (NULL) for other backends (on topology->backend).
