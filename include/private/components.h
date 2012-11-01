@@ -72,7 +72,7 @@ struct hwloc_backend {
   struct hwloc_core_component * component; /* Reserved for the core */
   struct hwloc_topology * topology;
 
-  unsigned long flags; /* unused for now */
+  unsigned long flags; /* OR'ed set of HWLOC_BACKEND_FLAG_* */
 
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
@@ -96,6 +96,10 @@ struct hwloc_backend {
   struct hwloc_backend * next; /* Used internally to list backends topology->backends.
 				* Reserved for the core.
 				*/
+};
+
+enum hwloc_backend_flag_e {
+  HWLOC_BACKEND_FLAG_NEED_LEVELS = (1<<0) /* Levels should be reconnected before this backend discover() is used */
 };
 
 /* Allocate a backend structure, set good default values, initialize backend->component.

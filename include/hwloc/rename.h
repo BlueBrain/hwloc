@@ -452,6 +452,9 @@ extern "C" {
 #define hwloc_backends_get_obj_cpuset HWLOC_NAME(backends_get_obj_cpuset)
 #define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
 
+#define hwloc_backend_flag_e HWLOC_NAME(backend_flag_e)
+#define HWLOC_BACKEND_FLAG_NEED_LEVELS HWLOC_NAME_CAPS(BACKEND_FLAG_NEED_LEVELS)
+
 #define hwloc_components_init HWLOC_NAME(components_init)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 

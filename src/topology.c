@@ -2012,6 +2012,7 @@ hwloc_discover(struct hwloc_topology *topology)
   struct hwloc_backend *backend;
   int gotsomeio = 0;
   unsigned discoveries = 0;
+  unsigned need_reconnect = 0;
 
   /* Raw detection, from coarser levels to finer levels for more efficiency.  */
 
@@ -2072,11 +2073,20 @@ hwloc_discover(struct hwloc_topology *topology)
     if (!backend->discover)
       goto next_cpubackend;
 
+    if (need_reconnect && (backend->flags & HWLOC_BACKEND_FLAG_NEED_LEVELS)) {
+      hwloc_connect_children(topology->levels[0][0]);
+      if (hwloc_connect_levels(topology) < 0)
+	return -1;
+      need_reconnect = 0;
+    }
+
     err = backend->discover(backend);
     if (err >= 0) {
       if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
         gotsomeio += err;
       discoveries++;
+      if (err > 0)
+	need_reconnect++;
     }
     print_objects(topology, 0, topology->levels[0][0]);
 
@@ -2157,6 +2167,8 @@ next_cpubackend:
 
   hwloc_connect_children(topology->levels[0][0]);
 
+  need_reconnect = 0;
+
   print_objects(topology, 0, topology->levels[0][0]);
 
   /* Explore the resulting topology level by level.  */
@@ -2181,9 +2193,19 @@ next_cpubackend:
     if (!backend->discover)
       goto next_noncpubackend;
 
+    if (need_reconnect && (backend->flags & HWLOC_BACKEND_FLAG_NEED_LEVELS)) {
+      hwloc_connect_children(topology->levels[0][0]);
+      if (hwloc_connect_levels(topology) < 0)
+	return -1;
+      need_reconnect = 0;
+    }
+
     err = backend->discover(backend);
-    if (err >= 0)
+    if (err >= 0) {
       gotsomeio += err;
+      if (err > 0)
+	need_reconnect++;
+    }
     print_objects(topology, 0, topology->levels[0][0]);
 
 next_noncpubackend:
@@ -2197,8 +2219,15 @@ next_noncpubackend:
     hwloc_connect_children(topology->levels[0][0]);
     if (hwloc_connect_levels(topology) < 0)
       return -1;
+    need_reconnect = 0;
     print_objects(topology, 0, topology->levels[0][0]);
     hwloc_propagate_bridge_depth(topology, topology->levels[0][0], 0);
+  }
+
+  if (need_reconnect) {
+    hwloc_connect_children(topology->levels[0][0]);
+    if (hwloc_connect_levels(topology) < 0)
+      return -1;
   }
 
   /*
