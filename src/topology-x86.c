@@ -850,6 +850,7 @@ hwloc_x86_discover(struct hwloc_backend *backend)
 {
   struct hwloc_topology *topology = backend->topology;
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
+  int alreadypus = 0;
   int ret;
 
   if (!topology->is_thissystem) {
@@ -858,19 +859,29 @@ hwloc_x86_discover(struct hwloc_backend *backend)
   }
 
   if (topology->levels[0][0]->cpuset) {
-    /* somebody discovered things, just add some infos to it */
+    /* somebody else discovered things */
+    if (topology->nb_levels == 2 && topology->level_nbobjects[1] == nbprocs) {
+      /* only PUs were discovered, as much as we would, complete the topology with everything else */
+      alreadypus = 1;
+      goto fulldiscovery;
+    }
+
+    /* several object types were added, we can't easily complete, just annotate a bit */
     ret = hwloc_look_x86(topology, nbprocs, 0);
     if (ret)
       hwloc_obj_add_info(topology->levels[0][0], "Backend", "x86");
     return 0;
+  } else {
+    /* topology is empty, initialize it */
+    hwloc_alloc_obj_cpusets(topology->levels[0][0]);
   }
 
-  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
-
+fulldiscovery:
   hwloc_look_x86(topology, nbprocs, 1);
   /* if failed, just continue and create PUs */
 
-  hwloc_setup_pu_level(topology, nbprocs);
+  if (!alreadypus)
+    hwloc_setup_pu_level(topology, nbprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "x86");
   return 1;
@@ -897,7 +908,7 @@ static struct hwloc_core_component hwloc_x86_core_component = {
   "x86",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_x86_component_instantiate,
-  47, /* between native and FreeBSD */
+  45, /* between native and no_os */
   NULL
 };
 
