@@ -835,7 +835,7 @@ static struct hwloc_core_component hwloc_x86_core_component = {
   "x86",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_x86_component_instantiate,
-  45, /* between native and noos */
+  47, /* between native and FreeBSD */
   NULL
 };
 

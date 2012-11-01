@@ -180,14 +180,13 @@ hwloc_look_freebsd(struct hwloc_backend *backend)
   struct hwloc_topology *topology = backend->topology;
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
 
-  if (topology->levels[0][0]->cpuset)
-    /* somebody discovered things */
-    return 0;
+  if (!topology->levels[0][0]->cpuset) {
+    /* Nobody (even the x86 backend) created objects yet, setup basic objects */
+    hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+    hwloc_setup_pu_level(topology, nbprocs);
+  }
 
-  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
-
-  hwloc_setup_pu_level(topology, nbprocs);
-
+  /* Add FreeBSD specific information */
 #ifdef HAVE__SC_LARGE_PAGESIZE
   topology->levels[0][0]->attr->machine.huge_page_size_kB = sysconf(_SC_LARGE_PAGESIZE);
 #endif
@@ -243,7 +242,7 @@ static struct hwloc_core_component hwloc_freebsd_core_component = {
   "freebsd",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_freebsd_component_instantiate,
-  50,
+  44, /* below x86, above noos */
   NULL
 };
 
