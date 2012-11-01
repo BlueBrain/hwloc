@@ -575,7 +575,7 @@ static struct hwloc_core_component hwloc_libpci_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
   "libpci",
   hwloc_libpci_component_instantiate,
-  10,
+  20,
   NULL
 };
 

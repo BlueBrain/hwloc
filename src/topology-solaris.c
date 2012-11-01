@@ -779,7 +779,7 @@ static struct hwloc_core_component hwloc_solaris_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "solaris",
   hwloc_solaris_component_instantiate,
-  10,
+  50,
   NULL
 };
 

@@ -795,7 +795,7 @@ static struct hwloc_core_component hwloc_windows_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "windows",
   hwloc_windows_component_instantiate,
-  10,
+  50,
   NULL
 };
 

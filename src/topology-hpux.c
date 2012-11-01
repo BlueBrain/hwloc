@@ -290,7 +290,7 @@ static struct hwloc_core_component hwloc_hpux_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "hpux",
   hwloc_hpux_component_instantiate,
-  10,
+  50,
   NULL
 };
 

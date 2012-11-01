@@ -1144,7 +1144,7 @@ static struct hwloc_core_component hwloc_xml_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   "xml",
   hwloc_xml_component_instantiate,
-  10,
+  30,
   NULL
 };
 

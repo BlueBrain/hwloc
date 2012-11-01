@@ -41,7 +41,7 @@ static struct hwloc_core_component hwloc_noos_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "no_os",
   hwloc_noos_component_instantiate,
-  0, /* lowest priority */
+  40, /* lower than native OS component, higher than globals */
   NULL
 };
 

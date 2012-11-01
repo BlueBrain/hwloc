@@ -374,7 +374,7 @@ static struct hwloc_core_component hwloc_osf_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "osf",
   hwloc_osf_component_instantiate,
-  10,
+  50,
   NULL
 };
 

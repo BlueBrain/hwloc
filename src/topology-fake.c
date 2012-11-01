@@ -25,7 +25,7 @@ static struct hwloc_core_component hwloc_fake_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, /* so that it's always enabled when using the OS discovery */
   "fake",
   hwloc_fake_component_instantiate,
-  10,
+  100, /* make sure it's loaded before anything conflicting excludes it */
   NULL
 };
 

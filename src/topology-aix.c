@@ -815,7 +815,7 @@ static struct hwloc_core_component hwloc_aix_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "aix",
   hwloc_aix_component_instantiate,
-  10,
+  50,
   NULL
 };
 

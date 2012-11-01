@@ -3944,7 +3944,7 @@ static struct hwloc_core_component hwloc_linux_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "linux",
   hwloc_linux_component_instantiate,
-  10,
+  50,
   NULL
 };
 

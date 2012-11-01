@@ -292,7 +292,7 @@ static struct hwloc_core_component hwloc_darwin_core_component = {
   HWLOC_CORE_COMPONENT_TYPE_OS,
   "darwin",
   hwloc_darwin_component_instantiate,
-  10,
+  50,
   NULL
 };
 
