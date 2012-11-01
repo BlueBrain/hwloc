@@ -91,6 +91,10 @@ void hwloc_add_uname_info(struct hwloc_topology *topology __hwloc_attribute_unus
   if (uname(&utsname) < 0)
     return;
 
+  if (hwloc_obj_get_info_by_name(topology->levels[0][0], "OSName"))
+    /* don't annotate twice */
+    return;
+
   hwloc_obj_add_info(topology->levels[0][0], "OSName", utsname.sysname);
   hwloc_obj_add_info(topology->levels[0][0], "OSRelease", utsname.release);
   hwloc_obj_add_info(topology->levels[0][0], "OSVersion", utsname.version);
