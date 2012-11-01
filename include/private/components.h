@@ -192,6 +192,8 @@ HWLOC_DECLSPEC extern const struct hwloc_component hwloc_libpci_component;
 
 HWLOC_DECLSPEC extern const struct hwloc_component hwloc_synthetic_component;
 
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_x86_component;
+
 HWLOC_DECLSPEC extern const struct hwloc_component hwloc_noos_component;
 
 HWLOC_DECLSPEC extern const struct hwloc_component hwloc_custom_component;

@@ -165,7 +165,8 @@ EOF])
     # List of components to be built, either statically or dynamically.
     # To be enlarged below.
     #
-    hwloc_components="noos xml synthetic custom xml_nolibxml"
+    hwloc_components="noos x86 xml synthetic custom xml_nolibxml"
+# FIXME disable x86 if hwloc_have_cpuid!=yes?
 
     #
     # Check OS support

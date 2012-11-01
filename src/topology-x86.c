@@ -658,12 +658,10 @@ static void hwloc_x86_os_state_restore(hwloc_x86_os_state_t *state __hwloc_attri
 #define AMD_EBX ('A' | ('u'<<8) | ('t'<<16) | ('h'<<24))
 #define AMD_EDX ('e' | ('n'<<8) | ('t'<<16) | ('i'<<24))
 #define AMD_ECX ('c' | ('A'<<8) | ('M'<<16) | ('D'<<24))
-#endif
 
-void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs __hwloc_attribute_unused)
+static
+int hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs)
 {
-    /* This function must always be here, but it's ok if it's empty. */
-#if defined(HWLOC_HAVE_CPUID)
   unsigned eax, ebx, ecx = 0, edx;
   hwloc_bitmap_t orig_cpuset;
   unsigned i;
@@ -677,18 +675,21 @@ void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs __hwloc_at
   struct hwloc_binding_hooks hooks;
   struct hwloc_topology_support support;
   struct hwloc_topology_membind_support memsupport __hwloc_attribute_unused;
+  int ret = -1;
 
   memset(&hooks, 0, sizeof(hooks));
   support.membind = &memsupport;
   hwloc_set_native_binding_hooks(&hooks, &support);
+  if (!(hooks.get_thisproc_cpubind && hooks.set_thisproc_cpubind)
+   && !(hooks.get_thisthread_cpubind && hooks.set_thisthread_cpubind))
+    goto out;
 
   if (!hwloc_have_cpuid())
     goto out;
 
   infos = malloc(sizeof(struct procinfo) * nbprocs);
-  if (NULL == infos) {
-      goto out;
-  }
+  if (NULL == infos)
+    goto out;
 
   eax = 0x00;
   hwloc_cpuid(&eax, &ebx, &ecx, &edx);
@@ -747,6 +748,7 @@ void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs __hwloc_at
       hooks.set_thisthread_cpubind(topology, orig_cpuset, 0);
       hwloc_bitmap_free(orig_cpuset);
       summarize(topology, infos, nbprocs);
+      ret = 1; /* success */
       goto out_with_os_state;
     }
   }
@@ -766,6 +768,7 @@ void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs __hwloc_at
       hooks.set_thisproc_cpubind(topology, orig_cpuset, 0);
       hwloc_bitmap_free(orig_cpuset);
       summarize(topology, infos, nbprocs);
+      ret = 1; /* success */
       goto out_with_os_state;
     }
   }
@@ -778,10 +781,67 @@ out_with_infos:
   if (NULL != infos) {
       free(infos);
   }
-#endif /* HWLOC_HAVE_CPUID */
 
 out:
+  return ret;
+}
+#endif /* HWLOC_HAVE_CPUID */
+
+static int
+hwloc_x86_discover(struct hwloc_backend *backend)
+{
+  struct hwloc_topology *topology = backend->topology;
+  unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
+
+  if (!topology->is_thissystem) {
+    hwloc_debug("%s", "\nno x86 detection (not thissystem)\n");
+    return 0;
+  }
+
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
+#if defined(HWLOC_HAVE_CPUID)
+  hwloc_look_x86(topology, nbprocs);
+  /* if failed, just continue and create PUs */
+#endif
+
   hwloc_setup_pu_level(topology, nbprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "x86");
+  return 1;
 }
+
+static struct hwloc_backend *
+hwloc_x86_component_instantiate(struct hwloc_topology *topology,
+				struct hwloc_core_component *component,
+				const void *_data1 __hwloc_attribute_unused,
+				const void *_data2 __hwloc_attribute_unused,
+				const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(topology, component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_x86_discover;
+  return backend;
+}
+
+static struct hwloc_core_component hwloc_x86_core_component = {
+  HWLOC_CORE_COMPONENT_TYPE_OS,
+  "x86",
+  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
+  hwloc_x86_component_instantiate,
+  45, /* between native and noos */
+  NULL
+};
+
+const struct hwloc_component hwloc_x86_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_CORE,
+  0,
+  &hwloc_x86_core_component
+};

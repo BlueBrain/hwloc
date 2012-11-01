@@ -186,7 +186,7 @@ hwloc_look_freebsd(struct hwloc_backend *backend)
 
   hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
-  hwloc_look_x86(topology, nbprocs);
+  hwloc_setup_pu_level(topology, nbprocs);
 
 #ifdef HAVE__SC_LARGE_PAGESIZE
   topology->levels[0][0]->attr->machine.huge_page_size_kB = sysconf(_SC_LARGE_PAGESIZE);
@@ -194,6 +194,7 @@ hwloc_look_freebsd(struct hwloc_backend *backend)
 #ifdef HAVE_SYSCTL
   hwloc_freebsd_node_meminfo_info(topology);
 #endif
+  hwloc_obj_add_info(topology->levels[0][0], "Backend", "FreeBSD");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
   return 1;
