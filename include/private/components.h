@@ -17,8 +17,8 @@ struct hwloc_backend;
  */
 
 typedef enum hwloc_core_component_type_e {
-  HWLOC_CORE_COMPONENT_TYPE_OS = (1<<0), /* OS backend, and no-OS support.
-					  */
+  HWLOC_CORE_COMPONENT_TYPE_CPU = (1<<0), /* CPU-only discovery through the OS, or generic no-OS support.
+					   */
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL = (1<<1), /* xml, synthetic or custom.
 					      * no additional backend is used.
 					      */
@@ -75,7 +75,7 @@ struct hwloc_backend {
    * maybe NULL if type is HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL. */
   int (*discover)(struct hwloc_backend *backend);
 
-  /* used by the libpci backend to retrieve pci device locality from the OS backend */
+  /* used by the libpci backend to retrieve pci device locality from the OS/cpu backend */
   int (*get_obj_cpuset)(struct hwloc_backend *backend, struct hwloc_backend *caller, struct hwloc_obj *obj, hwloc_bitmap_t cpuset); /* may be NULL */
 
   /* used by additional backends to notify other backend when new objects are added.

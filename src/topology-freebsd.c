@@ -238,7 +238,7 @@ hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
 }
 
 static struct hwloc_core_component hwloc_freebsd_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_OS,
+  HWLOC_CORE_COMPONENT_TYPE_CPU,
   "freebsd",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_freebsd_component_instantiate,

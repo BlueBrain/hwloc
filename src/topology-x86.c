@@ -904,7 +904,7 @@ hwloc_x86_component_instantiate(struct hwloc_topology *topology,
 }
 
 static struct hwloc_core_component hwloc_x86_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_OS,
+  HWLOC_CORE_COMPONENT_TYPE_CPU,
   "x86",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_x86_component_instantiate,

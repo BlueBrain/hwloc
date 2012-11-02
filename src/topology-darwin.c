@@ -292,7 +292,7 @@ hwloc_darwin_component_instantiate(struct hwloc_topology *topology,
 }
 
 static struct hwloc_core_component hwloc_darwin_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_OS,
+  HWLOC_CORE_COMPONENT_TYPE_CPU,
   "darwin",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_darwin_component_instantiate,

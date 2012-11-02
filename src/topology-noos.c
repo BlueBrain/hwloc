@@ -42,7 +42,7 @@ hwloc_noos_component_instantiate(struct hwloc_topology *topology,
 }
 
 static struct hwloc_core_component hwloc_noos_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_OS,
+  HWLOC_CORE_COMPONENT_TYPE_CPU,
   "no_os",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_noos_component_instantiate,

@@ -2066,7 +2066,7 @@ hwloc_discover(struct hwloc_topology *topology)
   backend = topology->backends;
   while (NULL != backend) {
     int err;
-    if (backend->component->type != HWLOC_CORE_COMPONENT_TYPE_OS
+    if (backend->component->type != HWLOC_CORE_COMPONENT_TYPE_CPU
 	&& backend->component->type != HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
       /* not yet */
       goto next_cpubackend;
@@ -2186,7 +2186,7 @@ next_cpubackend:
   backend = topology->backends;
   while (NULL != backend) {
     int err;
-    if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_OS
+    if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_CPU
 	|| backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
       /* already done above */
       goto next_noncpubackend;
@@ -2346,7 +2346,7 @@ hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_pa
 {
   return hwloc_core_component_force_enable(topology,
 					   0 /* api */,
-					   HWLOC_CORE_COMPONENT_TYPE_OS, "linux",
+					   HWLOC_CORE_COMPONENT_TYPE_CPU, "linux",
 					   fsroot_path, NULL, NULL);
 }
 
@@ -2515,7 +2515,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
     if (fsroot_path_env)
       hwloc_core_component_force_enable(topology,
 					1 /* env force */,
-					HWLOC_CORE_COMPONENT_TYPE_OS, "linux",
+					HWLOC_CORE_COMPONENT_TYPE_CPU, "linux",
 					fsroot_path_env, NULL, NULL);
   }
   {
@@ -2533,7 +2533,7 @@ hwloc_topology_load (struct hwloc_topology *topology)
     if (fsroot_path_env)
       hwloc_core_component_force_enable(topology,
 					1 /* env force */,
-					HWLOC_CORE_COMPONENT_TYPE_OS, "linux",
+					HWLOC_CORE_COMPONENT_TYPE_CPU, "linux",
 					fsroot_path_env, NULL, NULL);
   }
   if (!topology->backends) {

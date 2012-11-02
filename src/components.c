@@ -210,7 +210,7 @@ static const char *
 hwloc_core_component_type_string(hwloc_core_component_type_t type)
 {
   switch (type) {
-  case HWLOC_CORE_COMPONENT_TYPE_OS: return "OS";
+  case HWLOC_CORE_COMPONENT_TYPE_CPU: return "cpu";
   case HWLOC_CORE_COMPONENT_TYPE_GLOBAL: return "global";
   case HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL: return "additional";
   default: return "Unknown";

@@ -815,7 +815,7 @@ hwloc_aix_component_instantiate(struct hwloc_topology *topology,
 }
 
 static struct hwloc_core_component hwloc_aix_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_OS,
+  HWLOC_CORE_COMPONENT_TYPE_CPU,
   "aix",
   HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
   hwloc_aix_component_instantiate,
