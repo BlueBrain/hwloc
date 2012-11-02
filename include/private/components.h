@@ -8,32 +8,32 @@
 
 struct hwloc_backend;
 
-/*******************
- * Core components *
- *******************/
+/************************
+ * Discovery components *
+ ************************/
 
-/* Core components are components taking take of the discovery.
+/* Discovery components taking care of the discovery.
  * They are registered by generic components, either static or plugins.
  */
 
-typedef enum hwloc_core_component_type_e {
-  HWLOC_CORE_COMPONENT_TYPE_CPU = (1<<0), /* CPU-only discovery through the OS, or generic no-OS support.
+typedef enum hwloc_disc_component_type_e {
+  HWLOC_DISC_COMPONENT_TYPE_CPU = (1<<0), /* CPU-only discovery through the OS, or generic no-OS support.
 					   */
-  HWLOC_CORE_COMPONENT_TYPE_GLOBAL = (1<<1), /* xml, synthetic or custom.
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL = (1<<1), /* xml, synthetic or custom.
 					      * no additional backend is used.
 					      */
-  HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL = (1<<2), /* pci, etc.
+  HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL = (1<<2), /* pci, etc.
 						  */
   /* This value is only here so that we can end the enum list without
      a comma (thereby preventing compiler warnings) */
-  HWLOC_CORE_COMPONENT_TYPE_MAX
-} hwloc_core_component_type_t;
+  HWLOC_DISC_COMPONENT_TYPE_MAX
+} hwloc_disc_component_type_t;
 
-struct hwloc_core_component {
-  hwloc_core_component_type_t type;
+struct hwloc_disc_component {
+  hwloc_disc_component_type_t type;
   const char *name;
-  unsigned excludes; /* ORed set of (1<<HWLOC_CORE_COMPONENT_TYPE_*) */
-  struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
+  unsigned excludes; /* ORed set of (1<<HWLOC_DISC_COMPONENT_TYPE_*) */
+  struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_disc_component *component, const void *data1, const void *data2, const void *data3);
 
   unsigned priority; /* used to sort topology->components, higher priority first.
 		      * 50 for native OS components,
@@ -42,20 +42,20 @@ struct hwloc_core_component {
 		      * 30 for global components (xml/synthetic/custom),
 		      * 20 for libpci, likely less for other additional components.
 		      */
-  struct hwloc_core_component * next; /* used internally to list components by priority on topology->components */
+  struct hwloc_disc_component * next; /* used internally to list components by priority on topology->components */
 };
 
-extern int hwloc_core_component_force_enable(struct hwloc_topology *topology,
+extern int hwloc_disc_component_force_enable(struct hwloc_topology *topology,
 					     int envvar_forced, /* 1 if forced through envvar, 0 if forced through API */
 					     int type, const char *name,
 					     const void *data1, const void *data2, const void *data3);
-extern void hwloc_core_components_enable_others(struct hwloc_topology *topology);
+extern void hwloc_disc_components_enable_others(struct hwloc_topology *topology);
 
 /************
  * Backends *
  ************/
 
-/* A backend is the instantiation of a core component.
+/* A backend is the instantiation of a discovery component.
  * When a component gets enabled for a topology,
  * its instantiate() callback creates a backend.
  *
@@ -65,14 +65,14 @@ extern void hwloc_core_components_enable_others(struct hwloc_topology *topology)
  */
 
 struct hwloc_backend {
-  struct hwloc_core_component * component; /* Reserved for the core */
+  struct hwloc_disc_component * component; /* Reserved for the core */
   struct hwloc_topology * topology;
 
   unsigned long flags; /* OR'ed set of HWLOC_BACKEND_FLAG_* */
 
   /* main discovery callback.
    * returns > 0 if it modified the topology tree, -1 on error, 0 otherwise.
-   * maybe NULL if type is HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL. */
+   * maybe NULL if type is HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL. */
   int (*discover)(struct hwloc_backend *backend);
 
   /* used by the libpci backend to retrieve pci device locality from the OS/cpu backend */
@@ -101,7 +101,7 @@ enum hwloc_backend_flag_e {
 /* Allocate a backend structure, set good default values, initialize backend->component.
  * The caller will then modify whatever needed, and call hwloc_backend_enable().
  */
-HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_core_component *component);
+HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_disc_component *component);
 
 /* Enable a previously allocated and setup backend. */
 HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);
@@ -138,7 +138,7 @@ extern void hwloc_components_destroy_all(struct hwloc_topology *topology); /* de
 #define HWLOC_COMPONENT_ABI 1
 
 typedef enum hwloc_component_type_e {
-  HWLOC_COMPONENT_TYPE_CORE,	/* The data field must point to a struct hwloc_core_component. */
+  HWLOC_COMPONENT_TYPE_DISC,	/* The data field must point to a struct hwloc_disc_component. */
   HWLOC_COMPONENT_TYPE_XML,	/* The data field must point to a struct hwloc_xml_component. */
   HWLOC_COMPONENT_TYPE_MAX
 } hwloc_component_type_t;

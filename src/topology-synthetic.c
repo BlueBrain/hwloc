@@ -386,7 +386,7 @@ hwloc_synthetic_backend_disable(struct hwloc_backend *backend)
 
 static struct hwloc_backend *
 hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
-				      struct hwloc_core_component *component,
+				      struct hwloc_disc_component *component,
 				      const void *_data1,
 				      const void *_data2 __hwloc_attribute_unused,
 				      const void *_data3 __hwloc_attribute_unused)
@@ -429,10 +429,10 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
   return NULL;
 }
 
-static struct hwloc_core_component hwloc_synthetic_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
+static struct hwloc_disc_component hwloc_synthetic_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
   "synthetic",
-  HWLOC_CORE_COMPONENT_TYPE_CPU | HWLOC_CORE_COMPONENT_TYPE_GLOBAL | HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL,
+  HWLOC_DISC_COMPONENT_TYPE_CPU | HWLOC_DISC_COMPONENT_TYPE_GLOBAL | HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
   hwloc_synthetic_component_instantiate,
   30,
   NULL
@@ -440,7 +440,7 @@ static struct hwloc_core_component hwloc_synthetic_core_component = {
 
 const struct hwloc_component hwloc_synthetic_component = {
   HWLOC_COMPONENT_ABI,
-  HWLOC_COMPONENT_TYPE_CORE,
+  HWLOC_COMPONENT_TYPE_DISC,
   0,
-  &hwloc_synthetic_core_component
+  &hwloc_synthetic_disc_component
 };

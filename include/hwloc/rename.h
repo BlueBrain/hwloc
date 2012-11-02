@@ -429,17 +429,17 @@ extern "C" {
 
 /* private/components.h */
 
-#define HWLOC_CORE_COMPONENT_TYPE_CPU HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_CPU)
-#define HWLOC_CORE_COMPONENT_TYPE_GLOBAL HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_GLOBAL)
-#define HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_ADDITIONAL)
-#define HWLOC_CORE_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(CORE_COMPONENT_TYPE_MAX)
+#define HWLOC_DISC_COMPONENT_TYPE_CPU HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_CPU)
+#define HWLOC_DISC_COMPONENT_TYPE_GLOBAL HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_GLOBAL)
+#define HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_ADDITIONAL)
+#define HWLOC_DISC_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_MAX)
 
-#define hwloc_core_component_type_e HWLOC_NAME(core_component_type_e)
-#define hwloc_core_component_type_t HWLOC_NAME(core_component_type_t)
-#define hwloc_core_component HWLOC_NAME(core_component)
+#define hwloc_disc_component_type_e HWLOC_NAME(disc_component_type_e)
+#define hwloc_disc_component_type_t HWLOC_NAME(disc_component_type_t)
+#define hwloc_disc_component HWLOC_NAME(disc_component)
 
-#define hwloc_core_component_force_enable HWLOC_NAME(core_component_force_enable)
-#define hwloc_core_components_enable_others HWLOC_NAME(core_components_instantiate_others)
+#define hwloc_disc_component_force_enable HWLOC_NAME(disc_component_force_enable)
+#define hwloc_disc_components_enable_others HWLOC_NAME(disc_components_instantiate_others)
 
 #define hwloc_backend HWLOC_NAME(backend)
 #define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
@@ -456,7 +456,7 @@ extern "C" {
 #define hwloc_components_init HWLOC_NAME(components_init)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
 
-#define HWLOC_COMPONENT_TYPE_CORE HWLOC_NAME_CAPS(COMPONENT_TYPE_CORE)
+#define HWLOC_COMPONENT_TYPE_DISC HWLOC_NAME_CAPS(COMPONENT_TYPE_DISC)
 #define HWLOC_COMPONENT_TYPE_XML HWLOC_NAME_CAPS(COMPONENT_TYPE_XML)
 #define HWLOC_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(COMPONENT_TYPE_MAX)
 

@@ -2066,8 +2066,8 @@ hwloc_discover(struct hwloc_topology *topology)
   backend = topology->backends;
   while (NULL != backend) {
     int err;
-    if (backend->component->type != HWLOC_CORE_COMPONENT_TYPE_CPU
-	&& backend->component->type != HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
+    if (backend->component->type != HWLOC_DISC_COMPONENT_TYPE_CPU
+	&& backend->component->type != HWLOC_DISC_COMPONENT_TYPE_GLOBAL)
       /* not yet */
       goto next_cpubackend;
     if (!backend->discover)
@@ -2082,7 +2082,7 @@ hwloc_discover(struct hwloc_topology *topology)
 
     err = backend->discover(backend);
     if (err >= 0) {
-      if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
+      if (backend->component->type == HWLOC_DISC_COMPONENT_TYPE_GLOBAL)
         gotsomeio += err;
       discoveries++;
       if (err > 0)
@@ -2186,8 +2186,8 @@ next_cpubackend:
   backend = topology->backends;
   while (NULL != backend) {
     int err;
-    if (backend->component->type == HWLOC_CORE_COMPONENT_TYPE_CPU
-	|| backend->component->type == HWLOC_CORE_COMPONENT_TYPE_GLOBAL)
+    if (backend->component->type == HWLOC_DISC_COMPONENT_TYPE_CPU
+	|| backend->component->type == HWLOC_DISC_COMPONENT_TYPE_GLOBAL)
       /* already done above */
       goto next_noncpubackend;
     if (!backend->discover)
@@ -2344,16 +2344,16 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
 int
 hwloc_topology_set_fsroot(struct hwloc_topology *topology, const char *fsroot_path)
 {
-  return hwloc_core_component_force_enable(topology,
+  return hwloc_disc_component_force_enable(topology,
 					   0 /* api */,
-					   HWLOC_CORE_COMPONENT_TYPE_CPU, "linux",
+					   HWLOC_DISC_COMPONENT_TYPE_CPU, "linux",
 					   fsroot_path, NULL, NULL);
 }
 
 int
 hwloc_topology_set_synthetic(struct hwloc_topology *topology, const char *description)
 {
-  return hwloc_core_component_force_enable(topology,
+  return hwloc_disc_component_force_enable(topology,
 					   0 /* api */,
 					   -1, "synthetic",
 					   description, NULL, NULL);
@@ -2363,7 +2363,7 @@ int
 hwloc_topology_set_xml(struct hwloc_topology *topology,
 		       const char *xmlpath)
 {
-  return hwloc_core_component_force_enable(topology,
+  return hwloc_disc_component_force_enable(topology,
 					   0 /* api */,
 					   -1, "xml",
 					   xmlpath, NULL, NULL);
@@ -2374,7 +2374,7 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology,
                              const char *xmlbuffer,
                              int size)
 {
-  return hwloc_core_component_force_enable(topology,
+  return hwloc_disc_component_force_enable(topology,
 					   0 /* api */,
 					   -1, "xml", NULL,
 					   xmlbuffer, (void*) (uintptr_t) size);
@@ -2383,7 +2383,7 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology,
 int
 hwloc_topology_set_custom(struct hwloc_topology *topology)
 {
-  return hwloc_core_component_force_enable(topology,
+  return hwloc_disc_component_force_enable(topology,
 					   0 /* api */,
 					   -1, "custom",
 					   NULL, NULL, NULL);
@@ -2513,17 +2513,17 @@ hwloc_topology_load (struct hwloc_topology *topology)
   {
     char *fsroot_path_env = getenv("HWLOC_FORCE_FSROOT");
     if (fsroot_path_env)
-      hwloc_core_component_force_enable(topology,
+      hwloc_disc_component_force_enable(topology,
 					1 /* env force */,
-					HWLOC_CORE_COMPONENT_TYPE_CPU, "linux",
+					HWLOC_DISC_COMPONENT_TYPE_CPU, "linux",
 					fsroot_path_env, NULL, NULL);
   }
   {
     char *xmlpath_env = getenv("HWLOC_FORCE_XMLFILE");
     if (xmlpath_env)
-      hwloc_core_component_force_enable(topology,
+      hwloc_disc_component_force_enable(topology,
 					1 /* env force */,
-					-1, "xml", 
+					-1, "xml",
 					xmlpath_env, NULL, NULL);
   }
 
@@ -2531,22 +2531,22 @@ hwloc_topology_load (struct hwloc_topology *topology)
   if (!topology->backends) {
     char *fsroot_path_env = getenv("HWLOC_FSROOT");
     if (fsroot_path_env)
-      hwloc_core_component_force_enable(topology,
+      hwloc_disc_component_force_enable(topology,
 					1 /* env force */,
-					HWLOC_CORE_COMPONENT_TYPE_CPU, "linux",
+					HWLOC_DISC_COMPONENT_TYPE_CPU, "linux",
 					fsroot_path_env, NULL, NULL);
   }
   if (!topology->backends) {
     char *xmlpath_env = getenv("HWLOC_XMLFILE");
     if (xmlpath_env)
-      hwloc_core_component_force_enable(topology,
+      hwloc_disc_component_force_enable(topology,
 					1 /* env force */,
 					-1, "xml",
 					xmlpath_env, NULL, NULL);
   }
 
   /* instantiate all possible other backends now */
-  hwloc_core_components_enable_others(topology);
+  hwloc_disc_components_enable_others(topology);
   /* now that backends are enabled, update the thissystem flag */
   hwloc_backends_is_thissystem(topology);
 

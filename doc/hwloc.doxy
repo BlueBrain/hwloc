@@ -1644,8 +1644,8 @@ The usual default is to enable the native operating system component,
 If available, an architecture-specific component (such as <tt>x86</tt>)
 may also improve the topology detection.
 
-If a XML topology is loaded, the <tt>xml</tt> component will be used
-instead of all other components.
+If a XML topology is loaded, the <tt>xml</tt> discovery  component
+will be used instead of all other components.
 It internally uses a specific class of components for the actual XML
 import/export routines (<tt>xml_libxml</tt> and <tt>xml_nolibxml</tt>)
 but these will not be discussed here.
@@ -1750,9 +1750,9 @@ is registered to the hwloc core.
 Components are then only enabled if the topology configuration
 requests it.
 
-\section plugins_adding Adding new core components and plugins
+\section plugins_adding Adding new discovery components and plugins
 
-Each new component requires a new <tt>hwloc_component</tt>
+Each new discovery component requires a new <tt>hwloc_component</tt>
 structure to be exported to the hwloc core with name
 <tt>hwloc_&lt;name&gt;_component</tt>.
 The configure script should then be modified to add

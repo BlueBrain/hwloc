@@ -9,11 +9,11 @@
 #include <private/private.h>
 #include <private/xml.h>
 
-/* list of all registered core components, sorted by priority, higher priority first.
+/* list of all registered discovery components, sorted by priority, higher priority first.
  * noos is last because its priority is 0.
  * others' priority is 10.
  */
-static struct hwloc_core_component * hwloc_core_components = NULL;
+static struct hwloc_disc_component * hwloc_disc_components = NULL;
 
 static unsigned hwloc_components_users = 0; /* first one initializes, last ones destroys */
 
@@ -106,10 +106,10 @@ hwloc__dlforeach_cb(const char *filename, void *_data __hwloc_attribute_unused)
   free(componentsymbolname);
   componentsymbolname = NULL;
 
-  if (HWLOC_COMPONENT_TYPE_CORE == component->type) {
+  if (HWLOC_COMPONENT_TYPE_DISC == component->type) {
     if (strncmp(basename, "hwloc_", 6)) {
       if (hwloc_plugins_verbose)
-	fprintf(stderr, "Plugin name `%s' doesn't match its type CORE\n", basename);
+	fprintf(stderr, "Plugin name `%s' doesn't match its type DISCOVERY\n", basename);
       goto out_with_handle;
     }
   } else if (HWLOC_COMPONENT_TYPE_XML == component->type) {
@@ -207,22 +207,22 @@ hwloc_plugins_init(void)
 #endif /* HWLOC_HAVE_PLUGINS */
 
 static const char *
-hwloc_core_component_type_string(hwloc_core_component_type_t type)
+hwloc_disc_component_type_string(hwloc_disc_component_type_t type)
 {
   switch (type) {
-  case HWLOC_CORE_COMPONENT_TYPE_CPU: return "cpu";
-  case HWLOC_CORE_COMPONENT_TYPE_GLOBAL: return "global";
-  case HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL: return "additional";
+  case HWLOC_DISC_COMPONENT_TYPE_CPU: return "cpu";
+  case HWLOC_DISC_COMPONENT_TYPE_GLOBAL: return "global";
+  case HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL: return "additional";
   default: return "Unknown";
   }
 }
 
 static int
-hwloc_core_component_register(struct hwloc_core_component *component)
+hwloc_disc_component_register(struct hwloc_disc_component *component)
 {
-  struct hwloc_core_component **prev;
+  struct hwloc_disc_component **prev;
 
-  prev = &hwloc_core_components;
+  prev = &hwloc_disc_components;
   while (NULL != *prev) {
     if (!strcmp((*prev)->name, component->name)) {
       if (hwloc_components_verbose)
@@ -234,9 +234,9 @@ hwloc_core_component_register(struct hwloc_core_component *component)
   }
   if (hwloc_components_verbose)
     fprintf(stderr, "Registered %s component `%s' with priority %u\n",
-	    hwloc_core_component_type_string(component->type), component->name, component->priority);
+	    hwloc_disc_component_type_string(component->type), component->name, component->priority);
 
-  prev = &hwloc_core_components;
+  prev = &hwloc_disc_components;
   while (NULL != *prev) {
     if ((*prev)->priority < component->priority)
       break;
@@ -274,8 +274,8 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 
   /* hwloc_static_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_components[i]; i++)
-    if (HWLOC_COMPONENT_TYPE_CORE == hwloc_static_components[i]->type)
-      hwloc_core_component_register(hwloc_static_components[i]->data);
+    if (HWLOC_COMPONENT_TYPE_DISC == hwloc_static_components[i]->type)
+      hwloc_disc_component_register(hwloc_static_components[i]->data);
     else if (HWLOC_COMPONENT_TYPE_XML == hwloc_static_components[i]->type)
       hwloc_xml_callbacks_register(hwloc_static_components[i]->data);
     else
@@ -284,8 +284,8 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   /* dynamic plugins */
 #ifdef HWLOC_HAVE_PLUGINS
   for(desc = hwloc_plugins; NULL != desc; desc = desc->next)
-    if (HWLOC_COMPONENT_TYPE_CORE == desc->component->type)
-      hwloc_core_component_register(desc->component->data);
+    if (HWLOC_COMPONENT_TYPE_DISC == desc->component->type)
+      hwloc_disc_component_register(desc->component->data);
     else if (HWLOC_COMPONENT_TYPE_XML == desc->component->type)
       hwloc_xml_callbacks_register(desc->component->data);
     else
@@ -298,11 +298,11 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   topology->backends = NULL;
 }
 
-static struct hwloc_core_component *
-hwloc_core_component_find(int type /* hwloc_component_type_t or -1 if any */,
-			  const char *name /* name of NULL if any */)
+static struct hwloc_disc_component *
+hwloc_disc_component_find(int type /* hwloc_disc_component_type_t or -1 if any */,
+			       const char *name /* name of NULL if any */)
 {
-  struct hwloc_core_component *comp = hwloc_core_components;
+  struct hwloc_disc_component *comp = hwloc_disc_components;
   while (NULL != comp) {
     if ((-1 == type || type == (int) comp->type)
        && (NULL == name || !strcmp(name, comp->name)))
@@ -314,15 +314,15 @@ hwloc_core_component_find(int type /* hwloc_component_type_t or -1 if any */,
 
 /* used by set_xml(), set_synthetic(), ... environment variables, ... to force the first backend */
 int
-hwloc_core_component_force_enable(struct hwloc_topology *topology,
+hwloc_disc_component_force_enable(struct hwloc_topology *topology,
 				  int envvar_forced,
 				  int type, const char *name,
 				  const void *data1, const void *data2, const void *data3)
 {
-  struct hwloc_core_component *comp;
+  struct hwloc_disc_component *comp;
   struct hwloc_backend *backend;
 
-  comp = hwloc_core_component_find(type, name);
+  comp = hwloc_disc_component_find(type, name);
   if (!comp) {
     errno = ENOSYS;
     return -1;
@@ -339,8 +339,8 @@ hwloc_core_component_force_enable(struct hwloc_topology *topology,
 }
 
 static int
-hwloc_core_component_try_enable(struct hwloc_topology *topology,
-				struct hwloc_core_component *comp,
+hwloc_disc_component_try_enable(struct hwloc_topology *topology,
+				struct hwloc_disc_component *comp,
 				const char *comparg,
 				unsigned *excludes,
 				int envvar_forced,
@@ -352,7 +352,7 @@ hwloc_core_component_try_enable(struct hwloc_topology *topology,
   if ((*excludes) & comp->type) {
     if (hwloc_components_verbose)
       fprintf(stderr, "Excluding %s component `%s', conflicts with excludes 0x%x\n",
-	      hwloc_core_component_type_string(comp->type), comp->name, *excludes);
+	      hwloc_disc_component_type_string(comp->type), comp->name, *excludes);
     return -1;
   }
 
@@ -374,9 +374,9 @@ hwloc_core_component_try_enable(struct hwloc_topology *topology,
 }
 
 void
-hwloc_core_components_enable_others(struct hwloc_topology *topology)
+hwloc_disc_components_enable_others(struct hwloc_topology *topology)
 {
-  struct hwloc_core_component *comp;
+  struct hwloc_disc_component *comp;
   unsigned excludes = 0;
   int tryall = 1;
   char *env;
@@ -411,9 +411,9 @@ hwloc_core_components_enable_others(struct hwloc_topology *topology)
 	  arg++;
 	}
 
-	comp = hwloc_core_component_find(-1, env);
+	comp = hwloc_disc_component_find(-1, env);
 	if (comp) {
-	  hwloc_core_component_try_enable(topology, comp, arg, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings on conflicts */);
+	  hwloc_disc_component_try_enable(topology, comp, arg, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings on conflicts */);
 	} else {
 	  fprintf(stderr, "Cannot find component `%s'\n", env);
 	}
@@ -430,9 +430,9 @@ hwloc_core_components_enable_others(struct hwloc_topology *topology)
   }
 
   if (tryall) {
-    comp = hwloc_core_components;
+    comp = hwloc_disc_components;
     while (NULL != comp) {
-      hwloc_core_component_try_enable(topology, comp, NULL, &excludes, 0 /* defaults, not envvar forced */, 0 /* defaults don't need warnings on conflicts */);
+      hwloc_disc_component_try_enable(topology, comp, NULL, &excludes, 0 /* defaults, not envvar forced */, 0 /* defaults don't need warnings on conflicts */);
       comp = comp->next;
     }
   }
@@ -450,7 +450,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
 
   /* no need to unlink/free the list of components, they'll be unloaded below */
 
-  hwloc_core_components = NULL;
+  hwloc_disc_components = NULL;
   hwloc_xml_callbacks_reset();
 
 #ifdef HWLOC_HAVE_PLUGINS
@@ -462,7 +462,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
 
 struct hwloc_backend *
 hwloc_backend_alloc(struct hwloc_topology *topology,
-		    struct hwloc_core_component *component)
+		    struct hwloc_disc_component *component)
 {
   struct hwloc_backend * backend = malloc(sizeof(*backend));
   if (!backend) {
@@ -502,7 +502,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
     if ((*pprev)->component == backend->component) {
       if (hwloc_components_verbose)
 	fprintf(stderr, "Cannot enable %s component `%s' twice\n",
-		hwloc_core_component_type_string(backend->component->type), backend->component->name);
+		hwloc_disc_component_type_string(backend->component->type), backend->component->name);
       hwloc_backend_disable(backend);
       errno = EBUSY;
       return -1;
@@ -512,7 +512,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 
   if (hwloc_components_verbose)
     fprintf(stderr, "Enabling %s component `%s'\n",
-	    hwloc_core_component_type_string(backend->component->type), backend->component->name);
+	    hwloc_disc_component_type_string(backend->component->type), backend->component->name);
 
   /* enqueue at the end */
   pprev = &topology->backends;
@@ -608,7 +608,7 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
     struct hwloc_backend *next = backend->next;
     if (hwloc_components_verbose)
       fprintf(stderr, "Disabling %s component `%s'\n",
-	      hwloc_core_component_type_string(backend->component->type), backend->component->name);
+	      hwloc_disc_component_type_string(backend->component->type), backend->component->name);
     hwloc_backend_disable(backend);
     topology->backends = next;
   }

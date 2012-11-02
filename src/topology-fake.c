@@ -11,7 +11,7 @@
 
 static struct hwloc_backend *
 hwloc_fake_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
-				 struct hwloc_core_component *component __hwloc_attribute_unused,
+				 struct hwloc_disc_component *component __hwloc_attribute_unused,
 				 const void *_data1 __hwloc_attribute_unused,
 				 const void *_data2 __hwloc_attribute_unused,
 				 const void *_data3 __hwloc_attribute_unused)
@@ -21,8 +21,8 @@ hwloc_fake_component_instantiate(struct hwloc_topology *topology __hwloc_attribu
   return NULL;
 }
 
-static struct hwloc_core_component hwloc_fake_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_ADDITIONAL, /* so that it's always enabled when using the OS discovery */
+static struct hwloc_disc_component hwloc_fake_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL, /* so that it's always enabled when using the OS discovery */
   "fake",
   0, /* nothing to exclude */
   hwloc_fake_component_instantiate,
@@ -34,7 +34,7 @@ HWLOC_DECLSPEC extern const struct hwloc_component hwloc_fake_component; /* neve
 
 const struct hwloc_component hwloc_fake_component = {
   HWLOC_COMPONENT_ABI,
-  HWLOC_COMPONENT_TYPE_CORE,
+  HWLOC_COMPONENT_TYPE_DISC,
   0,
-  &hwloc_fake_core_component
+  &hwloc_fake_disc_component
 };

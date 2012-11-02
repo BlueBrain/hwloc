@@ -224,7 +224,7 @@ hwloc_set_freebsd_hooks(struct hwloc_binding_hooks *hooks __hwloc_attribute_unus
 
 static struct hwloc_backend *
 hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
-				    struct hwloc_core_component *component,
+				    struct hwloc_disc_component *component,
 				    const void *_data1 __hwloc_attribute_unused,
 				    const void *_data2 __hwloc_attribute_unused,
 				    const void *_data3 __hwloc_attribute_unused)
@@ -237,10 +237,10 @@ hwloc_freebsd_component_instantiate(struct hwloc_topology *topology,
   return backend;
 }
 
-static struct hwloc_core_component hwloc_freebsd_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_CPU,
+static struct hwloc_disc_component hwloc_freebsd_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
   "freebsd",
-  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
   hwloc_freebsd_component_instantiate,
   50,
   NULL
@@ -248,7 +248,7 @@ static struct hwloc_core_component hwloc_freebsd_core_component = {
 
 const struct hwloc_component hwloc_freebsd_component = {
   HWLOC_COMPONENT_ABI,
-  HWLOC_COMPONENT_TYPE_CORE,
+  HWLOC_COMPONENT_TYPE_DISC,
   0,
-  &hwloc_freebsd_core_component
+  &hwloc_freebsd_disc_component
 };

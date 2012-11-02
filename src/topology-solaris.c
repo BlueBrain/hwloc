@@ -765,7 +765,7 @@ hwloc_set_solaris_hooks(struct hwloc_binding_hooks *hooks,
 
 static struct hwloc_backend *
 hwloc_solaris_component_instantiate(struct hwloc_topology *topology,
-				    struct hwloc_core_component *component,
+				    struct hwloc_disc_component *component,
 				    const void *_data1 __hwloc_attribute_unused,
 				    const void *_data2 __hwloc_attribute_unused,
 				    const void *_data3 __hwloc_attribute_unused)
@@ -778,10 +778,10 @@ hwloc_solaris_component_instantiate(struct hwloc_topology *topology,
   return backend;
 }
 
-static struct hwloc_core_component hwloc_solaris_core_component = {
-  HWLOC_CORE_COMPONENT_TYPE_CPU,
+static struct hwloc_disc_component hwloc_solaris_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
   "solaris",
-  HWLOC_CORE_COMPONENT_TYPE_GLOBAL,
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
   hwloc_solaris_component_instantiate,
   50,
   NULL
@@ -789,7 +789,7 @@ static struct hwloc_core_component hwloc_solaris_core_component = {
 
 const struct hwloc_component hwloc_solaris_component = {
   HWLOC_COMPONENT_ABI,
-  HWLOC_COMPONENT_TYPE_CORE,
+  HWLOC_COMPONENT_TYPE_DISC,
   0,
-  &hwloc_solaris_core_component
+  &hwloc_solaris_disc_component
 };
