@@ -36,9 +36,8 @@ struct hwloc_core_component {
   struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_core_component *component, const void *data1, const void *data2, const void *data3);
 
   unsigned priority; /* used to sort topology->components, higher priority first.
-		      * 50 for native OS components (except FreeBSD),
-		      * 47 for x86,
-		      * 44 for FreeBSD native component (must be below x86),
+		      * 50 for native OS components,
+		      * 45 for x86,
 		      * 40 for no-OS fallback,
 		      * 30 for global components (xml/synthetic/custom),
 		      * 20 for libpci, likely less for other additional components.

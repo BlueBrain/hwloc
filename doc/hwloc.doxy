@@ -1665,16 +1665,20 @@ is enabled first.
 Then hwloc looks for an architecture specific component
 (e.g. <tt>x86</tt>).
 Finally these also exist a basic component (<tt>no_os</tt>)
-that just  tries to discover the number of PUs in the system.
-Each component discovers as much topology information as possible,
-some are also able to complete what others discovered
-(for instance <tt>x86</tt> and <tt>FreeBSD</tt>).
+that just tries to discover the number of PUs in the system.
+
+Each component discovers as much topology information as possible.
+Most of them, including most native OS components, do nothing
+unless the topology is still empty.
+Some others, such as <tt>x86</tt> and <tt>libpci</tt>,
+can complete and annotate what other backends still earlier.
 
 Default priorities ensure that clever components are invoked first.
-If the operating system (for instance FreeBSD) offers very few
-topology information, its native component priority is lowered so
-that the architecture specific component (e.g. <tt>x86</tt>)
-is used first.
+Native operating system components have higher priorities,
+and are therefore invoked first, because they likely offer
+very detailed topology information.
+If needed, it will be later extended by architecture-specific
+information (e.g. from the <tt>x86</tt> component).
 
 If any configuration function such as hwloc_topology_set_xml()
 is used before loading the topology, the corresponding component
