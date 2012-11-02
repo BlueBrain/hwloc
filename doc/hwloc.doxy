@@ -1768,7 +1768,7 @@ The build system may then use this variable to actually
 change the way the component is built.
 
 The component structure contains a data field that points to an
-<tt>hwloc_core_component</tt> which defines an <tt>instantiate</tt>
+<tt>hwloc_disc_component</tt> which defines an <tt>instantiate</tt>
 callback.
 This function is invoked when this component is actually used by a topology.
 It creates a <tt>backend</tt> structure that usually contains a
