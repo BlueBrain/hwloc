@@ -3785,7 +3785,7 @@ hwloc_linux_lookup_block_class(struct hwloc_topology *topology, struct hwloc_obj
 	  strcpy(&path[pathlen+1], hostdirent->d_name);
 	  pathlen += hostdlen = 1+strlen(hostdirent->d_name);
 	  /* lookup block class for real */
-          hwloc_linux_lookup_host_block_class(topology, pcidev, path, pathlen);
+          res += hwloc_linux_lookup_host_block_class(topology, pcidev, path, pathlen);
 	  /* restore parent path */
 	  pathlen -= hostdlen;
 	  path[pathlen] = '\0';
