@@ -231,10 +231,9 @@ hwloc__nolibxml_import_close_content(hwloc__xml_import_state_t state)
 }
 
 static int
-hwloc_nolibxml_look_init(struct hwloc_backend *backend,
+hwloc_nolibxml_look_init(struct hwloc_xml_backend_data_s *bdata,
 			 struct hwloc__xml_import_state_s *state)
 {
-  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   hwloc__nolibxml_import_state_data_t nstate = (void*) state->data;
   char *buffer = bdata->data;
 
@@ -270,7 +269,7 @@ hwloc_nolibxml_look_init(struct hwloc_backend *backend,
 }
 
 static void
-hwloc_nolibxml_look_failed(struct hwloc_backend *backend __hwloc_attribute_unused)
+hwloc_nolibxml_look_failed(struct hwloc_xml_backend_data_s *bdata __hwloc_attribute_unused)
 {
   /* not only when verbose */
   fprintf(stderr, "Failed to parse XML input with the minimalistic parser. If it was not\n"
@@ -282,17 +281,15 @@ hwloc_nolibxml_look_failed(struct hwloc_backend *backend __hwloc_attribute_unuse
  ********************/
 
 static void
-hwloc_nolibxml_backend_exit(struct hwloc_backend *backend)
+hwloc_nolibxml_backend_exit(struct hwloc_xml_backend_data_s *bdata)
 {
-  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   free(bdata->data);
 }
 
 static int
-hwloc_nolibxml_backend_init(struct hwloc_backend *backend,
+hwloc_nolibxml_backend_init(struct hwloc_xml_backend_data_s *bdata,
 			    const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
-  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   if (xmlbuffer) {
     bdata->data = malloc(xmlbuflen);
     memcpy(bdata->data, xmlbuffer, xmlbuflen);

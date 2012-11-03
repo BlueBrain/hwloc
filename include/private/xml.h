@@ -31,9 +31,9 @@ typedef struct hwloc__xml_import_state_s {
 
 struct hwloc_xml_backend_data_s {
   /* xml backend parameters */
-  int (*look_init)(struct hwloc_backend *backend, struct hwloc__xml_import_state_s *state);
-  void (*look_failed)(struct hwloc_backend *backend);
-  void (*backend_exit)(struct hwloc_backend *backend);
+  int (*look_init)(struct hwloc_xml_backend_data_s *bdata, struct hwloc__xml_import_state_s *state);
+  void (*look_failed)(struct hwloc_xml_backend_data_s *bdata);
+  void (*backend_exit)(struct hwloc_xml_backend_data_s *bdata);
   void *data; /* libxml2 doc, or nolibxml buffer */
   struct hwloc_xml_imported_distances_s {
     hwloc_obj_t root;
@@ -63,7 +63,7 @@ HWLOC_DECLSPEC void hwloc__xml_export_object (hwloc__xml_export_state_t state, s
  ******************/
 
 struct hwloc_xml_callbacks {
-  int (*backend_init)(struct hwloc_backend *backend, const char *xmlpath, const char *xmlbuffer, int xmlbuflen);
+  int (*backend_init)(struct hwloc_xml_backend_data_s *bdata, const char *xmlpath, const char *xmlbuffer, int xmlbuflen);
   int (*export_file)(struct hwloc_topology *topology, const char *filename);
   int (*export_buffer)(struct hwloc_topology *topology, char **xmlbuffer, int *buflen);
   void (*free_buffer)(void *xmlbuffer);

@@ -153,10 +153,9 @@ hwloc__libxml_import_close_content(hwloc__xml_import_state_t state __hwloc_attri
 }
 
 static int
-hwloc_libxml_look_init(struct hwloc_backend *backend,
+hwloc_libxml_look_init(struct hwloc_xml_backend_data_s *bdata,
 		       struct hwloc__xml_import_state_s *state)
 {
-  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   hwloc__libxml_import_state_data_t lstate = (void*) state->data;
   xmlNode* root_node;
   xmlDtd *dtd;
@@ -203,17 +202,15 @@ hwloc_libxml_look_init(struct hwloc_backend *backend,
  ********************/
 
 static void
-hwloc_libxml_backend_exit(struct hwloc_backend *backend)
+hwloc_libxml_backend_exit(struct hwloc_xml_backend_data_s *bdata)
 {
-  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   xmlFreeDoc((xmlDoc*)bdata->data);
 }
 
 static int
-hwloc_libxml_backend_init(struct hwloc_backend *backend,
+hwloc_libxml_backend_init(struct hwloc_xml_backend_data_s *bdata,
 			  const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
-  struct hwloc_xml_backend_data_s *bdata = backend->private_data;
   xmlDoc *doc = NULL;
 
   LIBXML_TEST_VERSION;
