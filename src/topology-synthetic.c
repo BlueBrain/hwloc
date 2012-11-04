@@ -28,12 +28,11 @@ struct hwloc_synthetic_backend_data_s {
   unsigned depth[HWLOC_SYNTHETIC_MAX_DEPTH]; /* For cache/misc */
 };
 
-/* Read from DESCRIPTION a series of integers describing a symmetrical
-   topology and update `topology->synthetic_description' accordingly.  On
+/* Read from description a series of integers describing a symmetrical
+   topology and update the hwloc_synthetic_backend_data_s accordingly.  On
    success, return zero.  */
 static int
-hwloc_backend_synthetic_init(struct hwloc_topology *topology __hwloc_attribute_unused,
-			     struct hwloc_synthetic_backend_data_s *data,
+hwloc_backend_synthetic_init(struct hwloc_synthetic_backend_data_s *data,
 			     const char *description)
 {
   const char *pos, *next_pos;
@@ -410,7 +409,7 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
     goto out_with_backend;
   }
 
-  err = hwloc_backend_synthetic_init(topology, data, (const char *) _data1);
+  err = hwloc_backend_synthetic_init(data, (const char *) _data1);
   if (err < 0)
     goto out_with_data;
 
