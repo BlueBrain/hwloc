@@ -671,7 +671,7 @@ hwloc_look_xml(struct hwloc_backend *backend)
 
   data->first_distances = data->last_distances = NULL;
 
-  ret = data->look_init(backend->private_data, &state);
+  ret = data->look_init(data, &state);
   if (ret < 0)
     goto failed;
 
@@ -700,7 +700,7 @@ hwloc_look_xml(struct hwloc_backend *backend)
 
  failed:
   if (data->look_failed)
-    data->look_failed(backend->private_data);
+    data->look_failed(data);
   hwloc_localeswitch_fini();
   return -1;
 }
@@ -1122,9 +1122,9 @@ hwloc_xml_component_instantiate(struct hwloc_disc_component *component,
   env = getenv("HWLOC_NO_LIBXML_IMPORT");
   force_nolibxml = (env && atoi(env));
   if (!hwloc_libxml_callbacks || (hwloc_nolibxml_callbacks && force_nolibxml))
-    err = hwloc_nolibxml_callbacks->backend_init(backend->private_data, xmlpath, xmlbuffer, xmlbuflen);
+    err = hwloc_nolibxml_callbacks->backend_init(data, xmlpath, xmlbuffer, xmlbuflen);
   else
-    err = hwloc_libxml_callbacks->backend_init(backend->private_data, xmlpath, xmlbuffer, xmlbuflen);
+    err = hwloc_libxml_callbacks->backend_init(data, xmlpath, xmlbuffer, xmlbuflen);
   if (err < 0)
     goto out_with_data;
 
