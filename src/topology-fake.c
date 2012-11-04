@@ -10,8 +10,7 @@
 #include <stdlib.h>
 
 static struct hwloc_backend *
-hwloc_fake_component_instantiate(struct hwloc_topology *topology __hwloc_attribute_unused,
-				 struct hwloc_disc_component *component __hwloc_attribute_unused,
+hwloc_fake_component_instantiate(struct hwloc_disc_component *component __hwloc_attribute_unused,
 				 const void *_data1 __hwloc_attribute_unused,
 				 const void *_data2 __hwloc_attribute_unused,
 				 const void *_data3 __hwloc_attribute_unused)

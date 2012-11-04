@@ -3876,8 +3876,7 @@ hwloc_linux_backend_disable(struct hwloc_backend *backend)
 }
 
 static struct hwloc_backend *
-hwloc_linux_component_instantiate(struct hwloc_topology *topology,
-				  struct hwloc_disc_component *component,
+hwloc_linux_component_instantiate(struct hwloc_disc_component *component,
 				  const void *_data1,
 				  const void *_data2 __hwloc_attribute_unused,
 				  const void *_data3 __hwloc_attribute_unused)
@@ -3887,7 +3886,7 @@ hwloc_linux_component_instantiate(struct hwloc_topology *topology,
   const char * fsroot_path = _data1;
   int root = -1;
 
-  backend = hwloc_backend_alloc(topology, component);
+  backend = hwloc_backend_alloc(component);
   if (!backend)
     goto out;
 

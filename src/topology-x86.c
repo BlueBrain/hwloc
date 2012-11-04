@@ -888,14 +888,13 @@ fulldiscovery:
 }
 
 static struct hwloc_backend *
-hwloc_x86_component_instantiate(struct hwloc_topology *topology,
-				struct hwloc_disc_component *component,
+hwloc_x86_component_instantiate(struct hwloc_disc_component *component,
 				const void *_data1 __hwloc_attribute_unused,
 				const void *_data2 __hwloc_attribute_unused,
 				const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
-  backend = hwloc_backend_alloc(topology, component);
+  backend = hwloc_backend_alloc(component);
   if (!backend)
     return NULL;
   backend->flags = HWLOC_BACKEND_FLAG_NEED_LEVELS;

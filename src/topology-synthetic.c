@@ -384,8 +384,7 @@ hwloc_synthetic_backend_disable(struct hwloc_backend *backend)
 }
 
 static struct hwloc_backend *
-hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
-				      struct hwloc_disc_component *component,
+hwloc_synthetic_component_instantiate(struct hwloc_disc_component *component,
 				      const void *_data1,
 				      const void *_data2 __hwloc_attribute_unused,
 				      const void *_data3 __hwloc_attribute_unused)
@@ -399,7 +398,7 @@ hwloc_synthetic_component_instantiate(struct hwloc_topology *topology,
     goto out;
   }
 
-  backend = hwloc_backend_alloc(topology, component);
+  backend = hwloc_backend_alloc(component);
   if (!backend)
     goto out;
 

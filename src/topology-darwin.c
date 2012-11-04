@@ -284,7 +284,7 @@ hwloc_darwin_component_instantiate(struct hwloc_topology *topology,
 				   const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
-  backend = hwloc_backend_alloc(topology, component);
+  backend = hwloc_backend_alloc(component);
   if (!backend)
     return NULL;
   backend->discover = hwloc_look_darwin;

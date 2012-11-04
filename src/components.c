@@ -328,7 +328,7 @@ hwloc_disc_component_force_enable(struct hwloc_topology *topology,
     return -1;
   }
 
-  backend = comp->instantiate(topology, comp, data1, data2, data3);
+  backend = comp->instantiate(comp, data1, data2, data3);
   if (backend) {
     backend->envvar_forced = envvar_forced;
     if (topology->backends)
@@ -356,7 +356,7 @@ hwloc_disc_component_try_enable(struct hwloc_topology *topology,
     return -1;
   }
 
-  backend = comp->instantiate(topology, comp, comparg, NULL, NULL);
+  backend = comp->instantiate(comp, comparg, NULL, NULL);
   if (!backend) {
     if (verbose_errors)
       fprintf(stderr, "Failed to instantiate component `%s'\n", comp->name);
@@ -461,8 +461,7 @@ hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_u
 }
 
 struct hwloc_backend *
-hwloc_backend_alloc(struct hwloc_topology *topology,
-		    struct hwloc_disc_component *component)
+hwloc_backend_alloc(struct hwloc_disc_component *component)
 {
   struct hwloc_backend * backend = malloc(sizeof(*backend));
   if (!backend) {
@@ -470,7 +469,6 @@ hwloc_backend_alloc(struct hwloc_topology *topology,
     return NULL;
   }
   backend->component = component;
-  backend->topology = topology;
   backend->flags = 0;
   backend->discover = NULL;
   backend->get_obj_cpuset = NULL;
@@ -520,6 +518,8 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
     pprev = &((*pprev)->next);
   backend->next = *pprev;
   *pprev = backend;
+
+  backend->topology = topology;
 
   return 0;
 }

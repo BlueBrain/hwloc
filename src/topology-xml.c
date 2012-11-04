@@ -1080,8 +1080,7 @@ hwloc_xml_backend_disable(struct hwloc_backend *backend)
 }
 
 static struct hwloc_backend *
-hwloc_xml_component_instantiate(struct hwloc_topology *topology,
-				struct hwloc_disc_component *component,
+hwloc_xml_component_instantiate(struct hwloc_disc_component *component,
 				const void *_data1,
 				const void *_data2,
 				const void *_data3)
@@ -1105,7 +1104,7 @@ hwloc_xml_component_instantiate(struct hwloc_topology *topology,
     goto out;
   }
 
-  backend = hwloc_backend_alloc(topology, component);
+  backend = hwloc_backend_alloc(component);
   if (!backend)
     goto out;
 

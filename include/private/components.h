@@ -33,7 +33,7 @@ struct hwloc_disc_component {
   hwloc_disc_component_type_t type;
   const char *name;
   unsigned excludes; /* ORed set of (1<<HWLOC_DISC_COMPONENT_TYPE_*) */
-  struct hwloc_backend * (*instantiate)(struct hwloc_topology *topology, struct hwloc_disc_component *component, const void *data1, const void *data2, const void *data3);
+  struct hwloc_backend * (*instantiate)(struct hwloc_disc_component *component, const void *data1, const void *data2, const void *data3);
 
   unsigned priority; /* used to sort topology->components, higher priority first.
 		      * 50 for native OS components,
@@ -65,8 +65,8 @@ extern void hwloc_disc_components_enable_others(struct hwloc_topology *topology)
  */
 
 struct hwloc_backend {
-  struct hwloc_disc_component * component; /* Reserved for the core */
-  struct hwloc_topology * topology;
+  struct hwloc_disc_component * component; /* Reserved for the core, set by hwloc_backend_alloc() */
+  struct hwloc_topology * topology; /* Reserved for the core, set by hwloc_backend_enable() */
 
   unsigned long flags; /* OR'ed set of HWLOC_BACKEND_FLAG_* */
 
@@ -101,7 +101,7 @@ enum hwloc_backend_flag_e {
 /* Allocate a backend structure, set good default values, initialize backend->component.
  * The caller will then modify whatever needed, and call hwloc_backend_enable().
  */
-HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_topology *topology, struct hwloc_disc_component *component);
+HWLOC_DECLSPEC struct hwloc_backend * hwloc_backend_alloc(struct hwloc_disc_component *component);
 
 /* Enable a previously allocated and setup backend. */
 HWLOC_DECLSPEC int hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *backend);

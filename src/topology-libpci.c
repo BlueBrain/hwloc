@@ -556,17 +556,16 @@ hwloc_look_libpci(struct hwloc_backend *backend)
 }
 
 static struct hwloc_backend *
-hwloc_libpci_component_instantiate(struct hwloc_topology *topology,
-                                struct hwloc_disc_component *component,
-                                const void *_data1 __hwloc_attribute_unused,
-                                const void *_data2 __hwloc_attribute_unused,
-                                const void *_data3 __hwloc_attribute_unused)
+hwloc_libpci_component_instantiate(struct hwloc_disc_component *component,
+				   const void *_data1 __hwloc_attribute_unused,
+				   const void *_data2 __hwloc_attribute_unused,
+				   const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
 
   /* thissystem may not be fully initialized yet, we'll check flags in discover() */
 
-  backend = hwloc_backend_alloc(topology, component);
+  backend = hwloc_backend_alloc(component);
   if (!backend)
     return NULL;
   backend->discover = hwloc_look_libpci;
