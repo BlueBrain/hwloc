@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2012 Inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -1702,7 +1702,7 @@ may be set to get verbose messages about component registration
 Aside from topology configuration function such as
 <tt>hwloc_topology_set_custom()</tt>, the default priority order may
 be changed through the  <tt>HWLOC_COMPONENTS</tt> environment
-variable.
+variable (component names must be separated by commas).
 
 Specifying <tt>x86</tt> in this variable will cause the <tt>x86</tt>
 component to take precedence over any other component,
