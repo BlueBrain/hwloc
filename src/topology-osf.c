@@ -41,7 +41,7 @@
  */
 
 static int
-prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t hwloc_set)
+prepare_radset(hwloc_topology_t topology __hwloc_attribute_unused, radset_t *radset, hwloc_const_bitmap_t hwloc_set)
 {
   unsigned cpu;
   cpuset_t target_cpuset;
@@ -49,6 +49,7 @@ prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t
   radid_t radid;
   int ret = 0;
   int ret_errno = 0;
+  int nbnodes = rad_get_num();
 
   cpusetcreate(&target_cpuset);
   cpuemptyset(target_cpuset);
@@ -58,7 +59,7 @@ prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t
 
   cpusetcreate(&cpuset);
   cpusetcreate(&xor_cpuset);
-  for (radid = 0; radid < topology->backend_params.osf.nbnodes; radid++) {
+  for (radid = 0; radid < nbnodes; radid++) {
     cpuemptyset(cpuset);
     if (rad_get_cpus(radid, cpuset)==-1) {
       fprintf(stderr,"rad_get_cpus(%d) failed: %s\n",radid,strerror(errno));
@@ -236,7 +237,7 @@ hwloc_osf_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nodes
   return ptr;
 }
 
-void
+int
 hwloc_look_osf(struct hwloc_topology *topology)
 {
   cpu_cursor_t cursor;
@@ -248,7 +249,13 @@ hwloc_look_osf(struct hwloc_topology *topology)
   struct hwloc_obj *obj;
   unsigned distance;
 
-  topology->backend_params.osf.nbnodes = nbnodes = rad_get_num();
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
+  nbnodes = rad_get_num();
 
   cpusetcreate(&cpuset);
   radsetcreate(&radset);
@@ -327,21 +334,25 @@ hwloc_look_osf(struct hwloc_topology *topology)
   hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "OSF");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_osf_hooks(struct hwloc_topology *topology)
+hwloc_set_osf_hooks(struct hwloc_binding_hooks *hooks,
+		    struct hwloc_topology_support *support)
 {
-  topology->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
-  topology->set_thisthread_cpubind = hwloc_osf_set_thisthread_cpubind;
-  topology->set_proc_cpubind = hwloc_osf_set_proc_cpubind;
-  topology->set_thisproc_cpubind = hwloc_osf_set_thisproc_cpubind;
-  topology->set_area_membind = hwloc_osf_set_area_membind;
-  topology->alloc_membind = hwloc_osf_alloc_membind;
-  topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_free_mmap;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
-  topology->support.membind->replicate_membind = 1;
+  hooks->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_osf_set_thisthread_cpubind;
+  hooks->set_proc_cpubind = hwloc_osf_set_proc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_osf_set_thisproc_cpubind;
+  hooks->set_area_membind = hwloc_osf_set_area_membind;
+  hooks->alloc_membind = hwloc_osf_alloc_membind;
+  hooks->alloc = hwloc_alloc_mmap;
+  hooks->free_membind = hwloc_free_mmap;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
+  support->membind->replicate_membind = 1;
 }

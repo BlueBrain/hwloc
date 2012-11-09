@@ -84,12 +84,6 @@ void hwloc_report_os_error(const char *msg, int line)
     }
 }
 
-static void
-hwloc_topology_clear (struct hwloc_topology *topology);
-static void
-hwloc_topology_setup_defaults(struct hwloc_topology *topology);
-
-
 #if defined(HAVE_SYSCTLBYNAME)
 int hwloc_get_sysctlbyname(const char *name, int64_t *ret)
 {
@@ -301,7 +295,7 @@ hwloc_free_unlinked_object(hwloc_obj_t obj)
   free(obj);
 }
 
-static void
+void
 hwloc__duplicate_objects(struct hwloc_topology *newtopology,
 			 struct hwloc_obj *newparent,
 			 struct hwloc_obj *src)
@@ -415,6 +409,33 @@ static const hwloc_obj_type_t obj_order_type[] = {
   HWLOC_OBJ_OS_DEVICE,
   HWLOC_OBJ_PU,
   HWLOC_OBJ_MISC,
+};
+
+/* priority to be used when merging identical parent/children object
+ * (in merge_useless_child), keep the highest priority one.
+ *
+ * Always keep Machine/PU/PCIDev/OSDev
+ * then System/Node
+ * then Core
+ * then Socket
+ * then Cache
+ * then always drop Group/Misc/Bridge.
+ *
+ * Some type won't actually ever be involved in such merging.
+ */
+static const int obj_type_priority[] = {
+  /* first entry is HWLOC_OBJ_SYSTEM */     80,
+  /* next entry is HWLOC_OBJ_MACHINE */     100,
+  /* next entry is HWLOC_OBJ_NODE */        80,
+  /* next entry is HWLOC_OBJ_SOCKET */      40,
+  /* next entry is HWLOC_OBJ_CACHE */       20,
+  /* next entry is HWLOC_OBJ_CORE */        60,
+  /* next entry is HWLOC_OBJ_PU */          100,
+  /* next entry is HWLOC_OBJ_GROUP */       0,
+  /* next entry is HWLOC_OBJ_MISC */        0,
+  /* next entry is HWLOC_OBJ_BRIDGE */      0,
+  /* next entry is HWLOC_OBJ_PCI_DEVICE */  100,
+  /* next entry is HWLOC_OBJ_OS_DEVICE */   100
 };
 
 static unsigned __hwloc_attribute_const
@@ -933,22 +954,6 @@ hwloc_topology_insert_misc_object_by_parent(struct hwloc_topology *topology, hwl
   return obj;
 }
 
-hwloc_obj_t
-hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, int groupdepth)
-{
-  hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
-  obj->attr->group.depth = groupdepth;
-
-  if (topology->backend_type != HWLOC_BACKEND_CUSTOM || topology->is_loaded) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  hwloc_insert_object_by_parent(topology, parent, obj);
-
-  return obj;
-}
-
 /* Traverse children of a parent in a safe way: reread the next pointer as
  * appropriate to prevent crash on child deletion:  */
 #define for_each_child_safe(child, parent, pchild) \
@@ -964,6 +969,10 @@ static void
 append_iodevs(hwloc_topology_t topology, hwloc_obj_t obj)
 {
   hwloc_obj_t child, *temp;
+
+  /* make sure we don't have remaining stale pointers from a previous load */
+  obj->next_cousin = NULL;
+  obj->prev_cousin = NULL;
 
   if (obj->type == HWLOC_OBJ_BRIDGE) {
     obj->depth = HWLOC_TYPE_DEPTH_BRIDGE;
@@ -1506,6 +1515,7 @@ static void
 merge_useless_child(hwloc_topology_t topology, hwloc_obj_t *pparent)
 {
   hwloc_obj_t parent = *pparent, child, *pchild;
+  int replacechild = 0, replaceparent = 0;
 
   for_each_child_safe(child, parent, pchild)
     merge_useless_child(topology, pchild);
@@ -1515,16 +1525,37 @@ merge_useless_child(hwloc_topology_t topology, hwloc_obj_t *pparent)
     /* There are no or several children, it's useful to keep them.  */
     return;
 
-  /* TODO: have a preference order?  */
-  if (topology->ignored_types[parent->type] == HWLOC_IGNORE_TYPE_KEEP_STRUCTURE) {
+  /* Check whether parent and/or child can be replaced */
+  if (topology->ignored_types[parent->type] == HWLOC_IGNORE_TYPE_KEEP_STRUCTURE)
     /* Parent can be ignored in favor of the child.  */
+    replaceparent = 1;
+  if (topology->ignored_types[child->type] == HWLOC_IGNORE_TYPE_KEEP_STRUCTURE)
+    /* Child can be ignored in favor of the parent.  */    
+    replacechild = 1;
+
+  /* Decide which one to actually replace */
+  if (replaceparent && replacechild) {
+    /* If both may be replaced, look at obj_type_priority */
+    if (obj_type_priority[parent->type] > obj_type_priority[child->type])
+      replaceparent = 0;
+    else
+      replacechild = 0;
+  }
+
+  if (replaceparent) {
+    /* Replace parent with child */
     hwloc_debug("%s", "\nIgnoring parent ");
     print_object(topology, 0, parent);
+    if (parent == topology->levels[0][0]) {
+      child->parent = NULL;
+      child->depth = 0;
+    }
     *pparent = child;
     child->next_sibling = parent->next_sibling;
     hwloc_free_unlinked_object(parent);
-  } else if (topology->ignored_types[child->type] == HWLOC_IGNORE_TYPE_KEEP_STRUCTURE) {
-    /* Child can be ignored in favor of the parent.  */
+
+  } else if (replacechild) {
+    /* Replace child with parent */
     hwloc_debug("%s", "\nIgnoring child ");
     print_object(topology, 0, child);
     parent->first_child = child->first_child;
@@ -2008,113 +2039,7 @@ hwloc_connect_levels(hwloc_topology_t topology)
   return 0;
 }
 
-/*
- * Empty binding hooks always returning success
- */
-
-static int dontset_return_complete_cpuset(hwloc_topology_t topology, hwloc_cpuset_t set)
-{
-  hwloc_const_cpuset_t cpuset = hwloc_topology_get_complete_cpuset(topology);
-  if (cpuset) {
-    hwloc_bitmap_copy(set, hwloc_topology_get_complete_cpuset(topology));
-    return 0;
-  } else
-    return -1;
-}
-
-static int dontset_thisthread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_thisthread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_bitmap_t set, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_cpuset(topology, set);
-}
-static int dontset_thisproc_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_thisproc_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_bitmap_t set, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_cpuset(topology, set);
-}
-static int dontset_proc_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_pid_t pid __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_proc_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_pid_t pid __hwloc_attribute_unused, hwloc_bitmap_t cpuset, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_cpuset(topology, cpuset);
-}
-#ifdef hwloc_thread_t
-static int dontset_thread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_thread_t tid __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_thread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_thread_t tid __hwloc_attribute_unused, hwloc_bitmap_t cpuset, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_cpuset(topology, cpuset);
-}
-#endif
-
-static int dontset_return_complete_nodeset(hwloc_topology_t topology, hwloc_nodeset_t set, hwloc_membind_policy_t *policy)
-{
-  hwloc_const_nodeset_t nodeset = hwloc_topology_get_complete_nodeset(topology);
-  if (nodeset) {
-    hwloc_bitmap_copy(set, hwloc_topology_get_complete_nodeset(topology));
-    *policy = HWLOC_MEMBIND_DEFAULT;
-    return 0;
-  } else
-    return -1;
-}
-
-static int dontset_thisproc_membind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, hwloc_membind_policy_t policy __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_thisproc_membind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_bitmap_t set, hwloc_membind_policy_t * policy, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_nodeset(topology, set, policy);
-}
-
-static int dontset_thisthread_membind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, hwloc_membind_policy_t policy __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_thisthread_membind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_bitmap_t set, hwloc_membind_policy_t * policy, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_nodeset(topology, set, policy);
-}
-
-static int dontset_proc_membind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_pid_t pid __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, hwloc_membind_policy_t policy __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_proc_membind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_pid_t pid __hwloc_attribute_unused, hwloc_bitmap_t set, hwloc_membind_policy_t * policy, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_nodeset(topology, set, policy);
-}
-
-static int dontset_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, const void *addr __hwloc_attribute_unused, size_t size __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, hwloc_membind_policy_t policy __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return 0;
-}
-static int dontget_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, const void *addr __hwloc_attribute_unused, size_t size __hwloc_attribute_unused, hwloc_bitmap_t set, hwloc_membind_policy_t * policy, int flags __hwloc_attribute_unused)
-{
-  return dontset_return_complete_nodeset(topology, set, policy);
-}
-
-static void * dontalloc_membind(hwloc_topology_t topology __hwloc_attribute_unused, size_t size __hwloc_attribute_unused, hwloc_const_bitmap_t set __hwloc_attribute_unused, hwloc_membind_policy_t policy __hwloc_attribute_unused, int flags __hwloc_attribute_unused)
-{
-  return malloc(size);
-}
-static int dontfree_membind(hwloc_topology_t topology __hwloc_attribute_unused, void *addr __hwloc_attribute_unused, size_t size __hwloc_attribute_unused)
-{
-  free(addr);
-  return 0;
-}
-
-static void alloc_cpusets(hwloc_obj_t obj)
+void hwloc_alloc_obj_cpusets(hwloc_obj_t obj)
 {
   obj->cpuset = hwloc_bitmap_alloc_full();
   obj->complete_cpuset = hwloc_bitmap_alloc();
@@ -2132,10 +2057,10 @@ hwloc_discover(struct hwloc_topology *topology)
   int gotsomeio = 0;
 
   if (topology->backend_type == HWLOC_BACKEND_SYNTHETIC) {
-    alloc_cpusets(topology->levels[0][0]);
     hwloc_look_synthetic(topology);
   } else if (topology->backend_type == HWLOC_BACKEND_CUSTOM) {
-    /* nothing to do, just connect levels below */
+    if (hwloc_look_custom(topology) < 0)
+      return -1;
   } else if (topology->backend_type == HWLOC_BACKEND_XML) {
     if (hwloc_look_xml(topology) < 0)
       return -1;
@@ -2183,8 +2108,6 @@ hwloc_discover(struct hwloc_topology *topology)
    * Here, we only allocate cpusets for the root object.
    */
 
-    alloc_cpusets(topology->levels[0][0]);
-
   /* Each OS type should also fill the bind functions pointers, at least the
    * set_cpubind one
    */
@@ -2230,16 +2153,8 @@ hwloc_discover(struct hwloc_topology *topology)
 #    endif /* HWLOC_HPUX_SYS */
 
 #    ifndef HAVE_OS_SUPPORT
-    hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
+    hwloc_look_noos(topology);
 #    endif /* Unsupported OS */
-
-
-#    ifndef HWLOC_LINUX_SYS
-    if (topology->is_thissystem) {
-      /* gather uname info, except for Linux, which does it internally depending on load options */
-      hwloc_add_uname_info(topology);
-    }
-#    endif
   }
 
   /*
@@ -2382,104 +2297,10 @@ hwloc_discover(struct hwloc_topology *topology)
   hwloc_distances_finalize_logical(topology);
 
   /*
-   * Now set binding hooks.
-   * If the represented system is actually not this system, use dummy binding
-   * hooks.
+   * Now set binding hooks according to topology->is_thissystem
+   * what the native OS backend offers.
    */
-
-  if (topology->flags & HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM)
-    topology->is_thissystem = 1;
-
-  if (topology->is_thissystem) {
-#    ifdef HWLOC_LINUX_SYS
-    hwloc_set_linuxfs_hooks(topology);
-#    endif /* HWLOC_LINUX_SYS */
-
-#    ifdef HWLOC_AIX_SYS
-    hwloc_set_aix_hooks(topology);
-#    endif /* HWLOC_AIX_SYS */
-
-#    ifdef HWLOC_OSF_SYS
-    hwloc_set_osf_hooks(topology);
-#    endif /* HWLOC_OSF_SYS */
-
-#    ifdef HWLOC_SOLARIS_SYS
-    hwloc_set_solaris_hooks(topology);
-#    endif /* HWLOC_SOLARIS_SYS */
-
-#    ifdef HWLOC_WIN_SYS
-    hwloc_set_windows_hooks(topology);
-#    endif /* HWLOC_WIN_SYS */
-
-#    ifdef HWLOC_DARWIN_SYS
-    hwloc_set_darwin_hooks(topology);
-#    endif /* HWLOC_DARWIN_SYS */
-
-#    ifdef HWLOC_FREEBSD_SYS
-    hwloc_set_freebsd_hooks(topology);
-#    endif /* HWLOC_FREEBSD_SYS */
-
-#    ifdef HWLOC_HPUX_SYS
-    hwloc_set_hpux_hooks(topology);
-#    endif /* HWLOC_HPUX_SYS */
-  } else {
-    topology->set_thisproc_cpubind = dontset_thisproc_cpubind;
-    topology->get_thisproc_cpubind = dontget_thisproc_cpubind;
-    topology->set_thisthread_cpubind = dontset_thisthread_cpubind;
-    topology->get_thisthread_cpubind = dontget_thisthread_cpubind;
-    topology->set_proc_cpubind = dontset_proc_cpubind;
-    topology->get_proc_cpubind = dontget_proc_cpubind;
-#ifdef hwloc_thread_t
-    topology->set_thread_cpubind = dontset_thread_cpubind;
-    topology->get_thread_cpubind = dontget_thread_cpubind;
-#endif
-    topology->get_thisproc_last_cpu_location = dontget_thisproc_cpubind; /* cpubind instead of last_cpu_location is ok */
-    topology->get_thisthread_last_cpu_location = dontget_thisthread_cpubind; /* cpubind instead of last_cpu_location is ok */
-    topology->get_proc_last_cpu_location = dontget_proc_cpubind; /* cpubind instead of last_cpu_location is ok */
-    /* TODO: get_thread_last_cpu_location */
-    topology->set_thisproc_membind = dontset_thisproc_membind;
-    topology->get_thisproc_membind = dontget_thisproc_membind;
-    topology->set_thisthread_membind = dontset_thisthread_membind;
-    topology->get_thisthread_membind = dontget_thisthread_membind;
-    topology->set_proc_membind = dontset_proc_membind;
-    topology->get_proc_membind = dontget_proc_membind;
-    topology->set_area_membind = dontset_area_membind;
-    topology->get_area_membind = dontget_area_membind;
-    topology->alloc_membind = dontalloc_membind;
-    topology->free_membind = dontfree_membind;
-  }
-
-  /* if not is_thissystem, set_cpubind is fake
-   * and get_cpubind returns the whole system cpuset,
-   * so don't report that set/get_cpubind as supported
-   */
-  if (topology->is_thissystem) {
-#define DO(which,kind) \
-    if (topology->kind) \
-      topology->support.which##bind->kind = 1;
-    DO(cpu,set_thisproc_cpubind);
-    DO(cpu,get_thisproc_cpubind);
-    DO(cpu,set_proc_cpubind);
-    DO(cpu,get_proc_cpubind);
-    DO(cpu,set_thisthread_cpubind);
-    DO(cpu,get_thisthread_cpubind);
-#ifdef hwloc_thread_t
-    DO(cpu,set_thread_cpubind);
-    DO(cpu,get_thread_cpubind);
-#endif
-    DO(cpu,get_thisproc_last_cpu_location);
-    DO(cpu,get_proc_last_cpu_location);
-    DO(cpu,get_thisthread_last_cpu_location);
-    DO(mem,set_thisproc_membind);
-    DO(mem,get_thisproc_membind);
-    DO(mem,set_thisthread_membind);
-    DO(mem,get_thisthread_membind);
-    DO(mem,set_proc_membind);
-    DO(mem,get_proc_membind);
-    DO(mem,set_area_membind);
-    DO(mem,get_area_membind);
-    DO(mem,alloc_membind);
-  }
+  hwloc_set_binding_hooks(topology);
 
   return 0;
 }
@@ -2487,36 +2308,13 @@ hwloc_discover(struct hwloc_topology *topology)
 /* To be before discovery is actually launched,
  * Resets everything in case a previous load initialized some stuff.
  */
-static void
+void
 hwloc_topology_setup_defaults(struct hwloc_topology *topology)
 {
   struct hwloc_obj *root_obj;
 
   /* reset support */
-  topology->set_thisproc_cpubind = NULL;
-  topology->get_thisproc_cpubind = NULL;
-  topology->set_thisthread_cpubind = NULL;
-  topology->get_thisthread_cpubind = NULL;
-  topology->set_proc_cpubind = NULL;
-  topology->get_proc_cpubind = NULL;
-#ifdef hwloc_thread_t
-  topology->set_thread_cpubind = NULL;
-  topology->get_thread_cpubind = NULL;
-#endif
-  topology->get_thisproc_last_cpu_location = NULL;
-  topology->get_proc_last_cpu_location = NULL;
-  topology->get_thisthread_last_cpu_location = NULL;
-  topology->set_thisproc_membind = NULL;
-  topology->get_thisproc_membind = NULL;
-  topology->set_thisthread_membind = NULL;
-  topology->get_thisthread_membind = NULL;
-  topology->set_proc_membind = NULL;
-  topology->get_proc_membind = NULL;
-  topology->set_area_membind = NULL;
-  topology->get_area_membind = NULL;
-  topology->alloc = NULL;
-  topology->alloc_membind = NULL;
-  topology->free_membind = NULL;
+  memset(&topology->binding_hooks, 0, sizeof(topology->binding_hooks));
   memset(topology->support.discovery, 0, sizeof(*topology->support.discovery));
   memset(topology->support.cpubind, 0, sizeof(*topology->support.cpubind));
   memset(topology->support.membind, 0, sizeof(*topology->support.membind));
@@ -2596,44 +2394,6 @@ hwloc_topology_set_pid(struct hwloc_topology *topology __hwloc_attribute_unused,
   errno = ENOSYS;
   return -1;
 #endif /* HWLOC_LINUX_SYS */
-}
-
-static int
-hwloc_backend_custom_init(struct hwloc_topology *topology)
-{
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
-
-  topology->levels[0][0]->type = HWLOC_OBJ_SYSTEM;
-  topology->is_thissystem = 0;
-  topology->backend_type = HWLOC_BACKEND_CUSTOM;
-  return 0;
-}
-
-int
-hwloc_custom_insert_topology(struct hwloc_topology *newtopology,
-			     struct hwloc_obj *newparent,
-			     struct hwloc_topology *oldtopology,
-			     struct hwloc_obj *oldroot)
-{
-  if (newtopology->backend_type != HWLOC_BACKEND_CUSTOM || newtopology->is_loaded || !oldtopology->is_loaded) {
-    errno = EINVAL;
-    return -1;
-  }
-
-  hwloc__duplicate_objects(newtopology, newparent, oldroot ? oldroot : oldtopology->levels[0][0]);
-  return 0;
-}
-
-static void
-hwloc_backend_custom_exit(struct hwloc_topology *topology)
-{
-  assert(topology->backend_type == HWLOC_BACKEND_CUSTOM);
-
-  hwloc_topology_clear(topology);
-  hwloc_distances_clear(topology);
-  hwloc_topology_setup_defaults(topology);
-
-  topology->backend_type = HWLOC_BACKEND_NONE;
 }
 
 static void
@@ -2801,7 +2561,7 @@ hwloc_topology_clear_tree (struct hwloc_topology *topology, struct hwloc_obj *ro
   hwloc_free_unlinked_object (root);
 }
 
-static void
+void
 hwloc_topology_clear (struct hwloc_topology *topology)
 {
   unsigned l;
@@ -2840,6 +2600,15 @@ hwloc_topology_load (struct hwloc_topology *topology)
     topology->is_loaded = 0;
   }
 
+  /* Apply is_thissystem topology flag before we enforce envvar backends.
+   * If the application changed the backend with set_foo(),
+   * it may use set_flags() update the is_thissystem flag here.
+   * If it changes the backend with environment variables below,
+   * it may use HWLOC_THISSYSTEM envvar below as well.
+   */
+  if (topology->flags & HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM)
+    topology->is_thissystem = 1;
+
   /* enforce backend anyway if a FORCE variable was given */
 #ifdef HWLOC_LINUX_SYS
   {
@@ -2872,11 +2641,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
       hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
   }
 
-  /* always apply non-FORCE THISSYSTEM since it was explicitly designed to override setups from other backends */
-  local_env = getenv("HWLOC_THISSYSTEM");
-  if (local_env)
-    topology->is_thissystem = atoi(local_env);
-
   /* if we haven't chosen the backend, set the OS-specific one if needed */
   if (topology->backend_type == HWLOC_BACKEND_NONE) {
 #ifdef HWLOC_LINUX_SYS
@@ -2884,6 +2648,10 @@ hwloc_topology_load (struct hwloc_topology *topology)
       goto out;
 #endif
   }
+
+  local_env = getenv("HWLOC_THISSYSTEM");
+  if (local_env)
+    topology->is_thissystem = atoi(local_env);
 
   /* get distance matrix from the environment are store them (as indexes) in the topology.
    * indexes will be converted into objects later once the tree will be filled
@@ -2894,11 +2662,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
   err = hwloc_discover(topology);
   if (err < 0)
     goto out;
-
-  /* enforce THISSYSTEM if given in a FORCE variable */
-  local_env = getenv("HWLOC_FORCE_THISSYSTEM");
-  if (local_env)
-    topology->is_thissystem = atoi(local_env);
 
 #ifndef HWLOC_DEBUG
   if (getenv("HWLOC_DEBUG_CHECK"))
@@ -3023,6 +2786,7 @@ hwloc__check_children(struct hwloc_obj *parent)
 
   /* checks for all children */
   for(j=1; j<parent->arity; j++) {
+    assert(parent->children[j]->parent == parent);
     assert(parent->children[j]->sibling_rank == j);
     assert(parent->children[j-1]->next_sibling == parent->children[j]);
     assert(parent->children[j]->prev_sibling == parent->children[j-1]);
@@ -3075,6 +2839,7 @@ hwloc_topology_check(struct hwloc_topology *topology)
   assert(hwloc_get_nbobjs_by_depth(topology, 0) == 1);
   obj = hwloc_get_root_obj(topology);
   assert(obj);
+  assert(!obj->parent);
 
   depth = hwloc_topology_get_depth(topology);
 

@@ -753,6 +753,9 @@ enum hwloc_topology_flags_e {
 /** \brief Set OR'ed flags to non-yet-loaded topology.
  *
  * Set a OR'ed set of ::hwloc_topology_flags_e onto a topology that was not yet loaded.
+ *
+ * If this function is called multiple times, the last invokation will erase
+ * and replace the set of flags that was previously set.
  */
 HWLOC_DECLSPEC int hwloc_topology_set_flags (hwloc_topology_t topology, unsigned long flags);
 
@@ -879,11 +882,14 @@ HWLOC_DECLSPEC int hwloc_topology_set_xmlbuffer(hwloc_topology_t __hwloc_restric
 /** \brief Prepare the topology for custom assembly.
  *
  * The topology then contains a single root object.
- * It may then be built by inserting other topologies with
+ * It must then be built by inserting other topologies with
  * hwloc_custom_insert_topology() or single objects with
  * hwloc_custom_insert_group_object_by_parent().
  * hwloc_topology_load() must be called to finalize the new
  * topology as usual.
+ *
+ * \note If nothing is inserted in the topology,
+ * hwloc_topology_load() will fail with errno set to EINVAL.
  */
 HWLOC_DECLSPEC int hwloc_topology_set_custom(hwloc_topology_t topology);
 

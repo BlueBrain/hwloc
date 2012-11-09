@@ -174,42 +174,48 @@ hwloc_freebsd_node_meminfo_info(struct hwloc_topology *topology)
 }
 #endif
 
-void
+int
 hwloc_look_freebsd(struct hwloc_topology *topology)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
 
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
+  hwloc_look_x86(topology, nbprocs);
+
 #ifdef HAVE__SC_LARGE_PAGESIZE
   topology->levels[0][0]->attr->machine.huge_page_size_kB = sysconf(_SC_LARGE_PAGESIZE);
 #endif
-
-  hwloc_set_freebsd_hooks(topology);
-  hwloc_look_x86(topology, nbprocs);
-
-  hwloc_setup_pu_level(topology, nbprocs);
-
 #ifdef HAVE_SYSCTL
   hwloc_freebsd_node_meminfo_info(topology);
 #endif
-  hwloc_obj_add_info(topology->levels[0][0], "Backend", "FreeBSD");
+
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_freebsd_hooks(struct hwloc_topology *topology)
+hwloc_set_freebsd_hooks(struct hwloc_binding_hooks *hooks __hwloc_attribute_unused,
+			struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
 #if defined(HAVE_SYS_CPUSET_H) && defined(HAVE_CPUSET_SETAFFINITY)
-  topology->set_thisproc_cpubind = hwloc_freebsd_set_thisproc_cpubind;
-  topology->get_thisproc_cpubind = hwloc_freebsd_get_thisproc_cpubind;
-  topology->set_thisthread_cpubind = hwloc_freebsd_set_thisthread_cpubind;
-  topology->get_thisthread_cpubind = hwloc_freebsd_get_thisthread_cpubind;
-  topology->set_proc_cpubind = hwloc_freebsd_set_proc_cpubind;
-  topology->get_proc_cpubind = hwloc_freebsd_get_proc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_freebsd_set_thisproc_cpubind;
+  hooks->get_thisproc_cpubind = hwloc_freebsd_get_thisproc_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_freebsd_set_thisthread_cpubind;
+  hooks->get_thisthread_cpubind = hwloc_freebsd_get_thisthread_cpubind;
+  hooks->set_proc_cpubind = hwloc_freebsd_set_proc_cpubind;
+  hooks->get_proc_cpubind = hwloc_freebsd_get_proc_cpubind;
 #ifdef hwloc_thread_t
 #if HAVE_DECL_PTHREAD_SETAFFINITY_NP
-  topology->set_thread_cpubind = hwloc_freebsd_set_thread_cpubind;
+  hooks->set_thread_cpubind = hwloc_freebsd_set_thread_cpubind;
 #endif
 #if HAVE_DECL_PTHREAD_GETAFFINITY_NP
-  topology->get_thread_cpubind = hwloc_freebsd_get_thread_cpubind;
+  hooks->get_thread_cpubind = hwloc_freebsd_get_thread_cpubind;
 #endif
 #endif
 #endif

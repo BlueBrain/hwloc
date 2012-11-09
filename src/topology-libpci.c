@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * See COPYING in top-level directory.
  */
@@ -19,13 +19,12 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <setjmp.h>
-#ifdef HWLOC_LINUX_SYS
-#endif
 
 #define CONFIG_SPACE_CACHESIZE 256
 
 static void
-hwloc_pci_traverse_print_cb(struct hwloc_topology *topology __hwloc_attribute_unused, struct hwloc_obj *pcidev, int depth __hwloc_attribute_unused)
+hwloc_pci_traverse_print_cb(void * cbdata __hwloc_attribute_unused,
+			    struct hwloc_obj *pcidev, int depth __hwloc_attribute_unused)
 {
   char busid[14];
   snprintf(busid, sizeof(busid), "%04x:%02x:%02x.%01x",
@@ -47,42 +46,46 @@ hwloc_pci_traverse_print_cb(struct hwloc_topology *topology __hwloc_attribute_un
 }
 
 static void
-hwloc_pci_traverse_setbridgedepth_cb(struct hwloc_topology *topology __hwloc_attribute_unused, struct hwloc_obj *pcidev, int depth)
+hwloc_pci_traverse_setbridgedepth_cb(void * cbdata __hwloc_attribute_unused,
+				     struct hwloc_obj *pcidev, int depth)
 {
   if (pcidev->type == HWLOC_OBJ_BRIDGE)
     pcidev->attr->bridge.depth = depth;
 }
 
 static void
-hwloc_pci_traverse_lookuposdevices_cb(struct hwloc_topology *topology, struct hwloc_obj *pcidev, int depth __hwloc_attribute_unused)
+hwloc_pci_traverse_lookuposdevices_cb(void * cbdata,
+				      struct hwloc_obj *pcidev, int depth __hwloc_attribute_unused)
 {
+  struct hwloc_topology *topology = cbdata;
+
   if (pcidev->type == HWLOC_OBJ_BRIDGE)
     return;
 
 #ifdef HWLOC_LINUX_SYS
-  hwloc_linuxfs_pci_lookup_osdevices(topology, pcidev);
+  hwloc_linux_backend_notify_new_object(topology, pcidev);
 #endif
 }
 
 static void
-hwloc_pci__traverse(struct hwloc_topology *topology, struct hwloc_obj *root,
-		    void (*cb)(struct hwloc_topology *, struct hwloc_obj *, int depth),
+hwloc_pci__traverse(void * cbdata, struct hwloc_obj *root,
+		    void (*cb)(void * cbdata, struct hwloc_obj *, int depth),
 		    int depth)
 {
   struct hwloc_obj *child = root->first_child;
   while (child) {
-    cb(topology, child, depth);
+    cb(cbdata, child, depth);
     if (child->type == HWLOC_OBJ_BRIDGE)
-      hwloc_pci__traverse(topology, child, cb, depth+1);
+      hwloc_pci__traverse(cbdata, child, cb, depth+1);
     child = child->next_sibling;
   }
 }
 
 static void
-hwloc_pci_traverse(struct hwloc_topology *topology, struct hwloc_obj *root,
-		   void (*cb)(struct hwloc_topology *, struct hwloc_obj *, int depth))
+hwloc_pci_traverse(void * cbdata, struct hwloc_obj *root,
+		   void (*cb)(void * cbdata, struct hwloc_obj *, int depth))
 {
-  hwloc_pci__traverse(topology, root, cb, 0);
+  hwloc_pci__traverse(cbdata, root, cb, 0);
 }
 
 enum hwloc_pci_busid_comparison_e {
@@ -244,7 +247,7 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_o
   } else {
     /* get the hostbridge cpuset. it's not a PCI device, so we use its first child locality info */
 #ifdef HWLOC_LINUX_SYS
-    err = hwloc_linuxfs_get_pcidev_cpuset(topology, hostbridge->first_child, cpuset);
+    err = hwloc_linux_backend_get_obj_cpuset(topology, hostbridge->first_child, cpuset);
 #else
     err = -1;
 #endif
@@ -308,7 +311,7 @@ hwloc_pci_warning(char *msg __hwloc_attribute_unused, ...)
 {
 }
 
-void
+int
 hwloc_look_libpci(struct hwloc_topology *topology)
 {
   struct pci_access *pciaccess;
@@ -316,6 +319,14 @@ hwloc_look_libpci(struct hwloc_topology *topology)
   struct hwloc_obj fakehostbridge; /* temporary object covering the whole PCI hierarchy until its complete */
   unsigned current_hostbridge;
   int createdgroups = 0;
+
+  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
+    return 0;
+
+  if (!topology->is_thissystem) {
+    hwloc_debug("%s", "\nno PCI detection (not thissystem)\n");
+    return 0;
+  }
 
   fakehostbridge.first_child = NULL;
   fakehostbridge.last_child = NULL;
@@ -328,7 +339,7 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
   if (setjmp(err_buf)) {
     pci_cleanup(pciaccess);
-    return;
+    return -1;
   }
 
   pci_init(pciaccess);
@@ -478,14 +489,14 @@ hwloc_look_libpci(struct hwloc_topology *topology)
   pci_cleanup(pciaccess);
 
   hwloc_debug("%s", "\nPCI hierarchy after basic scan:\n");
-  hwloc_pci_traverse(topology, &fakehostbridge, hwloc_pci_traverse_print_cb);
+  hwloc_pci_traverse(NULL, &fakehostbridge, hwloc_pci_traverse_print_cb);
 
   if (!fakehostbridge.first_child)
     /* found nothing, exit */
-    return;
+    return 0;
 
   /* walk the hierarchy, set bridge depth and lookup OS devices */
-  hwloc_pci_traverse(topology, &fakehostbridge, hwloc_pci_traverse_setbridgedepth_cb);
+  hwloc_pci_traverse(NULL, &fakehostbridge, hwloc_pci_traverse_setbridgedepth_cb);
   hwloc_pci_traverse(topology, &fakehostbridge, hwloc_pci_traverse_lookuposdevices_cb);
 
   /*
@@ -542,4 +553,6 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
   if (createdgroups)
     topology->next_group_depth++;
+
+  return 1;
 }

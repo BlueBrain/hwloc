@@ -230,7 +230,7 @@ EOF])
     #
     AC_MSG_CHECKING([which CPU support to include])
     case ${target} in
-      i*86-*-*|x86_64-*-*)
+      i*86-*-*|x86_64-*-*|amd64-*-*)
         case ${ac_cv_sizeof_void_p} in
           4)
             AC_DEFINE(HWLOC_X86_32_ARCH, 1, [Define to 1 on x86_32])
@@ -580,6 +580,7 @@ EOF])
     AC_SEARCH_LIBS([pthread_getthrds_np], [pthread],
       AC_DEFINE([HWLOC_HAVE_PTHREAD_GETTHRDS_NP], 1, `Define to 1 if you have pthread_getthrds_np')
     )
+    AC_CHECK_FUNCS([cpuset_setid])
 
     # Linux libnuma support
     hwloc_linux_libnuma_happy=no
@@ -899,6 +900,8 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_CPUID], [test "x$hwloc_have_cpuid" = "xyes"])
+
+        AM_CONDITIONAL([HWLOC_HAVE_CXX], [test "x$hwloc_have_cxx" = "xyes"])
     ])
     hwloc_did_am_conditionals=yes
 ])dnl

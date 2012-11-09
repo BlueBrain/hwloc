@@ -708,45 +708,58 @@ hwloc_look_kstat(struct hwloc_topology *topology)
 }
 #endif /* LIBKSTAT */
 
-void
+int
 hwloc_look_solaris(struct hwloc_topology *topology)
 {
   unsigned nbprocs = hwloc_fallback_nbprocessors (topology);
+  int alreadypus = 0;
+
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
 #ifdef HAVE_LIBLGRP
   hwloc_look_lgrp(topology);
 #endif /* HAVE_LIBLGRP */
 #ifdef HAVE_LIBKSTAT
   nbprocs = 0;
-  if (hwloc_look_kstat(topology))
-    return;
+  if (hwloc_look_kstat(topology) > 0)
+    alreadypus = 1;
 #endif /* HAVE_LIBKSTAT */
-  hwloc_setup_pu_level(topology, nbprocs);
+  if (!alreadypus)
+    hwloc_setup_pu_level(topology, nbprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Solaris");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_solaris_hooks(struct hwloc_topology *topology)
+hwloc_set_solaris_hooks(struct hwloc_binding_hooks *hooks,
+			struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
-  topology->set_proc_cpubind = hwloc_solaris_set_proc_cpubind;
-  topology->set_thisproc_cpubind = hwloc_solaris_set_thisproc_cpubind;
-  topology->set_thisthread_cpubind = hwloc_solaris_set_thisthread_cpubind;
+  hooks->set_proc_cpubind = hwloc_solaris_set_proc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_solaris_set_thisproc_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_solaris_set_thisthread_cpubind;
 #ifdef HAVE_LIBLGRP
-  topology->get_proc_cpubind = hwloc_solaris_get_proc_cpubind;
-  topology->get_thisproc_cpubind = hwloc_solaris_get_thisproc_cpubind;
-  topology->get_thisthread_cpubind = hwloc_solaris_get_thisthread_cpubind;
-  topology->set_proc_membind = hwloc_solaris_set_proc_membind;
-  topology->set_thisproc_membind = hwloc_solaris_set_thisproc_membind;
-  topology->set_thisthread_membind = hwloc_solaris_set_thisthread_membind;
-  topology->get_proc_membind = hwloc_solaris_get_proc_membind;
-  topology->get_thisproc_membind = hwloc_solaris_get_thisproc_membind;
-  topology->get_thisthread_membind = hwloc_solaris_get_thisthread_membind;
+  hooks->get_proc_cpubind = hwloc_solaris_get_proc_cpubind;
+  hooks->get_thisproc_cpubind = hwloc_solaris_get_thisproc_cpubind;
+  hooks->get_thisthread_cpubind = hwloc_solaris_get_thisthread_cpubind;
+  hooks->set_proc_membind = hwloc_solaris_set_proc_membind;
+  hooks->set_thisproc_membind = hwloc_solaris_set_thisproc_membind;
+  hooks->set_thisthread_membind = hwloc_solaris_set_thisthread_membind;
+  hooks->get_proc_membind = hwloc_solaris_get_proc_membind;
+  hooks->get_thisproc_membind = hwloc_solaris_get_thisproc_membind;
+  hooks->get_thisthread_membind = hwloc_solaris_get_thisthread_membind;
 #endif /* HAVE_LIBLGRP */
 #ifdef MADV_ACCESS_LWP 
-  topology->set_area_membind = hwloc_solaris_set_area_membind;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
-  topology->support.membind->nexttouch_membind = 1;
+  hooks->set_area_membind = hwloc_solaris_set_area_membind;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
+  support->membind->nexttouch_membind = 1;
 #endif
 }
