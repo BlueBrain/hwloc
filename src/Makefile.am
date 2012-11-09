@@ -1,4 +1,4 @@
-# Copyright © 2009-2010 inria.  All rights reserved.
+# Copyright © 2009-2012 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # Copyright © 2011-2012 Oracle and/or its affiliates.  All rights reserved.
@@ -25,15 +25,16 @@ sources = \
         topology.c \
         traversal.c \
         distances.c \
-        topology-synthetic.c \
-        topology-custom.c \
-        topology-noos.c \
-        topology-xml.c \
-        topology-xml-nolibxml.c \
-        base64.c \
+        components.c \
         bind.c \
         bitmap.c \
-        misc.c
+        misc.c \
+        base64.c \
+        topology-noos.c \
+        topology-synthetic.c \
+        topology-custom.c \
+        topology-xml.c \
+        topology-xml-nolibxml.c
 ldflags =
 
 # Conditionally add to the sources and ldflags
@@ -86,6 +87,10 @@ if HWLOC_HAVE_FREEBSD
 sources += topology-freebsd.c
 endif HWLOC_HAVE_FREEBSD
 
+if HWLOC_HAVE_CPUID
+sources += topology-x86.c
+endif HWLOC_HAVE_CPUID
+
 if HWLOC_HAVE_GCC
 ldflags += -no-undefined
 endif HWLOC_HAVE_GCC
@@ -113,8 +118,6 @@ if HWLOC_HAVE_MS_LIB
 endif HWLOC_HAVE_MS_LIB
 endif HWLOC_HAVE_WINDOWS
 
-sources += topology-x86.c
-
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
@@ -134,3 +137,5 @@ xml_DATA = $(srcdir)/hwloc.dtd
 xmldir = $(pkgdatadir)
 EXTRA_DIST += hwloc.dtd
 endif
+
+DISTCLEANFILES = static-components.h

@@ -57,15 +57,26 @@ static hwloc_obj_t hwloc_topology_get_pcidev(hwloc_topology_t topology, hwloc_ob
   return NULL;
 }
 
-void hwloc_look_cuda(struct hwloc_topology *topology)
+static
+int hwloc_look_cuda(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   int cnt, device;
   cudaError_t cures;
   struct cudaDeviceProp prop;
-  cures = cudaGetDeviceCount(&cnt);
+  int res = 0;
 
+  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
+    return 0;
+
+  if (!topology->is_thissystem) {
+    hwloc_debug("%s", "\nno CUDA detection (not thissystem)\n");
+    return 0;
+  }
+
+  cures = cudaGetDeviceCount(&cnt);
   if (cures)
-    return;
+    return -1;
 
   for (device = 0; device < cnt; device++) {
     int domain, bus, dev;
@@ -86,7 +97,7 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
 
     pci_card = hwloc_topology_get_pcidev(topology, topology->levels[0][0], domain, bus, dev);
     if (!pci_card)
-      return;
+      continue;
 
     cuda_device = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
     snprintf(cuda_name, sizeof(cuda_name), "cuda%d", device);
@@ -148,5 +159,41 @@ void hwloc_look_cuda(struct hwloc_topology *topology)
 #if 0
     printf("Clock %0.3fGHz\n", (float)(float)  prop.clockRate / (1 << 20));
 #endif
+    res++;
   }
+
+  return res;
 }
+
+static struct hwloc_backend *
+hwloc_cuda_component_instantiate(struct hwloc_disc_component *component,
+                                 const void *_data1 __hwloc_attribute_unused,
+                                 const void *_data2 __hwloc_attribute_unused,
+                                 const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+
+  /* thissystem may not be fully initialized yet, we'll check flags in discover() */
+
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_cuda;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_cuda_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
+  "cuda",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_cuda_component_instantiate,
+  19, /* after libpci */
+  NULL
+};
+
+const struct hwloc_component hwloc_cuda_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_cuda_disc_component
+};

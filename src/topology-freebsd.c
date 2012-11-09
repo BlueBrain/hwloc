@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2010, 2012 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -174,26 +174,26 @@ hwloc_freebsd_node_meminfo_info(struct hwloc_topology *topology)
 }
 #endif
 
-int
-hwloc_look_freebsd(struct hwloc_topology *topology)
+static int
+hwloc_look_freebsd(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   unsigned nbprocs = hwloc_fallback_nbprocessors(topology);
 
-  if (topology->levels[0][0]->cpuset)
-    /* somebody discovered things */
-    return 0;
+  if (!topology->levels[0][0]->cpuset) {
+    /* Nobody (even the x86 backend) created objects yet, setup basic objects */
+    hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+    hwloc_setup_pu_level(topology, nbprocs);
+  }
 
-  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
-
-  hwloc_look_x86(topology, nbprocs);
-
+  /* Add FreeBSD specific information */
 #ifdef HAVE__SC_LARGE_PAGESIZE
   topology->levels[0][0]->attr->machine.huge_page_size_kB = sysconf(_SC_LARGE_PAGESIZE);
 #endif
 #ifdef HAVE_SYSCTL
   hwloc_freebsd_node_meminfo_info(topology);
 #endif
-
+  hwloc_obj_add_info(topology->levels[0][0], "Backend", "FreeBSD");
   if (topology->is_thissystem)
     hwloc_add_uname_info(topology);
   return 1;
@@ -221,3 +221,33 @@ hwloc_set_freebsd_hooks(struct hwloc_binding_hooks *hooks __hwloc_attribute_unus
 #endif
   /* TODO: get_last_cpu_location: find out ki_lastcpu */
 }
+
+static struct hwloc_backend *
+hwloc_freebsd_component_instantiate(struct hwloc_disc_component *component,
+				    const void *_data1 __hwloc_attribute_unused,
+				    const void *_data2 __hwloc_attribute_unused,
+				    const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_freebsd;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_freebsd_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
+  "freebsd",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_freebsd_component_instantiate,
+  50,
+  NULL
+};
+
+const struct hwloc_component hwloc_freebsd_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_freebsd_disc_component
+};
