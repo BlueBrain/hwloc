@@ -211,7 +211,6 @@ int main(int argc, char *argv[])
       if (taskdir) {
 	struct dirent *taskdirent;
 	long tid;
-	char *end;
 	unsigned n = 0;
 	/* count threads */
 	while ((taskdirent = readdir(taskdir))) {
@@ -272,15 +271,15 @@ int main(int argc, char *argv[])
     if (pidcmd) {
       char *cmd;
       FILE *file;
-      char *end;
       cmd = malloc(strlen(pidcmd)+1+5+2+1);
       sprintf(cmd, "%s %u", pidcmd, pid);
       file = popen(cmd, "r");
       if (file) {
-	fgets(pidoutput, sizeof(pidoutput), file);
-	end = strchr(pidoutput, '\n');
-	if (end)
-	  *end = '\0';
+	if (fgets(pidoutput, sizeof(pidoutput), file)) {
+	  end = strchr(pidoutput, '\n');
+	  if (end)
+	    *end = '\0';
+	}
 	pclose(file);
       }
       free(cmd);

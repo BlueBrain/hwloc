@@ -475,9 +475,12 @@ int hwloc_compare_types (hwloc_obj_type_t type1, hwloc_obj_type_t type2)
 static enum hwloc_type_cmp_e
 hwloc_type_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
 {
-  if (hwloc_compare_types(obj1->type, obj2->type) > 0)
+  int compare;
+
+  compare = hwloc_compare_types(obj1->type, obj2->type);
+  if (compare > 0)
     return HWLOC_TYPE_DEEPER;
-  if (hwloc_compare_types(obj1->type, obj2->type) < 0)
+  if (compare < 0)
     return HWLOC_TYPE_HIGHER;
 
   /* Caches have the same types but can have different depths.  */
@@ -1563,6 +1566,18 @@ merge_useless_child(hwloc_topology_t topology, hwloc_obj_t *pparent)
   }
 }
 
+static void
+hwloc_drop_all_io(hwloc_topology_t topology, hwloc_obj_t root)
+{
+  hwloc_obj_t child, *pchild;
+  for_each_child_safe(child, root, pchild) {
+    if (hwloc_obj_type_is_io(child->type))
+      unlink_and_free_object_and_children(pchild);
+    else
+      hwloc_drop_all_io(topology, child);
+  }
+}
+
 /*
  * If IO_DEVICES and WHOLE_IO are not set, we drop everything.
  * If WHOLE_IO is not set, we drop non-interesting devices,
@@ -1577,9 +1592,7 @@ hwloc_drop_useless_io(hwloc_topology_t topology, hwloc_obj_t root)
 
   if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO))) {
     /* drop all I/O children */
-    for_each_child_safe(child, root, pchild)
-      if (hwloc_obj_type_is_io(child->type))
-	unlink_and_free_object_and_children(pchild);
+    hwloc_drop_all_io(topology, root);
     return;
   }
 
