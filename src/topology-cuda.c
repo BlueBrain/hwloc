@@ -6,11 +6,12 @@
 
 #include <private/autogen/config.h>
 #include <hwloc.h>
-#include <private/misc.h>
-#include <private/private.h>
+#include <hwloc/plugins.h>
+#include <hwloc/cudart.h>
+
+/* private headers allowed for convenience because this plugin is built within hwloc */
 #include <private/misc.h>
 #include <private/debug.h>
-#include <hwloc/cudart.h>
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -67,10 +68,10 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
   struct cudaDeviceProp prop;
   int res = 0;
 
-  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
+  if (!(hwloc_topology_get_flags(topology) & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
     return 0;
 
-  if (!topology->is_thissystem) {
+  if (!hwloc_topology_is_thissystem(topology)) {
     hwloc_debug("%s", "\nno CUDA detection (not thissystem)\n");
     return 0;
   }
@@ -96,7 +97,7 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
 
     cores = hwloc_cuda_cores_per_MP(prop.major, prop.minor);
 
-    pci_card = hwloc_topology_get_pcidev(topology, topology->levels[0][0], domain, bus, dev);
+    pci_card = hwloc_topology_get_pcidev(topology, hwloc_get_root_obj(topology), domain, bus, dev);
     if (!pci_card)
       continue;
 
@@ -131,7 +132,7 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
 #endif
 
     hwloc_debug("%d MP(s)\n", prop.multiProcessorCount);
-    if (topology->flags & HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS) {
+    if (hwloc_topology_get_flags(topology) & HWLOC_TOPOLOGY_FLAG_WHOLE_ACCELERATORS) {
       for (i = 0; i < (unsigned) prop.multiProcessorCount; i++) {
         hwloc_obj_t shared = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
         hwloc_obj_t group = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
@@ -191,6 +192,10 @@ static struct hwloc_disc_component hwloc_cuda_disc_component = {
   19, /* after libpci */
   NULL
 };
+
+#ifdef HWLOC_INSIDE_PLUGIN
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_cuda_component;
+#endif
 
 const struct hwloc_component hwloc_cuda_component = {
   HWLOC_COMPONENT_ABI,

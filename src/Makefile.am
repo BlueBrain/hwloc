@@ -50,7 +50,7 @@ sources += topology-xml-libxml.c
 else
 plugins_LTLIBRARIES += hwloc_xml_libxml.la
 hwloc_xml_libxml_la_SOURCES = topology-xml-libxml.c
-hwloc_xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS)
+hwloc_xml_libxml_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_LIBXML2_CFLAGS) -DHWLOC_INSIDE_PLUGIN
 hwloc_xml_libxml_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_LIBXML2_LIBS)
 endif
 endif HWLOC_HAVE_LIBXML2
@@ -61,7 +61,7 @@ sources += topology-libpci.c
 else
 plugins_LTLIBRARIES += hwloc_libpci.la
 hwloc_libpci_la_SOURCES = topology-libpci.c
-hwloc_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS)
+hwloc_libpci_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_PCI_CFLAGS) -DHWLOC_INSIDE_PLUGIN
 hwloc_libpci_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_PCI_LIBS)
 endif
 endif HWLOC_HAVE_LIBPCI
@@ -72,7 +72,7 @@ sources += topology-cuda.c
 else
 plugins_LTLIBRARIES += hwloc_cuda.la
 hwloc_cuda_la_SOURCES = topology-cuda.c
-hwloc_cuda_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_CUDA_CFLAGS)
+hwloc_cuda_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_CUDA_CFLAGS) -DHWLOC_INSIDE_PLUGIN
 hwloc_cuda_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_CUDA_LIBS)
 endif
 endif HWLOC_HAVE_CUDART

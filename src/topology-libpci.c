@@ -8,7 +8,9 @@
 #include <private/autogen/config.h>
 #include <hwloc.h>
 #include <hwloc/helper.h>
-#include <private/private.h>
+#include <hwloc/plugins.h>
+
+/* private headers allowed for convenience because this plugin is built within hwloc */
 #include <private/debug.h>
 #include <private/misc.h>
 
@@ -227,7 +229,7 @@ hwloc_pci_add_object(struct hwloc_obj *root, struct hwloc_obj *new)
 
 static struct hwloc_obj *
 hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_backend *backend,
-				 struct hwloc_obj *hostbridge, int *created)
+				 struct hwloc_obj *hostbridge)
 {
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
   struct hwloc_obj *parent;
@@ -277,10 +279,9 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_b
     hwloc_obj_t group_obj = group_obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
     if (group_obj) {
       group_obj->cpuset = hwloc_bitmap_dup(cpuset);
-      group_obj->attr->group.depth = topology->next_group_depth;
+      group_obj->attr->group.depth = (unsigned) -1;
       hwloc__insert_object_by_cpuset(topology, group_obj, hwloc_report_os_error);
       parent = group_obj;
-      *created = 1;
     }
   }
 
@@ -316,9 +317,8 @@ hwloc_look_libpci(struct hwloc_backend *backend)
   struct pci_dev *pcidev;
   struct hwloc_obj fakehostbridge; /* temporary object covering the whole PCI hierarchy until its complete */
   unsigned current_hostbridge;
-  int createdgroups = 0;
 
-  if (!(topology->flags & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
+  if (!(hwloc_topology_get_flags(topology) & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
     return 0;
 
   if (!hwloc_topology_is_thissystem(topology)) {
@@ -545,12 +545,9 @@ hwloc_look_libpci(struct hwloc_backend *backend)
 		current_domain, current_bus, current_subordinate);
 
     /* attach the hostbridge where it belongs */
-    parent = hwloc_pci_find_hostbridge_parent(topology, backend, hostbridge, &createdgroups);
+    parent = hwloc_pci_find_hostbridge_parent(topology, backend, hostbridge);
     hwloc_insert_object_by_parent(topology, parent, hostbridge);
   }
-
-  if (createdgroups)
-    topology->next_group_depth++;
 
   return 1;
 }
@@ -580,6 +577,10 @@ static struct hwloc_disc_component hwloc_libpci_disc_component = {
   20,
   NULL
 };
+
+#ifdef HWLOC_INSIDE_PLUGIN
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_libpci_component;
+#endif
 
 const struct hwloc_component hwloc_libpci_component = {
   HWLOC_COMPONENT_ABI,

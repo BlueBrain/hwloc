@@ -24,7 +24,7 @@
     <info name="OSVersion" value="#1 SMP Debian 3.2.32-1"/>
     <info name="HostName" value="conan"/>
     <info name="Architecture" value="x86_64"/>
-    <object type="Group" cpuset="0xffffffff" complete_cpuset="0xffffffff" online_cpuset="0xffffffff" allowed_cpuset="0xffffffff" nodeset="0x00000003" complete_nodeset="0x00000003" allowed_nodeset="0x00000003" depth="0">
+    <object type="Group" cpuset="0xffffffff" complete_cpuset="0xffffffff" online_cpuset="0xffffffff" allowed_cpuset="0xffffffff" nodeset="0x00000003" complete_nodeset="0x00000003" allowed_nodeset="0x00000003" depth="0" tight="0">
       <distances nbobjs="2" relative_depth="1" latency_base="10.000000">
         <latency value="1.000000"/>
         <latency value="2.000000"/>
