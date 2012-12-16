@@ -107,7 +107,9 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
     cuda_device->depth = (unsigned) HWLOC_TYPE_DEPTH_UNKNOWN;
     cuda_device->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
 
-    hwloc_obj_add_info(cuda_device, "CUDAname", prop.name);
+    hwloc_obj_add_info(cuda_device, "Backend", "CUDA");
+    hwloc_obj_add_info(cuda_device, "Vendor", "NVIDIA Corporation");
+    hwloc_obj_add_info(cuda_device, "Name", prop.name);
 
     hwloc_insert_object_by_parent(topology, pci_card, cuda_device);
 
