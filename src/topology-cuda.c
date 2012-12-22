@@ -16,6 +16,14 @@
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 
+struct hwloc_cuda_backend_data_s {
+  unsigned nr_devices; /* -1 when unknown yet, first callback will setup */
+  struct hwloc_cuda_device_info_s {
+    int idx;
+    unsigned pcidomain, pcibus, pcidev, pcifunc;
+  } * devices;
+};
+
 static int hwloc_cuda_cores_per_MP(int major, int minor)
 {
   /* TODO: use nvml instead? */
@@ -39,34 +47,54 @@ static int hwloc_cuda_cores_per_MP(int major, int minor)
   return 0;
 }
 
-static hwloc_obj_t hwloc_topology_get_pcidev(hwloc_topology_t topology, hwloc_obj_t parent, int domain, int bus, int dev)
+/* query all PCI bus ids for later */
+static void
+hwloc_cuda_query_devices(struct hwloc_cuda_backend_data_s *data)
 {
-  hwloc_obj_t child;
+  cudaError_t cures;
+  int nb, i;
 
-  if (parent->type == HWLOC_OBJ_PCI_DEVICE
-      && parent->attr->pcidev.domain == domain
-      && parent->attr->pcidev.bus == bus
-      && parent->attr->pcidev.dev == dev)
-    return parent;
+  /* mark the number of devices as 0 in case we fail below,
+   * so that we don't try again later.
+   */
+  data->nr_devices = 0;
 
-  for (child = parent->first_child; child; child = child->next_sibling) {
-    hwloc_obj_t found;
-    found = hwloc_topology_get_pcidev(topology, child, domain, bus, dev);
-    if (found)
-      return found;
+  cures = cudaGetDeviceCount(&nb);
+  if (cures)
+    return;
+
+  /* allocate structs */
+  data->devices = malloc(nb * sizeof(*data->devices));
+  if (!data->devices)
+    return;
+
+  for (i = 0; i < nb; i++) {
+    struct hwloc_cuda_device_info_s *info = &data->devices[data->nr_devices];
+    int domain, bus, dev;
+
+    if (hwloc_cudart_get_device_pci_ids(NULL /* topology unused */, i, &domain, &bus, &dev))
+      continue;
+
+    info->idx = i;
+    info->pcidomain = (unsigned) domain;
+    info->pcibus = (unsigned) bus;
+    info->pcidev = (unsigned) dev;
+    info->pcifunc = 0;
+
+    /* validate this device */
+    data->nr_devices++;
   }
 
-  return NULL;
+  return;
 }
 
-static
-int hwloc_look_cuda(struct hwloc_backend *backend)
+static int
+hwloc_cuda_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_backend *caller __hwloc_attribute_unused,
+				     struct hwloc_obj *pcidev)
 {
   struct hwloc_topology *topology = backend->topology;
-  int cnt, device;
-  cudaError_t cures;
-  struct cudaDeviceProp prop;
-  int res = 0;
+  struct hwloc_cuda_backend_data_s *data = backend->private_data;
+  unsigned i;
 
   if (!(hwloc_topology_get_flags(topology) & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
     return 0;
@@ -76,33 +104,46 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
     return 0;
   }
 
-  cures = cudaGetDeviceCount(&cnt);
-  if (cures)
-    return -1;
+  if (HWLOC_OBJ_PCI_DEVICE != pcidev->type)
+    return 0;
 
-  for (device = 0; device < cnt; device++) {
-    int domain, bus, dev;
+  if (data->nr_devices == (unsigned) -1) {
+    /* first call, lookup all devices */
+    hwloc_cuda_query_devices(data);
+    /* if it fails, data->nr_devices = 0 so we won't do anything below and in next callbacks */
+  }
+
+  if (!data->nr_devices)
+    /* found no devices */
+    return 0;
+
+  for(i=0; i<data->nr_devices; i++) {
+    struct hwloc_cuda_device_info_s *info = &data->devices[i];
     char cuda_name[32];
-    hwloc_obj_t pci_card, cuda_device, memory, space;
+    struct cudaDeviceProp prop;
+    hwloc_obj_t cuda_device, memory, space;
     unsigned i, j, cores;
+    cudaError_t cures;
 
-    hwloc_debug("cuda %d\n", device);
-
-    cures = cudaGetDeviceProperties(&prop, device);
-    if (cures)
+    if (info->pcidomain != pcidev->attr->pcidev.domain)
+      continue;
+    if (info->pcibus != pcidev->attr->pcidev.bus)
+      continue;
+    if (info->pcidev != pcidev->attr->pcidev.dev)
+      continue;
+    if (info->pcifunc != pcidev->attr->pcidev.func)
       continue;
 
-    if (hwloc_cudart_get_device_pci_ids(topology, device, &domain, &bus, &dev))
+    hwloc_debug("cuda %d\n", info->idx);
+
+    cures = cudaGetDeviceProperties(&prop, info->idx);
+    if (cures)
       continue;
 
     cores = hwloc_cuda_cores_per_MP(prop.major, prop.minor);
 
-    pci_card = hwloc_topology_get_pcidev(topology, hwloc_get_root_obj(topology), domain, bus, dev);
-    if (!pci_card)
-      continue;
-
     cuda_device = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
-    snprintf(cuda_name, sizeof(cuda_name), "cuda%d", device);
+    snprintf(cuda_name, sizeof(cuda_name), "cuda%d", info->idx);
     cuda_device->name = strdup(cuda_name);
     cuda_device->depth = (unsigned) HWLOC_TYPE_DEPTH_UNKNOWN;
     cuda_device->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
@@ -111,7 +152,7 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
     hwloc_obj_add_info(cuda_device, "Vendor", "NVIDIA Corporation");
     hwloc_obj_add_info(cuda_device, "Name", prop.name);
 
-    hwloc_insert_object_by_parent(topology, pci_card, cuda_device);
+    hwloc_insert_object_by_parent(topology, pcidev, cuda_device);
 
     space = memory = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, -1);
     memory->name = strdup("Global");
@@ -120,7 +161,7 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
 
 #ifdef HWLOC_HAVE_CUDA_L2CACHESIZE
     if (prop.l2CacheSize) {
-      hwloc_obj_t cache = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
+      hwloc_obj_t cache = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, info->idx);
 
       hwloc_debug("%d KiB cache\n", prop.l2CacheSize >> 10);
 
@@ -163,10 +204,19 @@ int hwloc_look_cuda(struct hwloc_backend *backend)
 #if 0
     printf("Clock %0.3fGHz\n", (float)(float)  prop.clockRate / (1 << 20));
 #endif
-    res++;
+
+    return 1;
   }
 
-  return res;
+  return 0;
+}
+
+static void
+hwloc_cuda_backend_disable(struct hwloc_backend *backend)
+{
+  struct hwloc_cuda_backend_data_s *data = backend->private_data;
+  free(data->devices);
+  free(data);
 }
 
 static struct hwloc_backend *
@@ -176,13 +226,27 @@ hwloc_cuda_component_instantiate(struct hwloc_disc_component *component,
                                  const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
+  struct hwloc_cuda_backend_data_s *data;
 
   /* thissystem may not be fully initialized yet, we'll check flags in discover() */
 
   backend = hwloc_backend_alloc(component);
   if (!backend)
     return NULL;
-  backend->discover = hwloc_look_cuda;
+
+  data = malloc(sizeof(*data));
+  if (!data) {
+    free(backend);
+    return NULL;
+  }
+  /* the first callback will initialize those */
+  data->nr_devices = (unsigned) -1; /* unknown yet */
+  data->devices = NULL;
+
+  backend->private_data = data;
+  backend->disable = hwloc_cuda_backend_disable;
+
+  backend->notify_new_object = hwloc_cuda_backend_notify_new_object;
   return backend;
 }
 
