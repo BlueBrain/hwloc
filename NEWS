@@ -39,6 +39,8 @@ Version 1.7.0
     AMD GPU devices or indexes.
   + Add hwloc/nvml.h to retrieve the locality or OS device for NVML
     devices or indexes.
+  + Add new helpers in hwloc/cuda.h and hwloc/cudart.h to convert
+    between CUDA devices or indexes and hwloc OS devices.
 * Interoperability
   + Add hwloc_ibv_get_device_osdev() and clarify the requirements
     of the OpenFabrics Verbs helpers in hwloc/openfabrics-verbs.h.
