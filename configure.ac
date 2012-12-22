@@ -198,22 +198,29 @@ append_env() {
 hwloc_xml_status=basic
 AS_IF([test "$hwloc_libxml2_happy" = "yes"], [hwloc_xml_status=full])
 
+# Prepare the I/O summary
+hwloc_probeio_list=
+test "x$hwloc_pci_happy" = "xyes" && hwloc_probeio_list="$hwloc_probeio_list PCI"
+test "x$hwloc_opencl_happy" = "xyes" && hwloc_probeio_list="$hwloc_probeio_list OpenCL"
+test "x$hwloc_have_cudart" = "xyes" && hwloc_probeio_list="$hwloc_probeio_list CUDA"
+test "x$hwloc_nvml_happy" = "xyes" && hwloc_probeio_list="$hwloc_probeio_list NVML"
+test "x$hwloc_probeio_list" = "x" && hwloc_probeio_list=" no"
+
 # Beginning of generic support
 cat <<EOF
 
 -----------------------------------------------------------------------------
 Hwloc optional build support status (more details can be found above):
 
-Probe / display PCI devices:  $hwloc_pci_happy
-Probe / display CUDA devices: $hwloc_have_cudart
-Graphical output (Cairo):     $hwloc_cairo_happy
-XML input / output:           $hwloc_xml_status
-Plugin support:               $hwloc_have_plugins
+Probe / display I/O devices:$hwloc_probeio_list
+Graphical output (Cairo):    $hwloc_cairo_happy
+XML input / output:          $hwloc_xml_status
+Plugin support:              $hwloc_have_plugins
 EOF
 
 # Linux specific support
 AS_IF([test "$hwloc_linux" = "yes"], [cat <<EOF
-libnuma memory support:       $hwloc_linux_libnuma_happy
+libnuma memory support:      $hwloc_linux_libnuma_happy
 EOF])
 
 # End of generic support

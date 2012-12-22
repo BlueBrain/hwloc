@@ -374,12 +374,19 @@ extern "C" {
 /* openfabrics-verbs.h */
 
 #define hwloc_ibv_get_device_cpuset HWLOC_NAME(ibv_get_device_cpuset)
+#define hwloc_ibv_get_device_osdev HWLOC_NAME(ibv_get_device_osdev)
 #define hwloc_ibv_get_device_osdev_by_name HWLOC_NAME(ibv_get_device_osdev_by_name)
 
 /* myriexpress.h */
 
 #define hwloc_mx_board_get_device_cpuset HWLOC_NAME(mx_board_get_device_cpuset)
 #define hwloc_mx_endpoint_get_device_cpuset HWLOC_NAME(mx_endpoint_get_device_cpuset)
+
+/* opencl.h */
+
+#define hwloc_opencl_get_device_cpuset HWLOC_NAME(opencl_get_device_cpuset)
+#define hwloc_opencl_get_device_osdev HWLOC_NAME(opencl_get_device_osdev)
+#define hwloc_opencl_get_device_osdev_by_index HWLOC_NAME(opencl_get_device_osdev_by_index)
 
 /* cuda.h */
 
@@ -392,6 +399,12 @@ extern "C" {
 #define hwloc_cudart_get_device_pci_ids HWLOC_NAME(cudart_get_device_pci_ids)
 #define hwloc_cudart_get_device_cpuset HWLOC_NAME(cudart_get_device_cpuset)
 #define hwloc_cudart_get_device_pcidev HWLOC_NAME(cudart_get_device_pcidev)
+
+/* nvml.h */
+
+#define hwloc_nvml_get_device_cpuset HWLOC_NAME(nvml_get_device_cpuset)
+#define hwloc_nvml_get_device_osdev HWLOC_NAME(nvml_get_device_osdev)
+#define hwloc_nvml_get_device_osdev_by_index HWLOC_NAME(nvml_get_device_osdev_by_index)
 
 /* hwloc/plugins.h */
 

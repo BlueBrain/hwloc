@@ -69,8 +69,10 @@ dox_inputs = $(DOX_CONFIG) \
        $(HWLOC_top_srcdir)/include/hwloc/glibc-sched.h \
        $(HWLOC_top_srcdir)/include/hwloc/linux.h \
        $(HWLOC_top_srcdir)/include/hwloc/linux-libnuma.h \
+       $(HWLOC_top_srcdir)/include/hwloc/opencl.h \
        $(HWLOC_top_srcdir)/include/hwloc/cuda.h \
        $(HWLOC_top_srcdir)/include/hwloc/cudart.h \
+       $(HWLOC_top_srcdir)/include/hwloc/nvml.h \
        $(HWLOC_top_srcdir)/include/hwloc/openfabrics-verbs.h \
        $(HWLOC_top_srcdir)/include/hwloc/myriexpress.h
 
@@ -624,6 +626,10 @@ man3_helper_advanced_io_DATA = \
 
 man3_cudadir = $(man3dir)
 man3_cuda_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_opencl.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_osdev_by_index.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cuda.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_pci_ids.3 \
@@ -631,7 +637,11 @@ man3_cuda_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_cudart.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pci_ids.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pcidev.3
+        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pcidev.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_nvml.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_osdev_by_index.3
 
 man3_glibc_scheddir = $(man3dir)
 man3_glibc_sched_DATA = \
@@ -669,6 +679,7 @@ man3_openfabricsdir = $(man3dir)
 man3_openfabrics_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_openfabrics.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev_by_name.3
 
 # end of manpages(3) if HWLOC_BUILD_DOXYGEN

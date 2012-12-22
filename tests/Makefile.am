@@ -65,6 +65,10 @@ if HWLOC_HAVE_MYRIEXPRESS
 check_PROGRAMS += myriexpress
 endif HWLOC_HAVE_MYRIEXPRESS
 
+if HWLOC_HAVE_OPENCL
+check_PROGRAMS += opencl
+endif HWLOC_HAVE_OPENCL
+
 if HWLOC_HAVE_CUDA
 check_PROGRAMS += cuda
 endif HWLOC_HAVE_CUDA
@@ -72,6 +76,10 @@ endif HWLOC_HAVE_CUDA
 if HWLOC_HAVE_CUDART
 check_PROGRAMS += cudart
 endif HWLOC_HAVE_CUDART
+
+if HWLOC_HAVE_NVML
+check_PROGRAMS += nvml
+endif HWLOC_HAVE_NVML
 
 TESTS = $(check_PROGRAMS)
 
@@ -88,8 +96,10 @@ LDADD += $(HWLOC_top_builddir)/src/$(hwloc_lib)
 linux_libnuma_LDADD = $(LDADD) -lnuma
 openfabrics_verbs_LDADD = $(LDADD) -libverbs
 myriexpress_LDADD = $(LDADD) -lmyriexpress
+opencl_LDADD = $(LDADD) -lOpenCL
 cuda_LDADD = $(LDADD) -lcuda
 cudart_LDADD = $(LDADD) -lcuda -lcudart
+nvml_LDADD = $(LDADD) -lnvidia-ml
 xmlbuffer_LDADD = $(LDADD) $(HWLOC_LIBXML2_LIBS)
 hwloc_backends_LDADD = $(LDADD) $(HWLOC_LIBXML2_LIBS)
 hwloc_bind_LDADD = $(LDADD)

@@ -65,10 +65,20 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
                   AS_HELP_STRING([--disable-pci],
                                  [Disable the PCI device discovery using libpci]))
 
+    # OpenCL?
+    AC_ARG_ENABLE([opencl],
+                  AS_HELP_STRING([--disable-opencl],
+                                 [Disable the OpenCL device discovery]))
+
     # CUDA?
     AC_ARG_ENABLE([cuda],
                   AS_HELP_STRING([--disable-cuda],
                                  [Disable the CUDA device discovery using libcudart]))
+
+    # NVML?
+    AC_ARG_ENABLE([nvml],
+                  AS_HELP_STRING([--disable-nvml],
+                                 [Disable the NVML device discovery]))
 
     # Linux libnuma
     AC_ARG_ENABLE([libnuma],
@@ -415,6 +425,7 @@ int foo(void) {
 	hwloc_config_prefix[tests/ports/topology-windows.c]:hwloc_config_prefix[src/topology-windows.c]
 	hwloc_config_prefix[tests/ports/topology-darwin.c]:hwloc_config_prefix[src/topology-darwin.c]
 	hwloc_config_prefix[tests/ports/topology-freebsd.c]:hwloc_config_prefix[src/topology-freebsd.c]
+	hwloc_config_prefix[tests/ports/topology-netbsd.c]:hwloc_config_prefix[src/topology-netbsd.c]
 	hwloc_config_prefix[tests/ports/topology-hpux.c]:hwloc_config_prefix[src/topology-hpux.c])
     ])
 ])dnl
