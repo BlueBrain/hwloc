@@ -978,7 +978,8 @@ EOF])
            HWLOC_REQUIRES="$HWLOC_OPENCL_REQUIRES $HWLOC_REQUIRES"])
     AS_IF([test "$hwloc_cuda_component" = "static"],
           [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_CUDA_LIBS"
-           HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_CUDA_CFLAGS"])
+           HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_CUDA_CFLAGS"
+           HWLOC_REQUIRES="$HWLOC_CUDA_REQUIRES $HWLOC_REQUIRES"])
     AS_IF([test "$hwloc_nvml_component" = "static"],
           [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_NVML_LIBS"
            HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_NVML_CFLAGS"
