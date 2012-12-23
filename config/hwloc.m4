@@ -877,9 +877,11 @@ EOF])
 
         if test "x$hwloc_gl_happy" = "xyes"; then
             AC_DEFINE([HWLOC_HAVE_GL], [1], [Define to 1 if you have the GL module components.])
-            HWLOC_LIBS="$HWLOC_LIBS -lXNVCtrl -lXext -lX11"
+	    HWLOC_GL_LIBS="-lXNVCtrl -lXext -lX11"
+	    AC_SUBST(HWLOC_GL_LIBS)
             hwloc_have_gl=yes
 	    hwloc_components="$hwloc_components gl"
+	    hwloc_gl_component_maybeplugin=1
 	else
             AS_IF([test "$enable_gl" = "yes"], [
                 AC_MSG_WARN([--enable-gl requested, but GL/X11 support was not found due to a missing component])
@@ -887,6 +889,7 @@ EOF])
             ])
  	fi      
     fi
+    # don't add LIBS/CFLAGS yet, depends on plugins
     
     # libxml2 support
     hwloc_libxml2_happy=
@@ -1019,6 +1022,10 @@ EOF])
           [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_NVML_LIBS"
            HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_NVML_CFLAGS"
            HWLOC_REQUIRES="$HWLOC_NVML_REQUIRES $HWLOC_REQUIRES"])
+    AS_IF([test "$hwloc_gl_component" = "static"],
+          [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_GL_LIBS"
+           HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_GL_CFLAGS"
+           HWLOC_REQUIRES="$HWLOC_GL_REQUIRES $HWLOC_REQUIRES"])
     AS_IF([test "$hwloc_xml_libxml_component" = "static"],
           [HWLOC_LIBS="$HWLOC_LIBS $HWLOC_LIBXML2_LIBS"
            HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_LIBXML2_CFLAGS"
@@ -1139,6 +1146,7 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_OPENCL_BUILD_STATIC], [test "x$hwloc_opencl_component" = "xstatic"])
         AM_CONDITIONAL([HWLOC_CUDA_BUILD_STATIC], [test "x$hwloc_cuda_component" = "xstatic"])
         AM_CONDITIONAL([HWLOC_NVML_BUILD_STATIC], [test "x$hwloc_nvml_component" = "xstatic"])
+        AM_CONDITIONAL([HWLOC_GL_BUILD_STATIC], [test "x$hwloc_gl_component" = "xstatic"])
         AM_CONDITIONAL([HWLOC_XML_LIBXML_BUILD_STATIC], [test "x$hwloc_xml_libxml_component" = "xstatic"])
 
         AM_CONDITIONAL([HWLOC_HAVE_CXX], [test "x$hwloc_have_cxx" = "xyes"])

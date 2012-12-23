@@ -237,4 +237,3 @@ const struct hwloc_component hwloc_gl_component = {
   0,
   &hwloc_gl_disc_component
 };
-

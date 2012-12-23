@@ -100,7 +100,14 @@ endif
 endif HWLOC_HAVE_NVML
 
 if HWLOC_HAVE_GL
+if HWLOC_GL_BUILD_STATIC
 sources += topology-gl.c
+else
+plugins_LTLIBRARIES += hwloc_gl.la
+hwloc_gl_la_SOURCES = topology-gl.c
+hwloc_gl_la_CFLAGS = $(AM_CFLAGS) $(HWLOC_GL_CFLAGS) -DHWLOC_INSIDE_PLUGIN
+hwloc_gl_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_GL_LIBS)
+endif
 endif HWLOC_HAVE_GL
 
 if HWLOC_HAVE_SOLARIS
