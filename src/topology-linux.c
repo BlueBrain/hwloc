@@ -14,9 +14,6 @@
 #include <private/private.h>
 #include <private/misc.h>
 #include <private/debug.h>
-#ifdef HWLOC_HAVE_GL
-#include <hwloc/gl.h>
-#endif
 
 #include <limits.h>
 #include <stdio.h>
@@ -3786,33 +3783,6 @@ hwloc_linux_lookup_block_class(struct hwloc_topology *topology, struct hwloc_obj
   return res;
 }
 
-#ifdef HWLOC_HAVE_GL
-/*
- * Looks for the GPUs connected to the system and then shows
- * the attached displays to them
- */
-/* FIXME: do this in the gl component notify_new_object callback */
-static int
-hwloc_linux_lookup_display_class(struct hwloc_topology *topology, struct hwloc_obj *pcidev, const char *pcidevpath __hwloc_attribute_unused)
-{
-  unsigned port, device;
-  int err;
-
-  /* Getting the display info [:port.device] */
-  err = hwloc_gl_get_gpu_display(topology, pcidev, &port, &device);
-
-  /* If GPU, Appending the display as a children to the GPU
-   * and add a display object with the display name */
-  if (!err) {
-    char display_name[64];
-    snprintf(display_name, sizeof(display_name), ":%d.%d", port, device);
-    hwloc_linux_add_os_device(topology, pcidev, HWLOC_OBJ_OSDEV_DISPLAY, display_name);
-    return 1;
-  } else
-    return 0;
-}
-#endif
-
 static int
 hwloc_linux_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_backend *caller __hwloc_attribute_unused,
 				      struct hwloc_obj *obj)
@@ -3846,9 +3816,6 @@ hwloc_linux_backend_notify_new_object(struct hwloc_backend *backend, struct hwlo
   res += hwloc_linux_lookup_dma_class(topology, obj, pcidevpath);
   res += hwloc_linux_lookup_drm_class(topology, obj, pcidevpath);
   res += hwloc_linux_lookup_block_class(topology, obj, pcidevpath);
-#ifdef HWLOC_HAVE_GL
-  res += hwloc_linux_lookup_display_class(topology, obj, pcidevpath);
-#endif
   return res;
 }
 

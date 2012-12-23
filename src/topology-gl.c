@@ -6,6 +6,7 @@
 
 #include <private/autogen/config.h>
 #include <hwloc.h>
+#include <hwloc/plugins.h>
 #include <hwloc/helper.h>
 #include <stdarg.h>
 #include <errno.h>
@@ -170,3 +171,70 @@ hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, int port, int
   else
     return NULL;
 }
+
+static int
+hwloc_gl_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_backend *caller __hwloc_attribute_unused,
+				   struct hwloc_obj *pcidev)
+{
+  struct hwloc_topology *topology = backend->topology;
+  unsigned port, device;
+  int err;
+
+  /* Getting the display info [:port.device] */
+  err = hwloc_gl_get_gpu_display(topology, pcidev, &port, &device);
+
+  /* If GPU, Appending the display as a children to the GPU
+   * and add a display object with the display name */
+  if (!err) {
+    struct hwloc_obj *obj;
+    char display_name[64];
+    snprintf(display_name, sizeof(display_name), ":%d.%d", port, device);
+
+    obj = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
+    obj->name = strdup(display_name);
+    obj->logical_index = -1;
+    obj->attr->osdev.type = HWLOC_OBJ_OSDEV_DISPLAY;
+    hwloc_insert_object_by_parent(topology, pcidev, obj);
+    return 1;
+  } else
+    return 0;
+}
+
+static struct hwloc_backend *
+hwloc_gl_component_instantiate(struct hwloc_disc_component *component,
+			       const void *_data1 __hwloc_attribute_unused,
+			       const void *_data2 __hwloc_attribute_unused,
+			       const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+
+  /* thissystem may not be fully initialized yet, we'll check flags in discover() */
+
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+
+  backend->notify_new_object = hwloc_gl_backend_notify_new_object;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_gl_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
+  "gl",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_gl_component_instantiate,
+  19, /* after libpci */
+  NULL
+};
+
+#ifdef HWLOC_INSIDE_PLUGIN
+HWLOC_DECLSPEC extern const struct hwloc_component hwloc_gl_component;
+#endif
+
+const struct hwloc_component hwloc_gl_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_gl_disc_component
+};
+

@@ -879,6 +879,7 @@ EOF])
             AC_DEFINE([HWLOC_HAVE_GL], [1], [Define to 1 if you have the GL module components.])
             HWLOC_LIBS="$HWLOC_LIBS -lXNVCtrl -lXext -lX11"
             hwloc_have_gl=yes
+	    hwloc_components="$hwloc_components gl"
 	else
             AS_IF([test "$enable_gl" = "yes"], [
                 AC_MSG_WARN([--enable-gl requested, but GL/X11 support was not found due to a missing component])
