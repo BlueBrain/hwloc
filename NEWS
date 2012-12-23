@@ -17,7 +17,7 @@ bug fixes (and other actions) for each version of hwloc since version
 in v0.9.1).
 
 
-  + Add NVIDIA CUDA device detection.
+  + Add NVIDIA CUDA device internals detection.
 
 
 
@@ -28,6 +28,8 @@ Version 1.7.0
   + Add a OpenCL component, buildable as a plugin. It adds OS devices
     such as opencl0p0 for each OpenCL device on the AMD OpenCL
     implementation.
+  + Add a CUDA component, buildable as a plugin. It adds OS devices
+    such as cuda0 for each NVIDIA GPU.
   + Add a NVML component, buildable as a plugin. It adds OS devices
     such as nvml0 for each NVIDIA GPU, and improves the discovery of
     their PCIe link speed.
