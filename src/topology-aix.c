@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -11,8 +11,12 @@
 #include <private/autogen/config.h>
 
 #include <sys/types.h>
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
@@ -21,8 +25,11 @@
 
 #include <hwloc.h>
 #include <private/private.h>
+#include <private/misc.h>
 #include <private/debug.h>
 
+#include <procinfo.h>
+#include <sys/types.h>
 #include <sys/rset.h>
 #include <sys/processor.h>
 #include <sys/thread.h>
@@ -30,7 +37,7 @@
 #include <sys/systemcfg.h>
 
 static int
-hwloc_aix_set_sth_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, hwloc_const_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
+hwloc_aix_set_sth_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, pid_t pid, hwloc_const_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
 {
   rsethandle_t rad;
   int res;
@@ -55,17 +62,26 @@ hwloc_aix_set_sth_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, 
   hwloc_bitmap_foreach_end();
 
   res = ra_attachrset(what, who, rad, 0);
+  if (res < 0 && errno == EPERM) {
+    /* EPERM may mean that one thread has ben bound with bindprocessor().
+     * Unbind the entire process (we can't unbind individual threads)
+     * and try again.
+     */
+    bindprocessor(BINDPROCESS, pid, PROCESSOR_CLASS_ANY);
+    res = ra_attachrset(what, who, rad, 0);
+  }
 
   rs_free(rad);
   return res;
 }
 
 static int
-hwloc_aix_get_sth_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, hwloc_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
+hwloc_aix_get_sth_rset_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, hwloc_bitmap_t hwloc_set, int flags __hwloc_attribute_unused, int *boundp)
 {
   rsethandle_t rset;
   unsigned cpu, maxcpus;
   int res = -1;
+  int bound = 0;
 
   rset = rs_alloc(RS_EMPTY);
 
@@ -77,8 +93,11 @@ hwloc_aix_get_sth_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, 
   for (cpu = 0; cpu < maxcpus; cpu++)
     if (rs_op(RS_TESTRESOURCE, rset, NULL, R_PROCS, cpu) == 1)
       hwloc_bitmap_set(hwloc_set, cpu);
+    else
+      bound = 1;
   hwloc_bitmap_and(hwloc_set, hwloc_set, hwloc_topology_get_complete_cpuset(topology));
   res = 0;
+  *boundp = bound;
 
 out:
   rs_free(rset);
@@ -86,19 +105,89 @@ out:
 }
 
 static int
+hwloc_aix_get_pid_getthrds_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, pid_t pid, hwloc_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
+{
+#if HWLOC_BITS_PER_LONG == 64
+  struct thrdentry64 thread_info;
+  tid64_t next_thread;
+#else
+  struct thrdsinfo thread_info;
+  tid_t next_thread;
+#endif
+
+  next_thread = 0;
+  /* TODO: get multiple at once */
+#if HWLOC_BITS_PER_LONG == 64
+  while (getthrds64 (pid, &thread_info, sizeof (thread_info),
+                     &next_thread, 1) == 1) {
+#else
+  while (getthrds   (pid, &thread_info, sizeof (thread_info),
+                     &next_thread, 1) == 1) {
+#endif
+    if (PROCESSOR_CLASS_ANY != thread_info.ti_cpuid)
+      hwloc_bitmap_set(hwloc_set, thread_info.ti_cpuid);
+    else
+      hwloc_bitmap_fill(hwloc_set);
+  }
+  /* TODO: what if the thread list changes and we get nothing? */
+
+  return 0;
+}
+
+static int
+hwloc_aix_get_tid_getthrds_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, tid_t tid, hwloc_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
+{
+#if HWLOC_BITS_PER_LONG == 64
+  struct thrdentry64 thread_info;
+  tid64_t next_thread;
+#else
+  struct thrdsinfo thread_info;
+  tid_t next_thread;
+#endif
+  pid_t pid = getpid();
+
+  next_thread = 0;
+  /* TODO: get multiple at once */
+#if HWLOC_BITS_PER_LONG == 64
+  while (getthrds64 (pid, &thread_info, sizeof (thread_info),
+                     &next_thread, 1) == 1) {
+#else
+  while (getthrds   (pid, &thread_info, sizeof (thread_info),
+                     &next_thread, 1) == 1) {
+#endif
+    if (thread_info.ti_tid == tid) {
+      if (PROCESSOR_CLASS_ANY != thread_info.ti_cpuid)
+	hwloc_bitmap_set(hwloc_set, thread_info.ti_cpuid);
+      else
+	hwloc_bitmap_fill(hwloc_set);
+      break;
+    }
+  }
+  /* TODO: what if the thread goes away in the meantime? */
+
+  return 0;
+}
+
+static int
 hwloc_aix_set_thisproc_cpubind(hwloc_topology_t topology, hwloc_const_bitmap_t hwloc_set, int flags)
 {
   rsid_t who;
   who.at_pid = getpid();
-  return hwloc_aix_set_sth_cpubind(topology, R_PROCESS, who, hwloc_set, flags);
+  return hwloc_aix_set_sth_cpubind(topology, R_PROCESS, who, who.at_pid, hwloc_set, flags);
 }
 
 static int
 hwloc_aix_get_thisproc_cpubind(hwloc_topology_t topology, hwloc_bitmap_t hwloc_set, int flags)
 {
+  int ret, bound;
   rsid_t who;
   who.at_pid = getpid();
-  return hwloc_aix_get_sth_cpubind(topology, R_PROCESS, who, hwloc_set, flags);
+  ret = hwloc_aix_get_sth_rset_cpubind(topology, R_PROCESS, who, hwloc_set, flags, &bound);
+  if (!ret && !bound) {
+    hwloc_bitmap_zero(hwloc_set);
+    ret = hwloc_aix_get_pid_getthrds_cpubind(topology, who.at_pid, hwloc_set, flags);
+  }
+  return ret;
 }
 
 #ifdef R_THREAD
@@ -107,15 +196,21 @@ hwloc_aix_set_thisthread_cpubind(hwloc_topology_t topology, hwloc_const_bitmap_t
 {
   rsid_t who;
   who.at_tid = thread_self();
-  return hwloc_aix_set_sth_cpubind(topology, R_THREAD, who, hwloc_set, flags);
+  return hwloc_aix_set_sth_cpubind(topology, R_THREAD, who, getpid(), hwloc_set, flags);
 }
 
 static int
 hwloc_aix_get_thisthread_cpubind(hwloc_topology_t topology, hwloc_bitmap_t hwloc_set, int flags)
 {
+  int ret, bound;
   rsid_t who;
   who.at_tid = thread_self();
-  return hwloc_aix_get_sth_cpubind(topology, R_THREAD, who, hwloc_set, flags);
+  ret = hwloc_aix_get_sth_rset_cpubind(topology, R_THREAD, who, hwloc_set, flags, &bound);
+  if (!ret && !bound) {
+    hwloc_bitmap_zero(hwloc_set);
+    ret = hwloc_aix_get_tid_getthrds_cpubind(topology, who.at_tid, hwloc_set, flags);
+  }
+  return ret;
 }
 #endif /* R_THREAD */
 
@@ -124,15 +219,21 @@ hwloc_aix_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_con
 {
   rsid_t who;
   who.at_pid = pid;
-  return hwloc_aix_set_sth_cpubind(topology, R_PROCESS, who, hwloc_set, flags);
+  return hwloc_aix_set_sth_cpubind(topology, R_PROCESS, who, pid, hwloc_set, flags);
 }
 
 static int
 hwloc_aix_get_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_bitmap_t hwloc_set, int flags)
 {
+  int ret, bound;
   rsid_t who;
   who.at_pid = pid;
-  return hwloc_aix_get_sth_cpubind(topology, R_PROCESS, who, hwloc_set, flags);
+  ret = hwloc_aix_get_sth_rset_cpubind(topology, R_PROCESS, who, hwloc_set, flags, &bound);
+  if (!ret && !bound) {
+    hwloc_bitmap_zero(hwloc_set);
+    ret = hwloc_aix_get_pid_getthrds_cpubind(topology, who.at_pid, hwloc_set, flags);
+  }
+  return ret;
 }
 
 #ifdef R_THREAD
@@ -146,7 +247,7 @@ hwloc_aix_set_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t pthread, 
     return -1;
   {
     rsid_t who = { .at_tid = info.__pi_tid };
-    return hwloc_aix_set_sth_cpubind(topology, R_THREAD, who, hwloc_set, flags);
+    return hwloc_aix_set_sth_cpubind(topology, R_THREAD, who, getpid(), hwloc_set, flags);
   }
 }
 
@@ -158,13 +259,37 @@ hwloc_aix_get_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t pthread, 
   if (pthread_getthrds_np(&pthread, PTHRDSINFO_QUERY_TID, &info, sizeof(info), NULL, &size))
     return -1;
   {
+    int ret, bound;
     rsid_t who;
     who.at_tid = info.__pi_tid;
-    return hwloc_aix_get_sth_cpubind(topology, R_THREAD, who, hwloc_set, flags);
+    ret = hwloc_aix_get_sth_rset_cpubind(topology, R_THREAD, who, hwloc_set, flags, &bound);
+    if (!ret && !bound) {
+      hwloc_bitmap_zero(hwloc_set);
+      ret = hwloc_aix_get_tid_getthrds_cpubind(topology, who.at_tid, hwloc_set, flags);
+    }
+    return ret;
   }
 }
 #endif /* HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
 #endif /* R_THREAD */
+
+static int
+hwloc_aix_get_thisthread_last_cpu_location(hwloc_topology_t topology, hwloc_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
+{
+  cpu_t cpu;
+
+  if (topology->pid) {
+    errno = ENOSYS;
+    return -1;
+  }
+
+  cpu = mycpu();
+  if (cpu < 0)
+    return -1;
+
+  hwloc_bitmap_only(hwloc_set, cpu);
+  return 0;
+}
 
 #ifdef P_DEFAULT
 
@@ -216,7 +341,7 @@ hwloc_aix_prepare_membind(hwloc_topology_t topology, rsethandle_t *rad, hwloc_co
 }
 
 static int
-hwloc_aix_set_sth_membind(hwloc_topology_t topology, rstype_t what, rsid_t who, hwloc_const_bitmap_t nodeset, hwloc_membind_policy_t policy, int flags)
+hwloc_aix_set_sth_membind(hwloc_topology_t topology, rstype_t what, rsid_t who, pid_t pid, hwloc_const_bitmap_t nodeset, hwloc_membind_policy_t policy, int flags)
 {
   rsethandle_t rad;
   int res;
@@ -239,6 +364,14 @@ hwloc_aix_set_sth_membind(hwloc_topology_t topology, rstype_t what, rsid_t who, 
     return -1;
 
   res = ra_attachrset(what, who, rad, 0);
+  if (res < 0 && errno == EPERM) {
+    /* EPERM may mean that one thread has ben bound with bindprocessor().
+     * Unbind the entire process (we can't unbind individual threads)
+     * and try again.
+     */
+    bindprocessor(BINDPROCESS, pid, PROCESSOR_CLASS_ANY);
+    res = ra_attachrset(what, who, rad, 0);
+  }
 
   rs_free(rad);
   return res;
@@ -292,7 +425,7 @@ hwloc_aix_set_thisproc_membind(hwloc_topology_t topology, hwloc_const_bitmap_t h
 {
   rsid_t who;
   who.at_pid = getpid();
-  return hwloc_aix_set_sth_membind(topology, R_PROCESS, who, hwloc_set, policy, flags);
+  return hwloc_aix_set_sth_membind(topology, R_PROCESS, who, who.at_pid, hwloc_set, policy, flags);
 }
 
 static int
@@ -309,7 +442,7 @@ hwloc_aix_set_thisthread_membind(hwloc_topology_t topology, hwloc_const_bitmap_t
 {
   rsid_t who;
   who.at_tid = thread_self();
-  return hwloc_aix_set_sth_membind(topology, R_THREAD, who, hwloc_set, policy, flags);
+  return hwloc_aix_set_sth_membind(topology, R_THREAD, who, getpid(), hwloc_set, policy, flags);
 }
 
 static int
@@ -326,7 +459,7 @@ hwloc_aix_set_proc_membind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_con
 {
   rsid_t who;
   who.at_pid = pid;
-  return hwloc_aix_set_sth_membind(topology, R_PROCESS, who, hwloc_set, policy, flags);
+  return hwloc_aix_set_sth_membind(topology, R_PROCESS, who, pid, hwloc_set, policy, flags);
 }
 
 static int
@@ -349,7 +482,7 @@ hwloc_aix_set_thread_membind(hwloc_topology_t topology, hwloc_thread_t pthread, 
   {
     rsid_t who;
     who.at_tid = info.__pi_tid;
-    return hwloc_aix_set_sth_membind(topology, R_THREAD, who, hwloc_set, policy, flags);
+    return hwloc_aix_set_sth_membind(topology, R_THREAD, who, getpid(), hwloc_set, policy, flags);
   }
 }
 
@@ -399,7 +532,17 @@ hwloc_aix_set_area_membind(hwloc_topology_t topology, const void *addr, size_t l
 
   subrange.su_policy = aix_policy;
 
-  ret = ra_attachrset(R_SUBRANGE, rsid, subrange.su_rsid.at_rset, 0);
+  res = ra_attachrset(R_SUBRANGE, rsid, subrange.su_rsid.at_rset, 0);
+  if (res < 0 && errno == EPERM) {
+    /* EPERM may mean that one thread has ben bound with bindprocessor().
+     * Unbind the entire process (we can't unbind individual threads)
+     * and try again.
+     * FIXME: actually check that this EPERM can happen
+     */
+    bindprocessor(BINDPROCESS, getpid(), PROCESSOR_CLASS_ANY);
+    res = ra_attachrset(R_SUBRANGE, rsid, subrange.su_rsid.at_rset, 0);
+  }
+
   rs_free(subrange.su_rsid.at_rset);
   return ret;
 }
@@ -470,7 +613,7 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
 	obj->memory.page_types_len = 2;
 	obj->memory.page_types = malloc(2*sizeof(*obj->memory.page_types));
 	memset(obj->memory.page_types, 0, 2*sizeof(*obj->memory.page_types));
-	obj->memory.page_types[0].size = getpagesize();
+	obj->memory.page_types[0].size = hwloc_getpagesize();
 #ifdef HAVE__SC_LARGE_PAGESIZE
 	obj->memory.page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
@@ -488,17 +631,34 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
 	break;
       case HWLOC_OBJ_CORE:
       {
-	hwloc_obj_t obj2 = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
+	hwloc_obj_t obj2, obj3;
+	obj2 = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
 	obj2->cpuset = hwloc_bitmap_dup(obj->cpuset);
 	obj2->attr->cache.size = _system_configuration.dcache_size;
 	obj2->attr->cache.associativity = _system_configuration.dcache_asc;
 	obj2->attr->cache.linesize = _system_configuration.dcache_line;
 	obj2->attr->cache.depth = 1;
-	obj2->attr->cache.type = HWLOC_OBJ_CACHE_DATA;
-	hwloc_debug("Adding an L1 cache for core %d\n", i);
-	hwloc_insert_object_by_cpuset(topology, obj2);
-	/* FIXME _system_configuration.icache_size/asc/line for L1i,
-	 * or L1u if _system_configuration.cache_attrib & (1<<30) */
+	if (_system_configuration.cache_attrib & (1<<30)) {
+	  /* Unified cache */
+	  obj2->attr->cache.type = HWLOC_OBJ_CACHE_UNIFIED;
+	  hwloc_debug("Adding an L1u cache for core %d\n", i);
+	  hwloc_insert_object_by_cpuset(topology, obj2);
+	} else {
+	  /* Separate Instruction and Data caches */
+	  obj2->attr->cache.type = HWLOC_OBJ_CACHE_DATA;
+	  hwloc_debug("Adding an L1d cache for core %d\n", i);
+	  hwloc_insert_object_by_cpuset(topology, obj2);
+
+	  obj3 = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
+	  obj3->cpuset = hwloc_bitmap_dup(obj->cpuset);
+	  obj3->attr->cache.size = _system_configuration.icache_size;
+	  obj3->attr->cache.associativity = _system_configuration.icache_asc;
+	  obj3->attr->cache.linesize = _system_configuration.icache_line;
+	  obj3->attr->cache.depth = 1;
+	  obj3->attr->cache.type = HWLOC_OBJ_CACHE_INSTRUCTION;
+	  hwloc_debug("Adding an L1i cache for core %d\n", i);
+	  hwloc_insert_object_by_cpuset(topology, obj3);
+	}
 	break;
       }
       default:
@@ -514,10 +674,18 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
   rs_free(rad);
 }
 
-void
-hwloc_look_aix(struct hwloc_topology *topology)
+static int
+hwloc_look_aix(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   int i;
+
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
   /* TODO: R_LGPGDEF/R_LGPGFREE for large pages */
 
   hwloc_debug("Note: SMPSDL is at %d\n", rs_getinfo(NULL, R_SMPSDL, 0));
@@ -579,49 +747,84 @@ hwloc_look_aix(struct hwloc_topology *topology)
     }
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "AIX");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_aix_hooks(struct hwloc_topology *topology)
+hwloc_set_aix_hooks(struct hwloc_binding_hooks *hooks,
+		    struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
-  topology->set_proc_cpubind = hwloc_aix_set_proc_cpubind;
-  topology->get_proc_cpubind = hwloc_aix_get_proc_cpubind;
+  hooks->set_proc_cpubind = hwloc_aix_set_proc_cpubind;
+  hooks->get_proc_cpubind = hwloc_aix_get_proc_cpubind;
 #ifdef R_THREAD
 #ifdef HWLOC_HAVE_PTHREAD_GETTHRDS_NP
-  topology->set_thread_cpubind = hwloc_aix_set_thread_cpubind;
-  topology->get_thread_cpubind = hwloc_aix_get_thread_cpubind;
+  hooks->set_thread_cpubind = hwloc_aix_set_thread_cpubind;
+  hooks->get_thread_cpubind = hwloc_aix_get_thread_cpubind;
 #endif /* HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
 #endif /* R_THREAD */
-  topology->set_thisproc_cpubind = hwloc_aix_set_thisproc_cpubind;
-  topology->get_thisproc_cpubind = hwloc_aix_get_thisproc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_aix_set_thisproc_cpubind;
+  hooks->get_thisproc_cpubind = hwloc_aix_get_thisproc_cpubind;
 #ifdef R_THREAD
-  topology->set_thisthread_cpubind = hwloc_aix_set_thisthread_cpubind;
-  topology->get_thisthread_cpubind = hwloc_aix_get_thisthread_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_aix_set_thisthread_cpubind;
+  hooks->get_thisthread_cpubind = hwloc_aix_get_thisthread_cpubind;
 #endif /* R_THREAD */
-  /* TODO: get_last_cpu_location: use mycpu() */
+  hooks->get_thisthread_last_cpu_location = hwloc_aix_get_thisthread_last_cpu_location;
+  /* TODO: get_last_cpu_location: mycpu() only works for the current thread? */
 #ifdef P_DEFAULT
-  topology->set_proc_membind = hwloc_aix_set_proc_membind;
-  topology->get_proc_membind = hwloc_aix_get_proc_membind;
+  hooks->set_proc_membind = hwloc_aix_set_proc_membind;
+  hooks->get_proc_membind = hwloc_aix_get_proc_membind;
 #ifdef R_THREAD
 #if 0 /* def HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
   /* Does it really make sense to set the memory binding of another thread? */
-  topology->set_thread_membind = hwloc_aix_set_thread_membind;
-  topology->get_thread_membind = hwloc_aix_get_thread_membind;
+  hooks->set_thread_membind = hwloc_aix_set_thread_membind;
+  hooks->get_thread_membind = hwloc_aix_get_thread_membind;
 #endif /* HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
 #endif /* R_THREAD */
-  topology->set_thisproc_membind = hwloc_aix_set_thisproc_membind;
-  topology->get_thisproc_membind = hwloc_aix_get_thisproc_membind;
+  hooks->set_thisproc_membind = hwloc_aix_set_thisproc_membind;
+  hooks->get_thisproc_membind = hwloc_aix_get_thisproc_membind;
 #ifdef R_THREAD
-  topology->set_thisthread_membind = hwloc_aix_set_thisthread_membind;
-  topology->get_thisthread_membind = hwloc_aix_get_thisthread_membind;
+  hooks->set_thisthread_membind = hwloc_aix_set_thisthread_membind;
+  hooks->get_thisthread_membind = hwloc_aix_get_thisthread_membind;
 #endif /* R_THREAD */
-  /* topology->set_area_membind = hwloc_aix_set_area_membind; */
+  /* hooks->set_area_membind = hwloc_aix_set_area_membind; */
   /* get_area_membind is not available */
-  topology->alloc_membind = hwloc_aix_alloc_membind;
-  topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_free_mmap;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
+  hooks->alloc_membind = hwloc_aix_alloc_membind;
+  hooks->alloc = hwloc_alloc_mmap;
+  hooks->free_membind = hwloc_free_mmap;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
 #endif /* P_DEFAULT */
 }
+
+static struct hwloc_backend *
+hwloc_aix_component_instantiate(struct hwloc_disc_component *component,
+				const void *_data1 __hwloc_attribute_unused,
+				const void *_data2 __hwloc_attribute_unused,
+				const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_aix;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_aix_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
+  "aix",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_aix_component_instantiate,
+  50,
+  NULL
+};
+
+const struct hwloc_component hwloc_aix_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_aix_disc_component
+};

@@ -1,12 +1,13 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
 #include <private/autogen/config.h>
+#include <private/private.h>
 #include <private/misc.h>
 
 #include <stdarg.h>
@@ -14,6 +15,7 @@
 #include <sys/utsname.h>
 #endif
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
@@ -89,6 +91,10 @@ void hwloc_add_uname_info(struct hwloc_topology *topology __hwloc_attribute_unus
   struct utsname utsname;
 
   if (uname(&utsname) < 0)
+    return;
+
+  if (hwloc_obj_get_info_by_name(topology->levels[0][0], "OSName"))
+    /* don't annotate twice */
     return;
 
   hwloc_obj_add_info(topology->levels[0][0], "OSName", utsname.sysname);

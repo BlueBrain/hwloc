@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright (c) 2009 inria.  All rights reserved.
+dnl Copyright (c) 2009-2012 Inria.  All rights reserved.
 dnl Copyright (c) 2009, 2011 Université Bordeaux 1
 dnl Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
@@ -9,7 +9,7 @@ dnl Copyright (c) 2004-2005 The Regents of the University of California.
 dnl                         All rights reserved.
 dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart, 
 dnl                         University of Stuttgart.  All rights reserved.
-dnl Copyright ©  2010 inria.  All rights reserved.
+dnl Copyright © 2010-2012 Inria.  All rights reserved.
 dnl Copyright © 2006-2011 Cisco Systems, Inc.  All rights reserved.
 dnl
 dnl See COPYING in top-level directory.
@@ -65,6 +65,21 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
                   AS_HELP_STRING([--disable-pci],
                                  [Disable the PCI device discovery using libpci]))
 
+    # OpenCL?
+    AC_ARG_ENABLE([opencl],
+                  AS_HELP_STRING([--disable-opencl],
+                                 [Disable the OpenCL device discovery]))
+
+    # CUDA?
+    AC_ARG_ENABLE([cuda],
+                  AS_HELP_STRING([--disable-cuda],
+                                 [Disable the CUDA device discovery using libcudart]))
+
+    # NVML?
+    AC_ARG_ENABLE([nvml],
+                  AS_HELP_STRING([--disable-nvml],
+                                 [Disable the NVML device discovery]))
+
     # GL/Display
     AC_ARG_ENABLE([gl],
 		  AS_HELP_STRING([--disable-gl],
@@ -74,6 +89,11 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
     AC_ARG_ENABLE([libnuma],
                   AS_HELP_STRING([--disable-libnuma],
                                  [Disable the Linux libnuma]))
+
+    # Plugins
+    AC_ARG_ENABLE([plugins],
+                  AS_HELP_STRING([--enable-plugins=name,...],
+                                 [Build the given components as dynamically-loaded plugins]))
 
 ])dnl
 
@@ -206,7 +226,7 @@ EOF
         add="$add -Wmissing-prototypes -Wstrict-prototypes"
         add="$add -Wcomment -pedantic"
 
-        CFLAGS="$CFLAGS $add"
+        HWLOC_CFLAGS="$HWLOC_CFLAGS $add"
     fi
 
     # Generate some files for the docs
@@ -226,10 +246,8 @@ AC_DEFUN([HWLOC_SETUP_UTILS],[
 ###
 EOF
 
-    hwloc_build_utils=yes
-
     # Cairo support
-    hwloc_cairo_happy=
+    hwloc_cairo_happy=no
     if test "x$enable_cairo" != "xno"; then
       HWLOC_PKG_CHECK_MODULES([CAIRO], [cairo], [cairo_fill],
                               [hwloc_cairo_happy=yes],
@@ -333,8 +351,6 @@ AC_DEFUN([HWLOC_SETUP_TESTS],[
 ###
 EOF
 
-    hwloc_build_tests=yes
-
     AC_CHECK_LIB([pthread], [pthread_self], [hwloc_have_pthread=yes])
 
     # linux-libnuma.h testing requires libnuma with numa_bitmask_alloc()
@@ -357,39 +373,22 @@ EOF
                                        hwloc_have_myriexpress=yes])],
                         [AC_MSG_RESULT(no)])])])
 
-    AC_CHECK_HEADERS([cuda.h], [
-      AC_MSG_CHECKING(if CUDA_VERSION >= 3020)
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <cuda.h>
-#ifndef CUDA_VERSION
-#error CUDA_VERSION undefined
-#elif CUDA_VERSION < 3020
-#error CUDA_VERSION too old
-#endif]], [[int i = 3;]])],
-       [AC_MSG_RESULT(yes)
-        AC_CHECK_LIB([cuda], [cuInit],
-		     [AC_DEFINE([HAVE_CUDA], 1, [Define to 1 if we have -lcuda])
-		      hwloc_have_cuda=yes])],
-       [AC_MSG_RESULT(no)])])
-
-    AC_CHECK_HEADERS([cuda_runtime_api.h], [
-      AC_MSG_CHECKING(if CUDART_VERSION >= 3020)
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <cuda_runtime_api.h>
-#ifndef CUDART_VERSION
-#error CUDART_VERSION undefined
-#elif CUDART_VERSION < 3020
-#error CUDART_VERSION too old
-#endif]], [[int i = 3;]])],
-       [AC_MSG_RESULT(yes)
-        AC_CHECK_LIB([cudart], [cudaGetDeviceCount],
-		     [AC_DEFINE([HAVE_CUDART], 1, [Define to 1 if we have -lcudart])
-		      hwloc_have_cudart=yes])],
-       [AC_MSG_RESULT(no)])])
-
     AC_CHECK_PROGS(XMLLINT, [xmllint])
 
     AC_CHECK_PROGS(BUNZIPP, bunzip2, false)
+
+    AC_MSG_CHECKING(if CXX works)
+    AC_LANG_PUSH([C++])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <iostream>
+using namespace std;
+int foo(void) {
+  cout << "test" << endl;
+  return 0;
+}
+	]])], [hwloc_have_cxx=yes], [hwloc_have_cxx=no])
+    AC_LANG_POP([C++])
+    AC_MSG_RESULT([$hwloc_have_cxx])
 
     _HWLOC_CHECK_DIFF_U
 
@@ -405,14 +404,17 @@ EOF
         hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh]
         hwloc_config_prefix[tests/linux/test-topology.sh]
         hwloc_config_prefix[tests/xml/test-topology.sh]
+        hwloc_config_prefix[tests/wrapper.sh]
         hwloc_config_prefix[utils/hwloc-assembler-remote]
+        hwloc_config_prefix[utils/test-hwloc-annotate.sh]
         hwloc_config_prefix[utils/test-hwloc-assembler.sh]
         hwloc_config_prefix[utils/test-hwloc-calc.sh]
         hwloc_config_prefix[utils/test-hwloc-distances.sh]
         hwloc_config_prefix[utils/test-hwloc-distrib.sh]
-        hwloc_config_prefix[utils/test-hwloc-ls.sh])
+        hwloc_config_prefix[utils/test-hwloc-ls.sh]
+        hwloc_config_prefix[utils/test-fake-plugin.sh])
 
-    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh])
+    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[tests/wrapper.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-annotate.sh ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh ]hwloc_config_prefix[utils/test-fake-plugin.sh])
 
     # These links are only needed in standalone mode.  It would
     # be nice to m4 foreach this somehow, but whenever I tried
@@ -421,9 +423,6 @@ EOF
     # built in standalone mode, only generate them in
     # standalone mode.
     AC_CONFIG_LINKS(
-        hwloc_config_prefix[tests/ports/topology.c]:hwloc_config_prefix[src/topology.c]
-	hwloc_config_prefix[tests/ports/traversal.c]:hwloc_config_prefix[src/traversal.c]
-	hwloc_config_prefix[tests/ports/topology-synthetic.c]:hwloc_config_prefix[src/topology-synthetic.c]
 	hwloc_config_prefix[tests/ports/topology-solaris.c]:hwloc_config_prefix[src/topology-solaris.c]
 	hwloc_config_prefix[tests/ports/topology-solaris-chiptype.c]:hwloc_config_prefix[src/topology-solaris-chiptype.c]
 	hwloc_config_prefix[tests/ports/topology-aix.c]:hwloc_config_prefix[src/topology-aix.c]
@@ -431,6 +430,7 @@ EOF
 	hwloc_config_prefix[tests/ports/topology-windows.c]:hwloc_config_prefix[src/topology-windows.c]
 	hwloc_config_prefix[tests/ports/topology-darwin.c]:hwloc_config_prefix[src/topology-darwin.c]
 	hwloc_config_prefix[tests/ports/topology-freebsd.c]:hwloc_config_prefix[src/topology-freebsd.c]
+	hwloc_config_prefix[tests/ports/topology-netbsd.c]:hwloc_config_prefix[src/topology-netbsd.c]
 	hwloc_config_prefix[tests/ports/topology-hpux.c]:hwloc_config_prefix[src/topology-hpux.c])
     ])
 ])dnl

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -8,18 +8,12 @@
 
 #include <private/autogen/config.h>
 #include <hwloc.h>
+#include <private/xml.h>
 #include <private/private.h>
 #include <private/misc.h>
 #include <private/debug.h>
 
-#include <assert.h>
-#include <strings.h>
-#ifdef HWLOC_HAVE_LIBXML2
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#endif
-
-static int
+int
 hwloc__xml_verbose(void)
 {
   static int first = 1;
@@ -33,115 +27,31 @@ hwloc__xml_verbose(void)
   return verbose;
 }
 
-#ifdef HWLOC_HAVE_LIBXML2
-static void hwloc_libxml2_error_callback(void * ctx __hwloc_attribute_unused, const char * msg __hwloc_attribute_unused, ...) { /* do nothing */ }
+/*********************************
+ ********* XML callbacks *********
+ *********************************/
 
-static void
-hwloc_libxml2_disable_stderrwarnings(void)
-{
-  static int first = 1;
-  if (first) {
-    xmlSetGenericErrorFunc(NULL, hwloc__xml_verbose() ? xmlGenericError : hwloc_libxml2_error_callback);
-    first = 0;
-  }
-}
-#endif
+/* set when registering nolibxml and libxml components.
+ * modifications protected by the components mutex.
+ * read by the common XML code in topology-xml.c to jump to the right XML backend.
+ */
+static struct hwloc_xml_callbacks *hwloc_nolibxml_callbacks = NULL, *hwloc_libxml_callbacks = NULL;
 
-/***********************************
- ******** Backend Init/Exit ********
- ***********************************/
-
-/* this can be the first XML call */
-int
-hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
-{
-#ifdef HWLOC_HAVE_LIBXML2
-  char *env = getenv("HWLOC_NO_LIBXML_IMPORT");
-  if (!env || !atoi(env)) {
-    xmlDoc *doc = NULL;
-
-    LIBXML_TEST_VERSION;
-    hwloc_libxml2_disable_stderrwarnings();
-
-    errno = 0; /* set to 0 so that we know if libxml2 changed it */
-
-    if (xmlpath)
-      doc = xmlReadFile(xmlpath, NULL, 0);
-    else if (xmlbuffer)
-      doc = xmlReadMemory(xmlbuffer, xmlbuflen, "", NULL, 0);
-
-    if (!doc) {
-      if (!errno)
-	/* libxml2 read the file fine, but it got an error during parsing */
-      errno = EINVAL;
-      return -1;
-    }
-
-    topology->backend_params.xml.buffer = NULL;
-    topology->backend_params.xml.doc = doc;
-  } else
-#endif /* HWLOC_HAVE_LIBXML2 */
-  if (xmlbuffer) {
-    topology->backend_params.xml.buffer = malloc(xmlbuflen);
-    memcpy(topology->backend_params.xml.buffer, xmlbuffer, xmlbuflen);
-  } else {
-    FILE * file;
-    size_t buflen = 4096, offset, readlen;
-    char *buffer = malloc(buflen+1);
-    size_t ret;
-
-    if (!strcmp(xmlpath, "-"))
-      xmlpath = "/dev/stdin";
-
-    file = fopen(xmlpath, "r");
-    if (!file)
-      return -1;
-
-    offset = 0; readlen = buflen;
-    while (1) {
-      ret = fread(buffer+offset, 1, readlen, file);
-
-      offset += ret;
-      buffer[offset] = 0;
-
-      if (ret != readlen)
-        break;
-
-      buflen *= 2;
-      buffer = realloc(buffer, buflen+1);
-      readlen = buflen/2;
-    }
-
-    fclose(file);
-
-    topology->backend_params.xml.buffer = buffer;
-    /* buflen = offset+1; */
-  }
-
-  topology->is_thissystem = 0;
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
-  topology->backend_type = HWLOC_BACKEND_XML;
-
-  return 0;
-}
-
-/* this canNOT be the first XML call */
 void
-hwloc_backend_xml_exit(struct hwloc_topology *topology)
+hwloc_xml_callbacks_register(struct hwloc_xml_component *comp)
 {
-#ifdef HWLOC_HAVE_LIBXML2
-  char *env = getenv("HWLOC_NO_LIBXML_IMPORT");
-  if (!env || !atoi(env)) {
-    xmlFreeDoc((xmlDoc*)topology->backend_params.xml.doc);
-  } else
-#endif
-  {
-    assert(topology->backend_params.xml.buffer);
-    free(topology->backend_params.xml.buffer);
-  }
-  assert(topology->backend_type == HWLOC_BACKEND_XML);
-  topology->backend_type = HWLOC_BACKEND_NONE;
+  if (!hwloc_nolibxml_callbacks)
+    hwloc_nolibxml_callbacks = comp->nolibxml_callbacks;
+  if (!hwloc_libxml_callbacks)
+    hwloc_libxml_callbacks = comp->libxml_callbacks;
 }
+
+void
+hwloc_xml_callbacks_reset(void)
+{
+  hwloc_nolibxml_callbacks = NULL;
+  hwloc_libxml_callbacks = NULL;
+}			       
 
 /************************************************
  ********* XML import (common routines) *********
@@ -297,7 +207,7 @@ hwloc__xml_import_object_attr(struct hwloc_topology *topology __hwloc_attribute_
     switch (obj->type) {
     case HWLOC_OBJ_PCI_DEVICE:
     case HWLOC_OBJ_BRIDGE: {
-      obj->attr->pcidev.linkspeed = atof(value);
+      obj->attr->pcidev.linkspeed = (float) atof(value);
       break;
     }
     default:
@@ -447,260 +357,6 @@ hwloc__xml_import_object_attr(struct hwloc_topology *topology __hwloc_attribute_
 }
 
 
-/* NO-libxml helper: skip spaces until the next interesting char */
-static char *
-hwloc__nolibxml_import_ignore_spaces(char *buffer)
-{
-  return buffer + strspn(buffer, " \t\n");
-}
-
-typedef struct hwloc__xml_import_state_s {
-  struct hwloc__xml_import_state_s *parent;
-  int use_libxml;
-
-  /* only useful if not using libxml */
-  char *tagbuffer; /* buffer containing the next tag */
-  char *attrbuffer; /* buffer containing the next attribute of the current node */
-  char *tagname; /* tag name of the current node */
-  int closed; /* set if the current node is auto-closing */
-
-  /* only useful if using libxml */
-#ifdef HWLOC_HAVE_LIBXML2
-  xmlNode *libxml_node; /* current libxml node, always valid */
-  xmlNode *libxml_child; /* last processed child, or NULL if none yet */
-  xmlAttr *libxml_attr; /* last processed attribute, or NULL if none yet */
-#endif
-} * hwloc__xml_import_state_t;
-
-static int
-hwloc__xml_import_next_attr(hwloc__xml_import_state_t state, char **namep, char **valuep)
-{
-  if (state->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    xmlAttr *attr;
-    if (state->libxml_attr)
-      attr = state->libxml_attr->next;
-    else
-      attr = state->libxml_node->properties;
-    for (; attr; attr = attr->next)
-      if (attr->type == XML_ATTRIBUTE_NODE) {
-	/* use the first valid attribute content */
-	xmlNode *subnode;
-	for (subnode = attr->children; subnode; subnode = subnode->next) {
-	  if (subnode->type == XML_TEXT_NODE) {
-	    if (subnode->content && subnode->content[0] != '\0' && subnode->content[0] != '\n') {
-	      *namep = (char *) attr->name;
-	      *valuep = (char *) subnode->content;
-	      state->libxml_attr = attr;
-	      return 0;
-	    }
-	  } else {
-	    if (hwloc__xml_verbose())
-	      fprintf(stderr, "ignoring unexpected xml attr node type %u\n", subnode->type);
-	  }
-	}
-      } else {
-	if (hwloc__xml_verbose())
-	  fprintf(stderr, "ignoring unexpected xml attr type %u\n", attr->type);
-      }
-#else
-    assert(0);
-#endif
-    return -1;
-  } else {
-    int namelen;
-    size_t len, escaped;
-    char *buffer, *value, *end;
-
-    /* find the beginning of an attribute */
-    buffer = hwloc__nolibxml_import_ignore_spaces(state->attrbuffer);
-    namelen = strspn(buffer, "abcdefghijklmnopqrstuvwxyz_");
-    if (buffer[namelen] != '=' || buffer[namelen+1] != '\"')
-      return -1;
-    buffer[namelen] = '\0';
-    *namep = buffer;
-
-    /* find the beginning of its value, and unescape it */
-    *valuep = value = buffer+namelen+2;
-    len = 0; escaped = 0;
-    while (value[len+escaped] != '\"') {
-      if (value[len+escaped] == '&') {
-	if (!strcmp(&value[1+len+escaped], "#10;")) {
-	  escaped += 4;
-	  value[1+len] = '\n';
-	} else if (!strcmp(&value[1+len+escaped], "#13;")) {
-	  escaped += 4;
-	  value[1+len] = '\r';
-	} else if (!strcmp(&value[1+len+escaped], "#9;")) {
-	  escaped += 3;
-	  value[1+len] = '\t';
-	} else if (!strcmp(&value[1+len+escaped], "quot;")) {
-	  escaped += 5;
-	  value[1+len] = '\"';
-	} else if (!strcmp(&value[1+len+escaped], "lt;")) {
-	  escaped += 3;
-	  value[1+len] = '<';
-	} else if (!strcmp(&value[1+len+escaped], "gt;")) {
-	  escaped += 3;
-	  value[1+len] = '>';
-	} else if (!strcmp(&value[1+len+escaped], "amp;")) {
-	  escaped += 4;
-	  value[1+len] = '&';
-	} else {
-	  return -1;
-	}
-	value[len] = value[len+escaped];
-      }
-      len++;
-      if (value[len+escaped] == '\0')
-	return -1;
-    }
-    value[len] = '\0';
-
-    /* find next attribute */
-    end = &value[len+escaped+1]; /* skip the ending " */
-    state->attrbuffer = hwloc__nolibxml_import_ignore_spaces(end);
-    return 0;
-  }
-}
-
-static int
-hwloc__xml_import_find_child(hwloc__xml_import_state_t state,
-			     hwloc__xml_import_state_t childstate,
-			     char **tagp)
-{
-  childstate->parent = state;
-  childstate->use_libxml = state->use_libxml;
-
-  if (state->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    xmlNode *child;
-    if (!state->libxml_child)
-      return 0;
-    child = state->libxml_child->next;
-    for (; child; child = child->next)
-      if (child->type == XML_ELEMENT_NODE) {
-	state->libxml_child = childstate->libxml_node = child;
-	childstate->libxml_child = child->children;
-	childstate->libxml_attr = NULL;
-	*tagp = (char*) child->name;
-	return 1;
-      } else if (child->type == XML_TEXT_NODE) {
-	if (child->content && child->content[0] != '\0' && child->content[0] != '\n')
-	  if (hwloc__xml_verbose())
-	    fprintf(stderr, "ignoring object text content %s\n", (const char*) child->content);
-      } else if (child->type != XML_COMMENT_NODE) {
-	if (hwloc__xml_verbose())
-	  fprintf(stderr, "ignoring unexpected xml node type %u\n", child->type);
-      }
-#else
-    assert(0);
-#endif
-    return 0;
-  } else {
-    char *buffer = state->tagbuffer;
-    char *end;
-    int namelen;
-
-    /* auto-closed tags have no children */
-    if (state->closed)
-      return 0;
-
-    /* find the beginning of the tag */
-    buffer = hwloc__nolibxml_import_ignore_spaces(buffer);
-    if (buffer[0] != '<')
-      return -1;
-    buffer++;
-
-    /* if closing tag, return nothing and do not advance */
-    if (buffer[0] == '/')
-      return 0;
-
-    /* normal tag */
-    *tagp = childstate->tagname = buffer;
-
-    /* find the end, mark it and return it */
-    end = strchr(buffer, '>');
-    if (!end)
-      return -1;
-    end[0] = '\0';
-    childstate->tagbuffer = end+1;
-
-    /* handle auto-closing tags */
-    if (end[-1] == '/') {
-      childstate->closed = 1;
-      end[-1] = '\0';
-    } else
-      childstate->closed = 0;
-
-    /* find attributes */
-    namelen = strspn(buffer, "abcdefghijklmnopqrstuvwxyz_");
-    /* cannot be without attributes */
-    assert(buffer[namelen] != '\0');
-
-    if (buffer[namelen] != ' ')
-      return -1;
-
-    /* found a space, likely starting attributes */
-    buffer[namelen] = '\0';
-    childstate->attrbuffer = buffer+namelen+1;
-    return 1;
-  }
-}
-
-/* look for an explicit closing tag </name> */
-static int
-hwloc__xml_import_close_tag(hwloc__xml_import_state_t state)
-{
-  if (state->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    /* nothing */
-#else
-    assert(0);
-#endif
-    return 0;
-  } else {
-    char *buffer = state->tagbuffer;
-    char *end;
-
-    /* auto-closed tags need nothing */
-    if (state->closed)
-      return 0;
-
-    /* find the beginning of the tag */
-    buffer = hwloc__nolibxml_import_ignore_spaces(buffer);
-    if (buffer[0] != '<')
-      return -1;
-    buffer++;
-
-    /* find the end, mark it and return it to the parent */
-    end = strchr(buffer, '>');
-    if (!end)
-      return -1;
-    end[0] = '\0';
-    state->tagbuffer = end+1;
-
-    /* if closing tag, return nothing */
-    if (buffer[0] != '/' || strcmp(buffer+1, state->tagname) )
-      return -1;
-    return 0;
-  }
-}
-
-static void
-hwloc__xml_import_close_child(hwloc__xml_import_state_t state)
-{
-  if (state->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    /* nothing */
-#else
-    assert(0);
-#endif
-  } else {
-    state->parent->tagbuffer = state->tagbuffer;
-  }
-}
-
 static int
 hwloc__xml_import_info(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj,
 		       hwloc__xml_import_state_t state)
@@ -710,7 +366,7 @@ hwloc__xml_import_info(hwloc_topology_t topology __hwloc_attribute_unused, hwloc
 
   while (1) {
     char *attrname, *attrvalue;
-    if (hwloc__xml_import_next_attr(state, &attrname, &attrvalue) < 0)
+    if (state->next_attr(state, &attrname, &attrvalue) < 0)
       break;
     if (!strcmp(attrname, "name"))
       infoname = attrvalue;
@@ -724,7 +380,7 @@ hwloc__xml_import_info(hwloc_topology_t topology __hwloc_attribute_unused, hwloc
     /* empty strings are ignored by libxml */
     hwloc_obj_add_info(obj, infoname, infovalue ? infovalue : "");
 
-  return hwloc__xml_import_close_tag(state);
+  return state->close_tag(state);
 }
 
 static int
@@ -735,7 +391,7 @@ hwloc__xml_import_pagetype(hwloc_topology_t topology __hwloc_attribute_unused, h
 
   while (1) {
     char *attrname, *attrvalue;
-    if (hwloc__xml_import_next_attr(state, &attrname, &attrvalue) < 0)
+    if (state->next_attr(state, &attrname, &attrvalue) < 0)
       break;
     if (!strcmp(attrname, "size"))
       size = strtoull(attrvalue, NULL, 10);
@@ -753,11 +409,12 @@ hwloc__xml_import_pagetype(hwloc_topology_t topology __hwloc_attribute_unused, h
     obj->memory.page_types[idx].count = count;
   }
 
-  return hwloc__xml_import_close_tag(state);
+  return state->close_tag(state);
 }
 
 static int
-hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj,
+hwloc__xml_import_distances(struct hwloc_xml_backend_data_s *data,
+			    hwloc_obj_t obj,
 			    hwloc__xml_import_state_t state)
 {
   unsigned long reldepth = 0, nbobjs = 0;
@@ -767,7 +424,7 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
 
   while (1) {
     char *attrname, *attrvalue;
-    if (hwloc__xml_import_next_attr(state, &attrname, &attrvalue) < 0)
+    if (state->next_attr(state, &attrname, &attrvalue) < 0)
       break;
     if (!strcmp(attrname, "nbobjs"))
       nbobjs = strtoul(attrvalue, NULL, 10);
@@ -796,7 +453,7 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
       char *attrname, *attrvalue;
       float val;
 
-      ret = hwloc__xml_import_find_child(state, &childstate, &tag);
+      ret = state->find_child(state, &childstate, &tag);
       if (ret <= 0 || strcmp(tag, "latency")) {
 	/* a latency child is needed */
 	free(distances->distances.latency);
@@ -804,7 +461,7 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
 	return -1;
       }
 
-      ret = hwloc__xml_import_next_attr(&childstate, &attrname, &attrvalue);
+      ret = state->next_attr(&childstate, &attrname, &attrvalue);
       if (ret < 0 || strcmp(attrname, "value")) {
 	free(distances->distances.latency);
 	free(distances);
@@ -816,34 +473,90 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
       if (val > latmax)
 	latmax = val;
 
-      ret = hwloc__xml_import_close_tag(&childstate);
+      ret = state->close_tag(&childstate);
       if (ret < 0)
 	return -1;
 
-      hwloc__xml_import_close_child(&childstate);
+      state->close_child(&childstate);
     }
 
     distances->distances.latency_max = latmax;
 
-    if (topology->backend_params.xml.last_distances)
-      topology->backend_params.xml.last_distances->next = distances;
+    if (data->last_distances)
+      data->last_distances->next = distances;
     else
-      topology->backend_params.xml.first_distances = distances;
-    distances->prev = topology->backend_params.xml.last_distances;
+      data->first_distances = distances;
+    distances->prev = data->last_distances;
     distances->next = NULL;
   }
 
-  return hwloc__xml_import_close_tag(state);
+  return state->close_tag(state);
 }
 
 static int
-hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
+hwloc__xml_import_userdata(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj,
+			   hwloc__xml_import_state_t state)
+{
+  size_t length = 0;
+  int encoded = 0;
+  char *name = NULL; /* optional */
+
+  while (1) {
+    char *attrname, *attrvalue;
+    if (state->next_attr(state, &attrname, &attrvalue) < 0)
+      break;
+    if (!strcmp(attrname, "length"))
+      length = strtoul(attrvalue, NULL, 10);
+    else if (!strcmp(attrname, "encoding"))
+      encoded = !strcmp(attrvalue, "base64");
+    else if (!strcmp(attrname, "name"))
+      name = attrvalue;
+    else
+      return -1;
+  }
+
+  if (length && topology->userdata_import_cb) {
+    int ret;
+
+    if (encoded) {
+      char *encoded_buffer;
+      size_t encoded_length = 4*((length+2)/3);
+      ret = state->get_content(state, &encoded_buffer, encoded_length);
+      if (ret < 0)
+        return -1;
+      if (ret) {
+	char *decoded_buffer = malloc(length+1);
+	if (!decoded_buffer)
+	  return -1;
+	assert(encoded_buffer[encoded_length] == 0);
+	ret = hwloc_decode_from_base64(encoded_buffer, decoded_buffer, length+1);
+	if (ret != (int) length)
+	  return -1;
+	topology->userdata_import_cb(topology, obj, name, decoded_buffer, length);
+	free(decoded_buffer);
+      }
+    } else {
+      char *buffer;
+      ret = state->get_content(state, &buffer, length);
+      if (ret < 0)
+        return -1;
+      topology->userdata_import_cb(topology, obj, name, buffer, length);
+    }
+    state->close_content(state);
+  }
+  return state->close_tag(state);
+}
+
+static int
+hwloc__xml_import_object(hwloc_topology_t topology,
+			 struct hwloc_xml_backend_data_s *data,
+			 hwloc_obj_t obj,
 			 hwloc__xml_import_state_t state)
 {
   /* process attributes */
   while (1) {
     char *attrname, *attrvalue;
-    if (hwloc__xml_import_next_attr(state, &attrname, &attrvalue) < 0)
+    if (state->next_attr(state, &attrname, &attrvalue) < 0)
       break;
     if (!strcmp(attrname, "type")) {
       obj->type = hwloc_obj_type_of_string(attrvalue);
@@ -863,7 +576,7 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
     char *tag;
     int ret;
 
-    ret = hwloc__xml_import_find_child(state, &childstate, &tag);
+    ret = state->find_child(state, &childstate, &tag);
     if (ret < 0)
       return -1;
     if (!ret)
@@ -872,23 +585,25 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
     if (!strcmp(tag, "object")) {
       hwloc_obj_t childobj = hwloc_alloc_setup_object(HWLOC_OBJ_TYPE_MAX, -1);
       hwloc_insert_object_by_parent(topology, obj, childobj);
-      ret = hwloc__xml_import_object(topology, childobj, &childstate);
+      ret = hwloc__xml_import_object(topology, data, childobj, &childstate);
     } else if (!strcmp(tag, "page_type")) {
       ret = hwloc__xml_import_pagetype(topology, obj, &childstate);
     } else if (!strcmp(tag, "info")) {
       ret = hwloc__xml_import_info(topology, obj, &childstate);
     } else if (!strcmp(tag, "distances")) {
-      ret = hwloc__xml_import_distances(topology, obj, &childstate);
+      ret = hwloc__xml_import_distances(data, obj, &childstate);
+    } else if (!strcmp(tag, "userdata")) {
+      ret = hwloc__xml_import_userdata(topology, obj, &childstate);
     } else
       ret = -1;
 
     if (ret < 0)
       return ret;
 
-    hwloc__xml_import_close_child(&childstate);
+    state->close_child(&childstate);
   }
 
-  return hwloc__xml_import_close_tag(state);
+  return state->close_tag(state);
 }
 
 /***********************************
@@ -896,9 +611,10 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
  ***********************************/
 
 static void
-hwloc_xml__handle_distances(struct hwloc_topology *topology)
+hwloc_xml__handle_distances(struct hwloc_topology *topology,
+			    struct hwloc_xml_backend_data_s *data)
 {
-  struct hwloc_xml_imported_distances_s *xmldist, *next = topology->backend_params.xml.first_distances;
+  struct hwloc_xml_imported_distances_s *xmldist, *next = data->first_distances;
 
   if (!next)
     return;
@@ -939,107 +655,52 @@ hwloc_xml__handle_distances(struct hwloc_topology *topology)
 }
 
 /* this canNOT be the first XML call */
-int
-hwloc_look_xml(struct hwloc_topology *topology)
+static int
+hwloc_look_xml(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
+  struct hwloc_xml_backend_data_s *data = backend->private_data;
   struct hwloc__xml_import_state_s state, childstate;
   char *tag;
-#ifdef HWLOC_HAVE_LIBXML2
-  char *env;
-#endif
   hwloc_localeswitch_declare;
   int ret;
 
+  assert(!topology->levels[0][0]->cpuset);
+
   hwloc_localeswitch_init();
 
-  state.use_libxml = 0;
-  state.parent = NULL;
+  data->first_distances = data->last_distances = NULL;
 
-  topology->backend_params.xml.first_distances = topology->backend_params.xml.last_distances = NULL;
-
-#ifdef HWLOC_HAVE_LIBXML2
-  env = getenv("HWLOC_NO_LIBXML_IMPORT");
-  if (!env || !atoi(env)) {
-    xmlNode* root_node;
-    xmlDtd *dtd;
-
-    state.use_libxml = 1;
-
-    dtd = xmlGetIntSubset((xmlDoc*) topology->backend_params.xml.doc);
-    if (!dtd) {
-      if (hwloc__xml_verbose())
-	fprintf(stderr, "Loading XML topology without DTD\n");
-    } else if (strcmp((char *) dtd->SystemID, "hwloc.dtd")) {
-      if (hwloc__xml_verbose())
-	fprintf(stderr, "Loading XML topology with wrong DTD SystemID (%s instead of %s)\n",
-		(char *) dtd->SystemID, "hwloc.dtd");
-    }
-
-    root_node = xmlDocGetRootElement((xmlDoc*) topology->backend_params.xml.doc);
-
-    if (strcmp((const char *) root_node->name, "topology") && strcmp((const char *) root_node->name, "root")) {
-      /* root node should be in "topology" class (or "root" if importing from < 1.0) */
-      if (hwloc__xml_verbose())
-	fprintf(stderr, "ignoring object of class `%s' not at the top the xml hierarchy\n", (const char *) root_node->name);
-      goto failed;
-    }
-
-    state.libxml_node = root_node;
-    state.libxml_child = root_node->children;
-    state.libxml_attr = NULL;
-  } else
-#endif /* HWLOC_HAVE_LIBXML2 */
-  {
-    char *buffer = topology->backend_params.xml.buffer;
-
-    /* skip headers */
-    while (!strncmp(buffer, "<?xml ", 6) || !strncmp(buffer, "<!DOCTYPE ", 10)) {
-      buffer = strchr(buffer, '\n');
-      if (!buffer)
-	goto failed;
-      buffer++;
-    }
-
-    /* find topology tag */
-    if (strncmp(buffer, "<topology>", 10))
-	goto failed;
-
-    /* prepare parsing state */
-    state.tagbuffer = buffer+10;
-    state.tagname = "topology";
-    state.attrbuffer = NULL;
-  }
-
-  state.closed = 0;
-
-  /* find root object tag and import it */
-  ret = hwloc__xml_import_find_child(&state, &childstate, &tag);
-  if (ret < 0 || !ret || strcmp(tag, "object"))
-    goto failed;
-  ret = hwloc__xml_import_object(topology, topology->levels[0][0], &childstate);
+  ret = data->look_init(data, &state);
   if (ret < 0)
     goto failed;
-  hwloc__xml_import_close_child(&childstate);
+
+  /* find root object tag and import it */
+  ret = state.find_child(&state, &childstate, &tag);
+  if (ret < 0 || !ret || strcmp(tag, "object"))
+    goto failed;
+  ret = hwloc__xml_import_object(topology, data, topology->levels[0][0], &childstate);
+  if (ret < 0)
+    goto failed;
+  state.close_child(&childstate);
 
   /* find end of topology tag */
-  hwloc__xml_import_close_tag(&state);
+  state.close_tag(&state);
 
   /* keep the "Backend" information intact */
   /* we could add "BackendSource=XML" to notify that XML was used between the actual backend and here */
 
   /* if we added some distances, we must check them, and make them groupable */
-  hwloc_xml__handle_distances(topology);
-  topology->backend_params.xml.first_distances = topology->backend_params.xml.last_distances = NULL;
+  hwloc_xml__handle_distances(topology, data);
+  data->first_distances = data->last_distances = NULL;
   topology->support.discovery->pu = 1;
 
   hwloc_localeswitch_fini();
-  return 0;
+  return 1;
 
  failed:
-  if (state.use_libxml)
-    /* not only when verbose */
-    fprintf(stderr, "Failed to parse XML input with the minimalistic parser. If it was not\n"
-	    "generated by hwloc, try enabling full XML support with libxml2.\n");
+  if (data->look_failed)
+    data->look_failed(data);
   hwloc_localeswitch_fini();
   return -1;
 }
@@ -1048,230 +709,123 @@ hwloc_look_xml(struct hwloc_topology *topology)
  ********* XML export (common routines) *********
  ************************************************/
 
-typedef struct hwloc__xml_export_output_s {
-  int use_libxml;
+#define HWLOC_XML_CHAR_VALID(c) (((c) >= 32 && (c) <= 126) || (c) == '\t' || (c) == '\n' || (c) == '\r')
 
-  /* only useful if not using libxml */
-  char *buffer; /* (moving) buffer where to write */
-  size_t written; /* how many bytes were written (or would have be written if not truncated) */
-  size_t remaining; /* how many bytes are still available in the buffer */
-  unsigned indent; /* indentation level for the next line */
-
-  /* only useful if not using libxml */
-#ifdef HWLOC_HAVE_LIBXML2
-  xmlNodePtr current_node; /* current node to output */
-#endif
-} * hwloc__xml_export_output_t;
-
-/* NO-libxml helper: update output buffer */
-static void
-hwloc__xml_export_update_buffer(hwloc__xml_export_output_t output, int res)
+static int
+hwloc__xml_export_check_buffer(const char *buf, size_t length)
 {
-  if (res >= 0) {
-    output->written += res;
-    if (res >= (int) output->remaining)
-      res = output->remaining>0 ? output->remaining-1 : 0;
-    output->buffer += res;
-    output->remaining -= res;
-  }
+  unsigned i;
+  for(i=0; i<length; i++)
+    if (!HWLOC_XML_CHAR_VALID(buf[i]))
+      return -1;
+  return 0;
 }
 
-static void
-hwloc__xml_export_new_child(hwloc__xml_export_output_t output, const char *name)
+/* strdup and remove ugly chars from random string */
+static char*
+hwloc__xml_export_safestrdup(const char *old)
 {
-  if (output->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    output->current_node = xmlNewChild(output->current_node, NULL, BAD_CAST name, NULL);
-#else
-    assert(0);
-#endif
-  } else {
-    int res = hwloc_snprintf(output->buffer, output->remaining, "%*s<%s", output->indent, "", name);
-    hwloc__xml_export_update_buffer(output, res);
-    output->indent += 2;
-  }
-}
-
-/* NO-libxml helper: escape string */
-static char *
-hwloc__xml_export_escape_string(const char *src)
-{
-  int fulllen, sublen;
-  char *escaped, *dst;
-
-  fulllen = strlen(src);
-
-  sublen = strcspn(src, "\n\r\t\"<>&");
-  if (sublen == fulllen)
-    return NULL; /* nothing to escape */
-
-  escaped = malloc(fulllen*6+1); /* escaped chars are replaced by at most 6 char */
-  dst = escaped;
-
-  memcpy(dst, src, sublen);
-  src += sublen;
-  dst += sublen;
-
+  char *new = malloc(strlen(old)+1);
+  char *dst = new;
+  const char *src = old;
   while (*src) {
-    int replen;
-    switch (*src) {
-    case '\n': strcpy(dst, "&#10;");  replen=5; break;
-    case '\r': strcpy(dst, "&#13;");  replen=5; break;
-    case '\t': strcpy(dst, "&#9;");   replen=4; break;
-    case '\"': strcpy(dst, "&quot;"); replen=6; break;
-    case '<':  strcpy(dst, "&lt;");   replen=4; break;
-    case '>':  strcpy(dst, "&gt;");   replen=4; break;
-    case '&':  strcpy(dst, "&amp;");  replen=5; break;
-    default: replen=0; break;
-    }
-    dst+=replen; src++;
-
-    sublen = strcspn(src, "\n\r\t\"<>&");
-    memcpy(dst, src, sublen);
-    src += sublen;
-    dst += sublen;
+    if (HWLOC_XML_CHAR_VALID(*src))
+      *(dst++) = *src;
+    src++;
   }
-
-  *dst = 0;
-  return escaped;
+  *dst = '\0';
+  return new;
 }
 
-static void
-hwloc__xml_export_new_prop(hwloc__xml_export_output_t output, const char *name, const char *value)
+void
+hwloc__xml_export_object (hwloc__xml_export_state_t parentstate, hwloc_topology_t topology, hwloc_obj_t obj)
 {
-  if (output->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    xmlNewProp(output->current_node, BAD_CAST name, BAD_CAST value);
-#else
-    assert(0);
-#endif
-  } else {
-    char *escaped = hwloc__xml_export_escape_string(value);
-    int res = hwloc_snprintf(output->buffer, output->remaining, " %s=\"%s\"", name, escaped ? (const char *) escaped : value);
-    hwloc__xml_export_update_buffer(output, res);
-    free(escaped);
-  }
-}
-
-static void
-hwloc__xml_export_end_props(hwloc__xml_export_output_t output, unsigned nr_children)
-{
-  if (output->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    /* nothing to do */
-#else
-    assert(0);
-#endif
-  } else {
-    int res = hwloc_snprintf(output->buffer, output->remaining, nr_children ? ">\n" : "/>\n");
-    hwloc__xml_export_update_buffer(output, res);
-  }
-}
-
-static void
-hwloc__xml_export_end_child(hwloc__xml_export_output_t output, const char *name, unsigned nr_children)
-{
-  if (output->use_libxml) {
-#ifdef HWLOC_HAVE_LIBXML2
-    output->current_node = output->current_node->parent;
-#else
-    assert(0);
-#endif
-  } else {
-    int res;
-    output->indent -= 2;
-    if (nr_children) {
-      res = hwloc_snprintf(output->buffer, output->remaining, "%*s</%s>\n", output->indent, "", name);
-      hwloc__xml_export_update_buffer(output, res);
-    }
-  }
-}
-
-static void
-hwloc__xml_export_object (hwloc__xml_export_output_t output, hwloc_topology_t topology, hwloc_obj_t obj)
-{
+  struct hwloc__xml_export_state_s state;
   char *cpuset = NULL;
   char tmp[255];
-  unsigned nr_children = obj->memory.page_types_len + obj->infos_count + obj->distances_count + obj->arity;
   unsigned i;
 
-  hwloc__xml_export_new_child(output, "object");
-  hwloc__xml_export_new_prop(output, "type", hwloc_obj_type_string(obj->type));
+  parentstate->new_child(parentstate, &state, "object");
+
+  state.new_prop(&state, "type", hwloc_obj_type_string(obj->type));
   if (obj->os_level != -1) {
     sprintf(tmp, "%d", obj->os_level);
-    hwloc__xml_export_new_prop(output, "os_level", tmp);
+    state.new_prop(&state, "os_level", tmp);
   }
   if (obj->os_index != (unsigned) -1) {
     sprintf(tmp, "%u", obj->os_index);
-    hwloc__xml_export_new_prop(output, "os_index", tmp);
+    state.new_prop(&state, "os_index", tmp);
   }
   if (obj->cpuset) {
     hwloc_bitmap_asprintf(&cpuset, obj->cpuset);
-    hwloc__xml_export_new_prop(output, "cpuset", cpuset);
+    state.new_prop(&state, "cpuset", cpuset);
     free(cpuset);
   }
   if (obj->complete_cpuset) {
     hwloc_bitmap_asprintf(&cpuset, obj->complete_cpuset);
-    hwloc__xml_export_new_prop(output, "complete_cpuset", cpuset);
+    state.new_prop(&state, "complete_cpuset", cpuset);
     free(cpuset);
   }
   if (obj->online_cpuset) {
     hwloc_bitmap_asprintf(&cpuset, obj->online_cpuset);
-    hwloc__xml_export_new_prop(output, "online_cpuset", cpuset);
+    state.new_prop(&state, "online_cpuset", cpuset);
     free(cpuset);
   }
   if (obj->allowed_cpuset) {
     hwloc_bitmap_asprintf(&cpuset, obj->allowed_cpuset);
-    hwloc__xml_export_new_prop(output, "allowed_cpuset", cpuset);
+    state.new_prop(&state, "allowed_cpuset", cpuset);
     free(cpuset);
   }
   if (obj->nodeset && !hwloc_bitmap_isfull(obj->nodeset)) {
     hwloc_bitmap_asprintf(&cpuset, obj->nodeset);
-    hwloc__xml_export_new_prop(output, "nodeset", cpuset);
+    state.new_prop(&state, "nodeset", cpuset);
     free(cpuset);
   }
   if (obj->complete_nodeset && !hwloc_bitmap_isfull(obj->complete_nodeset)) {
     hwloc_bitmap_asprintf(&cpuset, obj->complete_nodeset);
-    hwloc__xml_export_new_prop(output, "complete_nodeset", cpuset);
+    state.new_prop(&state, "complete_nodeset", cpuset);
     free(cpuset);
   }
   if (obj->allowed_nodeset && !hwloc_bitmap_isfull(obj->allowed_nodeset)) {
     hwloc_bitmap_asprintf(&cpuset, obj->allowed_nodeset);
-    hwloc__xml_export_new_prop(output, "allowed_nodeset", cpuset);
+    state.new_prop(&state, "allowed_nodeset", cpuset);
     free(cpuset);
   }
 
-  if (obj->name)
-    hwloc__xml_export_new_prop(output, "name", obj->name);
+  if (obj->name) {
+    char *name = hwloc__xml_export_safestrdup(obj->name);
+    state.new_prop(&state, "name", name);
+    free(name);
+  }
 
   switch (obj->type) {
   case HWLOC_OBJ_CACHE:
     sprintf(tmp, "%llu", (unsigned long long) obj->attr->cache.size);
-    hwloc__xml_export_new_prop(output, "cache_size", tmp);
+    state.new_prop(&state, "cache_size", tmp);
     sprintf(tmp, "%u", obj->attr->cache.depth);
-    hwloc__xml_export_new_prop(output, "depth", tmp);
+    state.new_prop(&state, "depth", tmp);
     sprintf(tmp, "%u", (unsigned) obj->attr->cache.linesize);
-    hwloc__xml_export_new_prop(output, "cache_linesize", tmp);
+    state.new_prop(&state, "cache_linesize", tmp);
     sprintf(tmp, "%d", (unsigned) obj->attr->cache.associativity);
-    hwloc__xml_export_new_prop(output, "cache_associativity", tmp);
+    state.new_prop(&state, "cache_associativity", tmp);
     sprintf(tmp, "%d", (unsigned) obj->attr->cache.type);
-    hwloc__xml_export_new_prop(output, "cache_type", tmp);
+    state.new_prop(&state, "cache_type", tmp);
     break;
   case HWLOC_OBJ_GROUP:
     sprintf(tmp, "%u", obj->attr->group.depth);
-    hwloc__xml_export_new_prop(output, "depth", tmp);
+    state.new_prop(&state, "depth", tmp);
     break;
   case HWLOC_OBJ_BRIDGE:
     sprintf(tmp, "%u-%u", obj->attr->bridge.upstream_type, obj->attr->bridge.downstream_type);
-    hwloc__xml_export_new_prop(output, "bridge_type", tmp);
+    state.new_prop(&state, "bridge_type", tmp);
     sprintf(tmp, "%u", obj->attr->bridge.depth);
-    hwloc__xml_export_new_prop(output, "depth", tmp);
+    state.new_prop(&state, "depth", tmp);
     if (obj->attr->bridge.downstream_type == HWLOC_OBJ_BRIDGE_PCI) {
       sprintf(tmp, "%04x:[%02x-%02x]",
 	      (unsigned) obj->attr->bridge.downstream.pci.domain,
 	      (unsigned) obj->attr->bridge.downstream.pci.secondary_bus,
 	      (unsigned) obj->attr->bridge.downstream.pci.subordinate_bus);
-      hwloc__xml_export_new_prop(output, "bridge_pci", tmp);
+      state.new_prop(&state, "bridge_pci", tmp);
     }
     if (obj->attr->bridge.upstream_type != HWLOC_OBJ_BRIDGE_PCI)
       break;
@@ -1282,19 +836,19 @@ hwloc__xml_export_object (hwloc__xml_export_output_t output, hwloc_topology_t to
 	    (unsigned) obj->attr->pcidev.bus,
 	    (unsigned) obj->attr->pcidev.dev,
 	    (unsigned) obj->attr->pcidev.func);
-    hwloc__xml_export_new_prop(output, "pci_busid", tmp);
+    state.new_prop(&state, "pci_busid", tmp);
     sprintf(tmp, "%04x [%04x:%04x] [%04x:%04x] %02x",
 	    (unsigned) obj->attr->pcidev.class_id,
 	    (unsigned) obj->attr->pcidev.vendor_id, (unsigned) obj->attr->pcidev.device_id,
 	    (unsigned) obj->attr->pcidev.subvendor_id, (unsigned) obj->attr->pcidev.subdevice_id,
 	    (unsigned) obj->attr->pcidev.revision);
-    hwloc__xml_export_new_prop(output, "pci_type", tmp);
+    state.new_prop(&state, "pci_type", tmp);
     sprintf(tmp, "%f", obj->attr->pcidev.linkspeed);
-    hwloc__xml_export_new_prop(output, "pci_link_speed", tmp);
+    state.new_prop(&state, "pci_link_speed", tmp);
     break;
   case HWLOC_OBJ_OS_DEVICE:
     sprintf(tmp, "%u", obj->attr->osdev.type);
-    hwloc__xml_export_new_prop(output, "osdev_type", tmp);
+    state.new_prop(&state, "osdev_type", tmp);
     break;
   default:
     break;
@@ -1302,136 +856,62 @@ hwloc__xml_export_object (hwloc__xml_export_output_t output, hwloc_topology_t to
 
   if (obj->memory.local_memory) {
     sprintf(tmp, "%llu", (unsigned long long) obj->memory.local_memory);
-    hwloc__xml_export_new_prop(output, "local_memory", tmp);
+    state.new_prop(&state, "local_memory", tmp);
   }
 
-  hwloc__xml_export_end_props(output, nr_children);
-
   for(i=0; i<obj->memory.page_types_len; i++) {
-    hwloc__xml_export_new_child(output, "page_type");
+    struct hwloc__xml_export_state_s childstate;
+    state.new_child(&state, &childstate, "page_type");
     sprintf(tmp, "%llu", (unsigned long long) obj->memory.page_types[i].size);
-    hwloc__xml_export_new_prop(output, "size", tmp);
+    childstate.new_prop(&childstate, "size", tmp);
     sprintf(tmp, "%llu", (unsigned long long) obj->memory.page_types[i].count);
-    hwloc__xml_export_new_prop(output, "count", tmp);
-    hwloc__xml_export_end_props(output, 0);
-    hwloc__xml_export_end_child(output, "page_type", 0);
+    childstate.new_prop(&childstate, "count", tmp);
+    childstate.end_object(&childstate, "page_type");
   }
 
   for(i=0; i<obj->infos_count; i++) {
-    hwloc__xml_export_new_child(output, "info");
-    hwloc__xml_export_new_prop(output, "name", obj->infos[i].name);
-    hwloc__xml_export_new_prop(output, "value", obj->infos[i].value);
-    hwloc__xml_export_end_props(output, 0);
-    hwloc__xml_export_end_child(output, "info", 0);
+    char *name = hwloc__xml_export_safestrdup(obj->infos[i].name);
+    char *value = hwloc__xml_export_safestrdup(obj->infos[i].value);
+    struct hwloc__xml_export_state_s childstate;
+    state.new_child(&state, &childstate, "info");
+    childstate.new_prop(&childstate, "name", name);
+    childstate.new_prop(&childstate, "value", value);
+    childstate.end_object(&childstate, "info");
+    free(name);
+    free(value);
   }
 
   for(i=0; i<obj->distances_count; i++) {
     unsigned nbobjs = obj->distances[i]->nbobjs;
     unsigned j;
-    hwloc__xml_export_new_child(output, "distances");
+    struct hwloc__xml_export_state_s childstate;
+    state.new_child(&state, &childstate, "distances");
     sprintf(tmp, "%u", nbobjs);
-    hwloc__xml_export_new_prop(output, "nbobjs", tmp);
+    childstate.new_prop(&childstate, "nbobjs", tmp);
     sprintf(tmp, "%u", obj->distances[i]->relative_depth);
-    hwloc__xml_export_new_prop(output, "relative_depth", tmp);
+    childstate.new_prop(&childstate, "relative_depth", tmp);
     sprintf(tmp, "%f", obj->distances[i]->latency_base);
-    hwloc__xml_export_new_prop(output, "latency_base", tmp);
-    hwloc__xml_export_end_props(output, nbobjs*nbobjs);
+    childstate.new_prop(&childstate, "latency_base", tmp);
     for(j=0; j<nbobjs*nbobjs; j++) {
-      hwloc__xml_export_new_child(output, "latency");
+      struct hwloc__xml_export_state_s greatchildstate;
+      childstate.new_child(&childstate, &greatchildstate, "latency");
       sprintf(tmp, "%f", obj->distances[i]->latency[j]);
-      hwloc__xml_export_new_prop(output, "value", tmp);
-      hwloc__xml_export_end_props(output, 0);
-      hwloc__xml_export_end_child(output, "latency", 0);
+      greatchildstate.new_prop(&greatchildstate, "value", tmp);
+      greatchildstate.end_object(&greatchildstate, "latency");
     }
-    hwloc__xml_export_end_child(output, "distances", nbobjs*nbobjs);
+    childstate.end_object(&childstate, "distances");
   }
+
+  if (obj->userdata && topology->userdata_export_cb)
+    topology->userdata_export_cb((void*) &state, topology, obj);
 
   if (obj->arity) {
     unsigned x;
     for (x=0; x<obj->arity; x++)
-      hwloc__xml_export_object (output, topology, obj->children[x]);
+      hwloc__xml_export_object (&state, topology, obj->children[x]);
   }
 
-  hwloc__xml_export_end_child(output, "object", nr_children);
-}
-
-/************************************************
- ********* XML export (libxml2 routines) ********
- ************************************************/
-
-#ifdef HWLOC_HAVE_LIBXML2
-/* libxml2 specific export preparation */
-static xmlDocPtr
-hwloc__libxml2_prepare_export(hwloc_topology_t topology)
-{
-  struct hwloc__xml_export_output_s output;
-  xmlDocPtr doc = NULL;       /* document pointer */
-  xmlNodePtr root_node = NULL; /* root pointer */
-
-  LIBXML_TEST_VERSION;
-  hwloc_libxml2_disable_stderrwarnings();
-
-  /* Creates a new document, a node and set it as a root node. */
-  doc = xmlNewDoc(BAD_CAST "1.0");
-  root_node = xmlNewNode(NULL, BAD_CAST "topology");
-  xmlDocSetRootElement(doc, root_node);
-
-  /* Creates a DTD declaration. Isn't mandatory. */
-  (void) xmlCreateIntSubset(doc, BAD_CAST "topology", NULL, BAD_CAST "hwloc.dtd");
-
-  output.use_libxml = 1;
-  output.current_node = root_node;
-  hwloc__xml_export_object (&output, topology, hwloc_get_root_obj(topology));
-
-  return doc;
-}
-#endif /* HWLOC_HAVE_LIBXML2 */
-
-/***************************************************
- ********* XML export (NO-libxml2 routines) ********
- ***************************************************/
-
-static size_t
-hwloc___nolibxml_prepare_export(hwloc_topology_t topology, char *xmlbuffer, int buflen)
-{
-  struct hwloc__xml_export_output_s output;
-  int res;
-
-  output.use_libxml = 0;
-  output.indent = 0;
-  output.written = 0;
-  output.buffer = xmlbuffer;
-  output.remaining = buflen;
-
-  res = hwloc_snprintf(output.buffer, output.remaining,
-		 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-		 "<!DOCTYPE topology SYSTEM \"hwloc.dtd\">\n");
-  hwloc__xml_export_update_buffer(&output, res);
-  hwloc__xml_export_new_child(&output, "topology");
-  hwloc__xml_export_end_props(&output, 1);
-  hwloc__xml_export_object (&output, topology, hwloc_get_root_obj(topology));
-  hwloc__xml_export_end_child(&output, "topology", 1);
-
-  return output.written+1;
-}
-
-static void
-hwloc__nolibxml_prepare_export(hwloc_topology_t topology, char **bufferp, int *buflenp)
-{
-  char *buffer;
-  size_t bufferlen, res;
-
-  bufferlen = 16384; /* random guess for large enough default */
-  buffer = malloc(bufferlen);
-  res = hwloc___nolibxml_prepare_export(topology, buffer, bufferlen);
-
-  if (res > bufferlen) {
-    buffer = realloc(buffer, res);
-    hwloc___nolibxml_prepare_export(topology, buffer, res);
-  }
-
-  *bufferp = buffer;
-  *buflenp = res;
+  state.end_object(&state, "object");
 }
 
 /**********************************
@@ -1442,96 +922,234 @@ hwloc__nolibxml_prepare_export(hwloc_topology_t topology, char **bufferp, int *b
 int hwloc_topology_export_xml(hwloc_topology_t topology, const char *filename)
 {
   hwloc_localeswitch_declare;
-#ifdef HWLOC_HAVE_LIBXML2
   char *env;
-#endif
+  int force_nolibxml;
+  int ret;
+
+  if (!hwloc_libxml_callbacks && !hwloc_nolibxml_callbacks) {
+    errno = ENOSYS;
+    return -1;
+  }
 
   hwloc_localeswitch_init();
 
-#ifdef HWLOC_HAVE_LIBXML2
   env = getenv("HWLOC_NO_LIBXML_EXPORT");
-  if (!env || !atoi(env)) {
-    xmlDocPtr doc;
-    int ret;
-
-    errno = 0; /* set to 0 so that we know if libxml2 changed it */
-
-    doc = hwloc__libxml2_prepare_export(topology);
-    ret = xmlSaveFormatFileEnc(filename, doc, "UTF-8", 1);
-    xmlFreeDoc(doc);
-
-    if (ret < 0) {
-      if (!errno)
-	/* libxml2 likely got an error before doing I/O */
-	errno = EINVAL;
-      goto out;
-    }
-  } else
-#endif
-  {
-    FILE *file;
-    char *buffer;
-    int bufferlen;
-
-    if (!strcmp(filename, "-")) {
-      file = stdout;
-    } else {
-      file = fopen(filename, "w");
-      if (!file)
-        goto out;
-    }
-
-    hwloc__nolibxml_prepare_export(topology, &buffer, &bufferlen);
-    fwrite(buffer, bufferlen-1 /* don't write the ending \0 */, 1, file);
-    free(buffer);
-
-    if (file != stdout)
-      fclose(file);
-  }
+  force_nolibxml = (env && atoi(env));
+  if (!hwloc_libxml_callbacks || (hwloc_nolibxml_callbacks && force_nolibxml))
+    ret = hwloc_nolibxml_callbacks->export_file(topology, filename);
+  else
+    ret = hwloc_libxml_callbacks->export_file(topology, filename);
 
   hwloc_localeswitch_fini();
-  return 0;
-
-out:
-  hwloc_localeswitch_fini();
-  return -1;
+  return ret;
 }
 
 /* this can be the first XML call */
 int hwloc_topology_export_xmlbuffer(hwloc_topology_t topology, char **xmlbuffer, int *buflen)
 {
   hwloc_localeswitch_declare;
-#ifdef HWLOC_HAVE_LIBXML2
   char *env;
-#endif
+  int force_nolibxml;
+  int ret;
+
+  if (!hwloc_libxml_callbacks && !hwloc_nolibxml_callbacks) {
+    errno = ENOSYS;
+    return -1;
+  }
 
   hwloc_localeswitch_init();
 
-#ifdef HWLOC_HAVE_LIBXML2
   env = getenv("HWLOC_NO_LIBXML_EXPORT");
-  if (!env || !atoi(env)) {
-    xmlDocPtr doc = hwloc__libxml2_prepare_export(topology);
-    xmlDocDumpFormatMemoryEnc(doc, (xmlChar **)xmlbuffer, buflen, "UTF-8", 1);
-    xmlFreeDoc(doc);
-  } else
-#endif
-  {
-    hwloc__nolibxml_prepare_export(topology, xmlbuffer, buflen);
-  }
+  force_nolibxml = (env && atoi(env));
+  if (!hwloc_libxml_callbacks || (hwloc_nolibxml_callbacks && force_nolibxml))
+    ret = hwloc_nolibxml_callbacks->export_buffer(topology, xmlbuffer, buflen);
+  else
+    ret = hwloc_libxml_callbacks->export_buffer(topology, xmlbuffer, buflen);
 
   hwloc_localeswitch_fini();
-  return 0;
+  return ret;
 }
 
 void hwloc_free_xmlbuffer(hwloc_topology_t topology __hwloc_attribute_unused, char *xmlbuffer)
 {
-#ifdef HWLOC_HAVE_LIBXML2
-  char *env = getenv("HWLOC_NO_LIBXML_EXPORT");
-  if (!env || !atoi(env)) {
-    xmlFree(BAD_CAST xmlbuffer);
-  } else
-#endif
-  {
-    free(xmlbuffer);
+  char *env;
+  int force_nolibxml;
+
+  if (!hwloc_libxml_callbacks && !hwloc_nolibxml_callbacks) {
+    errno = ENOSYS;
+    return ;
   }
+
+  env = getenv("HWLOC_NO_LIBXML_EXPORT");
+  force_nolibxml = (env && atoi(env));
+  if (!hwloc_libxml_callbacks || (hwloc_nolibxml_callbacks && force_nolibxml))
+    hwloc_nolibxml_callbacks->free_buffer(xmlbuffer);
+  else
+    hwloc_libxml_callbacks->free_buffer(xmlbuffer);
 }
+
+void
+hwloc_topology_set_userdata_export_callback(hwloc_topology_t topology,
+					    void (*export)(void *reserved, struct hwloc_topology *topology, struct hwloc_obj *obj))
+{
+  topology->userdata_export_cb = export;
+}
+
+static void
+hwloc__export_obj_userdata(hwloc__xml_export_state_t parentstate, int encoded,
+			   const char *name, size_t length, const void *buffer, size_t encoded_length)
+{
+  struct hwloc__xml_export_state_s state;
+  char tmp[255];
+  parentstate->new_child(parentstate, &state, "userdata");
+  if (name)
+    state.new_prop(&state, "name", name);
+  sprintf(tmp, "%lu", (unsigned long) length);
+  state.new_prop(&state, "length", tmp);
+  if (encoded)
+    state.new_prop(&state, "encoding", "base64");
+  state.add_content(&state, buffer, encoded ? encoded_length : length);
+  state.end_object(&state, "userdata");
+}
+
+int
+hwloc_export_obj_userdata(void *reserved,
+			  struct hwloc_topology *topology __hwloc_attribute_unused, struct hwloc_obj *obj __hwloc_attribute_unused,
+			  const char *name, const void *buffer, size_t length)
+{
+  hwloc__xml_export_state_t state = reserved;
+
+  if ((name && hwloc__xml_export_check_buffer(name, strlen(name)) < 0)
+      || hwloc__xml_export_check_buffer(buffer, length) < 0) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  hwloc__export_obj_userdata(state, 0, name, length, buffer, length);
+  return 0;
+}
+
+int
+hwloc_export_obj_userdata_base64(void *reserved,
+				 struct hwloc_topology *topology __hwloc_attribute_unused, struct hwloc_obj *obj __hwloc_attribute_unused,
+				 const char *name, const void *buffer, size_t length)
+{
+  hwloc__xml_export_state_t state = reserved;
+  size_t encoded_length;
+  char *encoded_buffer;
+  int ret;
+
+  if (name && hwloc__xml_export_check_buffer(name, strlen(name)) < 0) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  encoded_length = 4*((length+2)/3);
+  encoded_buffer = malloc(encoded_length+1);
+  if (!encoded_buffer) {
+    errno = ENOMEM;
+    return -1;
+  }
+
+  ret = hwloc_encode_to_base64(buffer, length, encoded_buffer, encoded_length+1);
+  assert(ret == (int) encoded_length);
+
+  hwloc__export_obj_userdata(state, 1, name, length, encoded_buffer, encoded_length);
+
+  free(encoded_buffer);
+  return 0;
+}
+
+void
+hwloc_topology_set_userdata_import_callback(hwloc_topology_t topology,
+					    void (*import)(struct hwloc_topology *topology, struct hwloc_obj *obj, const char *name, const void *buffer, size_t length))
+{
+  topology->userdata_import_cb = import;
+}
+
+/***************************************
+ ************ XML component ************
+ ***************************************/
+
+static void
+hwloc_xml_backend_disable(struct hwloc_backend *backend)
+{
+  struct hwloc_xml_backend_data_s *data = backend->private_data;
+  data->backend_exit(data);
+  free(data);
+}
+
+static struct hwloc_backend *
+hwloc_xml_component_instantiate(struct hwloc_disc_component *component,
+				const void *_data1,
+				const void *_data2,
+				const void *_data3)
+{
+  struct hwloc_xml_backend_data_s *data;
+  struct hwloc_backend *backend;
+  char *env;
+  int force_nolibxml;
+  const char * xmlpath = (const char *) _data1;
+  const char * xmlbuffer = (const char *) _data2;
+  int xmlbuflen = (int)(uintptr_t) _data3;
+  int err;
+
+  if (!hwloc_libxml_callbacks && !hwloc_nolibxml_callbacks) {
+    errno = ENOSYS;
+    goto out;
+  }
+
+  if (!xmlpath && !xmlbuffer) {
+    errno = EINVAL;
+    goto out;
+  }
+
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    goto out;
+
+  data = malloc(sizeof(*data));
+  if (!data) {
+    errno = ENOMEM;
+    goto out_with_backend;
+  }
+
+  backend->private_data = data;
+  backend->discover = hwloc_look_xml;
+  backend->disable = hwloc_xml_backend_disable;
+  backend->is_thissystem = 0;
+
+  env = getenv("HWLOC_NO_LIBXML_IMPORT");
+  force_nolibxml = (env && atoi(env));
+  if (!hwloc_libxml_callbacks || (hwloc_nolibxml_callbacks && force_nolibxml))
+    err = hwloc_nolibxml_callbacks->backend_init(data, xmlpath, xmlbuffer, xmlbuflen);
+  else
+    err = hwloc_libxml_callbacks->backend_init(data, xmlpath, xmlbuffer, xmlbuflen);
+  if (err < 0)
+    goto out_with_data;
+
+  return backend;
+
+ out_with_data:
+  free(data);
+ out_with_backend:
+  free(backend);
+ out:
+  return NULL;
+}
+
+static struct hwloc_disc_component hwloc_xml_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  "xml",
+  HWLOC_DISC_COMPONENT_TYPE_CPU | HWLOC_DISC_COMPONENT_TYPE_GLOBAL | HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
+  hwloc_xml_component_instantiate,
+  30,
+  NULL
+};
+
+const struct hwloc_component hwloc_xml_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_xml_disc_component
+};

@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2009-2010 inria.  All rights reserved.
+.\" Copyright © 2009-2012 Inria.  All rights reserved.
 .\" Copyright © 2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
@@ -58,9 +58,6 @@ Bind on a single CPU to prevent migration.
 \fB\-\-strict\fR
 Require strict binding.
 .TP
-\fB\-\-get\fR
-Retrieve the current process binding
-.TP
 \fB\-\-pid\fR <pid>
 Operate on pid <pid>
 .TP
@@ -76,7 +73,16 @@ program instead of hwloc-specific CPU set string format.
 This option has no impact on the format of input CPU set strings,
 both formats are always accepted.
 .TP
-\fB\-v\fR
+\fB\-f\fR \fB\-\-force\fR
+Launch the executable even if binding failed.
+.TP
+\fB\-q\fR \fB\-\-quiet\fR
+Hide non-fatal error messages.
+It includes locations pointing to non-existing objects,
+as well as failure to bind.
+This is usually useful in addition to \fB\-\-force\fR.
+.TP
+\fB\-v\fR \fB\-\-verbose\fR
 Verbose output.
 .TP
 \fB\-\-version\fR
@@ -91,6 +97,10 @@ hwloc-bind execs an executable (with optional command line arguments)
 that is bound to the specified location (or list of locations).  Upon
 successful execution, hwloc-bind simply sets bindings and then execs
 the executable over itself.
+.
+If binding fails, or if the binding set is empty, and \fB\-\-force\fR
+was not given, hwloc-bind returns with an error instead of launching
+the executable.
 .
 .PP
 .B NOTE:
@@ -195,6 +205,13 @@ This returns a string describing the memory binding, such as "0x000000f0
 (interleave)".  Note that if the system does not contain any NUMA
 nodes, the reported string will indicate that the process is bound to
 the entire system memory (e.g., "0xf...f").
+.SH HINT
+If the graphics-enabled lstopo is available, use for instance
+
+    hwloc-bind core:2 -- lstopo --pid 0
+
+to check what the result of your binding command actually is.
+lstopo will graphically show where it is bound to by hwloc-bind.
 .
 .\" **************************
 .\"    Return value section

@@ -1,4 +1,4 @@
-# Copyright © 2009-2012 inria.  All rights reserved.
+# Copyright © 2009-2012 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -16,6 +16,7 @@ DOX_MAN_DIR = $(DOX_DIR)/man
 DOX_LATEX_DIR = $(DOX_DIR)/latex
 DOX_A4PDF = doxygen-doc/$(PACKAGE)-a4.pdf
 DOX_LETTERPDF = doxygen-doc/$(PACKAGE)-letter.pdf
+DOX_HTML_README = $(DOX_HTML_DIR)/readme.tmp.html
 DOX_TAG = $(DOX_DIR)/$(PACKAGE).tag
 
 #
@@ -36,6 +37,7 @@ BUILT_IMAGES = images/diagram.png images/diagram.eps
 
 EXTRA_DIST = \
         hwloc.doxy \
+        README.sed \
         doxygen.css \
         doxygen.cfg \
         images/diagram.fig \
@@ -69,8 +71,10 @@ dox_inputs = $(DOX_CONFIG) \
        $(HWLOC_top_srcdir)/include/hwloc/glibc-sched.h \
        $(HWLOC_top_srcdir)/include/hwloc/linux.h \
        $(HWLOC_top_srcdir)/include/hwloc/linux-libnuma.h \
+       $(HWLOC_top_srcdir)/include/hwloc/opencl.h \
        $(HWLOC_top_srcdir)/include/hwloc/cuda.h \
        $(HWLOC_top_srcdir)/include/hwloc/cudart.h \
+       $(HWLOC_top_srcdir)/include/hwloc/nvml.h \
        $(HWLOC_top_srcdir)/include/hwloc/openfabrics-verbs.h \
        $(HWLOC_top_srcdir)/include/hwloc/myriexpress.h
 
@@ -236,6 +240,9 @@ if HWLOC_INSTALL_DOXYGEN
 # in _DATA suffix names, because AM won't allow us to do things like
 # man3_extra_MANS = ...group...
 
+# When adding a new _DATA line below, remember to add it to the
+# list of dependencies too.
+
 man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwlocality_api_version.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_API_VERSION.3 \
@@ -344,12 +351,20 @@ man3_configuration_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_get_support.3
 
-man3_tinkerdir = $(man3dir)
-man3_tinker_DATA = \
-        $(DOX_MAN_DIR)/man3/hwlocality_tinker.3 \
+man3_xmlexportdir = $(man3dir)
+man3_xmlexport_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_xmlexport.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xml.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xmlbuffer.3 \
         $(DOX_MAN_DIR)/man3/hwloc_free_xmlbuffer.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_export_callback.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata_base64.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_import_callback.3
+
+man3_tinkerdir = $(man3dir)
+man3_tinker_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_tinker.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_insert_misc_object_by_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_insert_misc_object_by_parent.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES.3 \
@@ -372,7 +387,8 @@ man3_information_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_get_depth_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_type.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_topology_is_thissystem.3
+        $(DOX_MAN_DIR)/man3/hwloc_topology_is_thissystem.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_get_flags.3
 
 man3_traversaldir = $(man3dir)
 man3_traversal_DATA = \
@@ -611,14 +627,25 @@ man3_helper_advanced_io_DATA = \
 
 man3_cudadir = $(man3dir)
 man3_cuda_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_opencl.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_osdev_by_index.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cuda.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_pci_ids.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_pcidev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_osdev_by_index.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cudart.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pci_ids.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pcidev.3
+        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pcidev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_osdev_by_index.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_nvml.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_osdev_by_index.3
 
 man3_glibc_scheddir = $(man3dir)
 man3_glibc_sched_DATA = \
@@ -656,6 +683,7 @@ man3_openfabricsdir = $(man3dir)
 man3_openfabrics_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_openfabrics.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev_by_name.3
 
 # end of manpages(3) if HWLOC_BUILD_DOXYGEN
@@ -670,6 +698,8 @@ if HWLOC_BUILD_DOXYGEN
 # *first* before we can try to process/install man pages, the HTML,
 # run pdflatex, .etc.).
 
+# The list below should match the list of _DATA lines above
+
 $(man3_MANS): $(DOX_TAG)
 $(man3_topology_DATA): $(DOX_TAG)
 $(man3_sets_DATA): $(DOX_TAG)
@@ -677,6 +707,7 @@ $(man3_types_DATA): $(DOX_TAG)
 $(man3_objects_DATA): $(DOX_TAG)
 $(man3_creation_DATA): $(DOX_TAG)
 $(man3_configuration_DATA): $(DOX_TAG)
+$(man3_xmlexport_DATA): $(DOX_TAG)
 $(man3_tinker_DATA): $(DOX_TAG)
 $(man3_information_DATA): $(DOX_TAG)
 $(man3_traversal_DATA): $(DOX_TAG)
@@ -688,8 +719,8 @@ $(man3_bitmap_DATA): $(DOX_TAG)
 $(man3_helper_types_DATA): $(DOX_TAG)
 $(man3_helper_traversal_basic_DATA): $(DOX_TAG)
 $(man3_helper_find_inside_DATA): $(DOX_TAG)
-$(man3_helper_find_coverings_DATA): $(DOX_TAG)
 $(man3_helper_find_covering_DATA): $(DOX_TAG)
+$(man3_helper_find_coverings_DATA): $(DOX_TAG)
 $(man3_helper_find_cache_DATA): $(DOX_TAG)
 $(man3_helper_traversal_DATA): $(DOX_TAG)
 $(man3_helper_binding_DATA): $(DOX_TAG)
@@ -720,13 +751,15 @@ endif
 # Make sure that the documentation example works
 #
 
-if HWLOC_BUILD_TESTS
-TESTS = hwloc-hello hwloc-hello-cpp
+TESTS = hwloc-hello
+if HWLOC_HAVE_CXX
+TESTS += hwloc-hello-cpp
+endif HWLOC_HAVE_CXX
+
 check_PROGRAMS = $(TESTS)
-endif HWLOC_BUILD_TESTS
 
 hwloc-hello-cpp.cpp: $(srcdir)/hwloc-hello.c
-	cp -f $< $@
+	cp -f $(srcdir)/hwloc-hello.c $@
 
 clean-local:
 	rm -f hwloc-hello-cpp.cpp
@@ -748,7 +781,8 @@ MAINTAINERCLEANFILES = $(DOX_TAG) \
     $(DOX_MAN_DIR) \
     $(DOX_LATEX_DIR) \
     $(DOX_A4PDF) \
-    $(DOX_LETTERPDF)
+    $(DOX_LETTERPDF) \
+    $(DOX_HTML_README)
 
 #
 # Rules for creating the top-level README file.  There does not appear
@@ -762,8 +796,12 @@ MAINTAINERCLEANFILES = $(DOX_TAG) \
 
 if HWLOC_BUILD_README
 doc readme: all $(HWLOC_top_srcdir)/README
-$(HWLOC_top_srcdir)/README: $(DOX_HTML_DIR)
-	LC_ALL=C $(HWLOC_W3_GENERATOR) $(DOX_HTML_DIR)/index.html | $(SED) -n -e 's/^   //' -e '/^Introduction$$/,$$p' > $@
+$(HWLOC_top_srcdir)/README: $(DOX_HTML_README)
+	LC_ALL=C $(HWLOC_W3_GENERATOR) $(DOX_HTML_README) | $(SED) -n -e 's/^   //' -e '/^Introduction$$/,$$p' > $@
+	rm -f $(DOX_HTML_README)
+$(DOX_HTML_README): $(DOX_HTML_DIR)
+	rm -f $@
+	sed -n -f $(srcdir)/README.sed $(DOX_HTML_DIR)/index.html > $@
 else
 doc readme: no-build-readme
 $(HWLOC_top_srcdir)/README: no-build-readme

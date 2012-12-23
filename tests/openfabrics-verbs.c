@@ -50,13 +50,14 @@ int main(void)
 	     cpuset_string, i, ibv_get_device_name(dev));
       free(cpuset_string);
 
-      os = hwloc_ibv_get_device_osdev_by_name(topology, ibv_get_device_name(dev));
+      os = hwloc_ibv_get_device_osdev(topology, dev);
       if (os) {
 	assert(os->type == HWLOC_OBJ_OS_DEVICE);
 	printf("found OS object subtype %u lindex %u name %s\n",
 	       (unsigned) os->attr->osdev.type, os->logical_index, os->name);
 	assert(os->attr->osdev.type == HWLOC_OBJ_OSDEV_OPENFABRICS);
-	assert(!strcmp(ibv_get_device_name(dev), os->name));
+	if (strcmp(ibv_get_device_name(dev), os->name))
+	  assert(0);
       }
     }
     hwloc_bitmap_free(set);

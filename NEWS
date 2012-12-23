@@ -1,5 +1,5 @@
 Copyright © 2009 CNRS
-Copyright © 2009-2012 inria.  All rights reserved.
+Copyright © 2009-2012 Inria.  All rights reserved.
 Copyright © 2009-2012 Université Bordeaux 1
 Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 
@@ -17,14 +17,130 @@ bug fixes (and other actions) for each version of hwloc since version
 in v0.9.1).
 
 
+Version 1.7.0
+-------------
+* Backends
+  + Add NetBSD support, thanks to Aleksej Saushev.
+  + Add a OpenCL component, buildable as a plugin. It adds OS devices
+    such as opencl0p0 for each OpenCL device on the AMD OpenCL
+    implementation.
+  + Add a CUDA component, buildable as a plugin. It adds OS devices
+    such as cuda0 for each NVIDIA GPU.
+  + Add a NVML component, buildable as a plugin. It adds OS devices
+    such as nvml0 for each NVIDIA GPU, and improves the discovery of
+    their PCIe link speed.
+* API
+  + Add hwloc_topology_get_flags().
+  + Add hwloc/plugins.h for building external plugins.
+    See the Adding new discovery components and plugins section.
+  + Add hwloc/opencl.h to retrieve the locality or OS device for
+    AMD GPU devices or indexes.
+  + Add hwloc/nvml.h to retrieve the locality or OS device for NVML
+    devices or indexes.
+  + Add new helpers in hwloc/cuda.h and hwloc/cudart.h to convert
+    between CUDA devices or indexes and hwloc OS devices.
+* Interoperability
+  + Add hwloc_ibv_get_device_osdev() and clarify the requirements
+    of the OpenFabrics Verbs helpers in hwloc/openfabrics-verbs.h.
+* Documentation
+  + Add new document sections "Existing components and plugins"
+    and "Common OS devices".
+  + Add a new FAQ entry "Why is lstopo slow?" about lstopo slowness
+    issues because of GPUs.
+  + Clarify the documentation of inline helpers in hwloc/myriexpress.h
+    and hwloc/openfabrics-verbs.h.
+* Misc
+  + The HWLOC_COMPONENTS may now start with '^' to only define a list of
+    components to exclude.
+
+
+Version 1.6.0
+-------------
+* Major changes
+  + Reorganize the backend infrastructure to support dynamic selection
+    of components and dynamic loading of plugins. For details, see the
+    new documentation section Components and plugins.
+    - The HWLOC_COMPONENTS variable lets one replace the default discovery
+      components.
+    - Dynamic loading of plugins may be enabled with --enable-plugins
+      (except on AIX and Windows). It will build libxml2 and libpci
+      support as separated modules. This helps reducing the dependencies
+      of the core hwloc library when distributed as a binary package.
+* Backends
+  + Add CPUModel detection on Darwin and x86/FreeBSD.
+    Thanks to Robin Scher for providing ways to implement this.
+  + The x86 backend now adds CPUModel info attributes to socket objects
+    created by other backends that do not natively support this attribute.
+  + Fix detection on FreeBSD in case of cpuset restriction. Thanks to
+    Sebastian Kuzminsky for reporting the problem.
+* XML
+  + Add hwloc_topology_set_userdata_import/export_callback(),
+    hwloc_export_obj_userdata() and _userdata_base64() to let
+    applications specify how to save/restore the custom data they placed
+    in the userdata private pointer field of hwloc objects.
+* Tools
+  + Add hwloc-annotate program to add string info attributes to XML
+    topologies.
+  + Add --pid-cmd to hwloc-ps to append the output of a command to each
+    PID line. May be used for showing Open MPI process ranks, see the
+    hwloc-ps(1) manpage for details.
+  + hwloc-bind now exits with an error if binding fails; the executable
+    is not launched unless binding suceeeded or --force was given.
+  + Add --quiet to hwloc-calc and hwloc-bind to hide non-fatal error
+    messages.
+  + Fix command-line pid support in windows tools.
+  + All programs accept --verbose as a synonym to -v.
+* Misc
+  + Fix some DIR descriptor leaks on Linux.
+  + Fix I/O device lists when some were filtered out after a XML import.
+  + Fix the removal of I/O objects when importing a I/O-enabled XML topology
+    without any I/O topology flag.
+  + When merging objects with HWLOC_IGNORE_TYPE_KEEP_STRUCTURE or
+    lstopo --merge, compare object types before deciding which one of two
+    identical object to remove (e.g. keep sockets in favor of caches).
+  + Add some GUID- and LID-related info attributes to OpenFabrics
+    OS devices.
+  + Only add CPUType socket attributes on Solaris/Sparc. Other cases
+    don't report reliable information (Solaris/x86), and a replacement
+    is available as the Architecture string info in the Machine object.
+  + Add missing Backend string info on Solaris in most cases.
+  + Document object attributes and string infos in a new Attributes
+    section in the documentation.
+  + Add a section about Synthetic topologies in the documentation.
+
+
+Version 1.5.1
+-------------
+* Fix block OS device detection on Linux kernel 3.3 and later.
+  Thanks to Guy Streeter for reporting the problem and testing the fix.
+* Fix the cpuid code in the x86 backend (for FreeBSD). Thanks to
+  Sebastian Kuzminsky for reporting problems and testing patches.
+* Fix 64bit detection on FreeBSD.
+* Fix some corner cases in the management of the thissystem flag with
+  respect to topology flags and environment variables.
+* Fix some corner cases in command-line parsing checks in hwloc-distrib
+  and hwloc-distances.
+* Make sure we do not miss some block OS devices on old Linux kernels
+  when a single PCI device has multiple IDE hosts/devices behind it.
+* Do not disable I/O devices or instruction caches in hwloc-assembler output.
+
+
 Version 1.5.0
 -------------
 * Backends
+  + Do not limit the number of processors to 1024 on Solaris anymore.
   + Gather total machine memory on FreeBSD.
   + XML topology files do not depend on the locale anymore. Float numbers
     such as NUMA distances or PCI link speeds now always use a dot as a
     decimal separator.
-  + Add instruction caches detection on Linux, Windows and Darwin.
+  + Add instruction caches detection on Linux, AIX, Windows and Darwin.
+  + Add get_last_cpu_location() support for the current thread on AIX.
+  + Support binding on AIX when threads or processes were bound with
+    bindprocessor(). Thanks to Hendryk Bockelmann for reporting the issue
+    and testing patches, and to Farid Parpia for explaining the binding
+    interfaces.
+  + Improve AMD topology detection in the x86 backend (for FreeBSD) using
+    the topoext feature.
 * API
   + Increase HWLOC_API_VERSION to 0x00010500 so that API changes may be
     detected at build-time.
@@ -41,9 +157,13 @@ Version 1.5.0
     openfabrics-verbs.h to find the hwloc OS device object corresponding to
     an OpenFabrics device.
 * Tools
-  + lstopo is now built without graphical support to avoid dependencies on
-    external libraries such as Cairo and X11. Graphical outputs are now
-    available in lstopo-gui which supports the same command line options.
+  + Add lstopo-no-graphics, a lstopo built without graphical support to
+    avoid dependencies on external libraries such as Cairo and X11. When
+    supported, graphical outputs are only available in the original lstopo
+    program.
+    - Packagers splitting lstopo and lstopo-no-graphics into different
+      packages are advised to use the alternatives system so that lstopo
+      points to the best available binary.
   + Instruction caches are enabled in lstopo by default. User --no-icaches
     to disable them.
   + Add -t/--threads to show threads in hwloc-ps.
@@ -57,7 +177,12 @@ Version 1.5.0
   + Remove support for "Proc" type name, it was superseded by "PU" in v1.0.
   + Remove hwloc-mask symlinks, it was replaced by hwloc-calc in v1.0.
 * Misc
+  + Fix PCIe 3.0 link speed computation.
+  + Non-printable characters are dropped from strings during XML export.
+  + Fix importing of escaped characters with the minimalistic XML backend.
   + Assert hwloc_is_thissystem() in several I/O related helpers.
+  + Fix some memory leaks in the x86 backend for FreeBSD.
+  + Minor fixes to ease native builds on Windows.
   + Limit the number of retries when operating on all threads within a
     process on Linux if the list of threads is heavily getting modified.
 

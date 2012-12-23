@@ -1,4 +1,4 @@
-# Copyright © 2012      inria.  All rights reserved.
+# Copyright © 2012      Inria.  All rights reserved.
 # See COPYING in top-level directory.
 
 # suppressions file to be passed to valgrind with
@@ -28,4 +28,100 @@
    fun:xmlNewRMutex
    ...
    fun:xmlDictCreate
+}
+
+# ltdl dlopen global state?
+{
+   ltdl_dlopen_doit_leak
+   Memcheck:Leak
+   ...
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+}
+
+# ltdl_dlclose_leak
+{
+   ltdl_dlclose_leak
+   Memcheck:Leak
+   ...
+   fun:_dl_close_worker
+   fun:_dl_close
+   ...
+   fun:dlclose
+}
+
+# lt_dlforeachfile abusing paths
+{
+   lt_dlforeachfile_addr8
+   Memcheck:Addr8
+   fun:_wordcopy_fwd_dest_aligned
+   fun:__GI_memmove
+   fun:argz_insert
+   ...
+   fun:lt_dlforeachfile
+}
+
+# cuda
+{
+   cuda_leak
+   Memcheck:Leak
+   ...
+   obj:*libcuda*
+}
+
+# nvml
+{
+   nvmlInit_cond
+   Memcheck:Cond
+   ...
+   obj:*nvidia-ml*
+   ...
+   fun:nvmlInit
+}
+
+# amd opencl
+{
+   atical_leak
+   Memcheck:Leak
+   ...
+   obj:*libatical*
+}
+{
+   atical_cond
+   Memcheck:Cond
+   ...
+   obj:*libatical*
+}
+{
+   amdocl_leak
+   Memcheck:Leak
+   ...
+   obj:*libamdocl*
+}
+{
+   amdocl_param
+   Memcheck:Param
+   write(buf)
+   fun:*write*
+   obj:*libamdocl*
+}
+{
+   opencl_leak
+   Memcheck:Leak
+   ...
+   obj:*libOpenCL*
+   ...
+   fun:clGetPlatformIDs
+}
+{
+   libatiadl_xcb_leak
+   Memcheck:Leak
+   ...
+   obj:*libxcb*
+   ...
+   fun:XOpenDisplay
+   ...
+   obj:*libatiadl*
 }

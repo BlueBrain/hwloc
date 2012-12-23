@@ -1,4 +1,4 @@
-# Copyright © 2009-2010 inria.  All rights reserved.
+# Copyright © 2009-2012 Inria.  All rights reserved.
 # Copyright © 2009-2010 Université Bordeaux 1
 # Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 # Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
@@ -15,11 +15,13 @@ include_hwloc_HEADERS = \
         hwloc/helper.h \
         hwloc/myriexpress.h \
         hwloc/openfabrics-verbs.h \
+        hwloc/opencl.h \
         hwloc/cuda.h \
         hwloc/cudart.h \
-        hwloc/rename.h \
-        hwloc/gl.h
-
+        hwloc/nvml.h \
+        hwloc/plugins.h \
+        hwloc/gl.h \
+        hwloc/rename.h
 include_hwloc_autogendir = $(includedir)/hwloc/autogen
 nodist_include_hwloc_autogen_HEADERS = hwloc/autogen/config.h 
 
@@ -27,6 +29,8 @@ noinst_HEADERS = \
         private/private.h \
         private/debug.h \
         private/misc.h \
+        private/xml.h \
+        private/components.h \
         private/cpuid.h
 
 if HWLOC_HAVE_LINUX
