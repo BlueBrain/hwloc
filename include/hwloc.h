@@ -276,7 +276,7 @@ typedef enum hwloc_obj_osdev_type_e {
 				  * For instance the "eth0" interface on Linux. */
   HWLOC_OBJ_OSDEV_OPENFABRICS,	/**< \brief Operating system openfabrics device.
 				  * For instance the "mlx4_0" InfiniBand HCA device on Linux. */
-  HWLOC_OBJ_OSDEV_DMA		/**< \brief Operating system dma engine device.
+  HWLOC_OBJ_OSDEV_DMA,		/**< \brief Operating system dma engine device.
 				  * For instance the "dma0chan0" DMA channel on Linux. */
   HWLOC_OBJ_OSDEV_DISPLAY       /**< \brief Operating system display device.
                                   * For instance the DISPLAY :0.0 attached to the GPU. */
