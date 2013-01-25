@@ -77,6 +77,10 @@ if HWLOC_HAVE_CUDART
 check_PROGRAMS += cudart
 endif HWLOC_HAVE_CUDART
 
+if HWLOC_HAVE_GL
+check_PROGRAMS += gl
+endif HWLOC_HAVE_GL
+
 if HWLOC_HAVE_NVML
 check_PROGRAMS += nvml
 endif HWLOC_HAVE_NVML

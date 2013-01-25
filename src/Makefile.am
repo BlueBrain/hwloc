@@ -88,6 +88,10 @@ hwloc_cuda_la_LDFLAGS = $(plugins_ldflags) $(HWLOC_CUDA_LIBS)
 endif
 endif HWLOC_HAVE_CUDART
 
+if HWLOC_HAVE_GL
+sources += topology-gl.c
+endif HWLOC_HAVE_GL
+
 if HWLOC_HAVE_NVML
 if HWLOC_NVML_BUILD_STATIC
 sources += topology-nvml.c

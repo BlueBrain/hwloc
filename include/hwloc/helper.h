@@ -3,6 +3,7 @@
  * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2012-2013 Blue Brain Project, BBP/EPFL. All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -19,7 +20,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
-
+#include <hwloc/gl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -1333,6 +1334,27 @@ hwloc_get_pcidev_by_busidstring(hwloc_topology_t topology, const char *busid)
   return hwloc_get_pcidev_by_busid(topology, domain, bus, dev, func);
 }
 
+/* FIXME move GL/display helpers to hwloc/gl.h */
+/** \brief Find the PCI device object matching the GPU connected to the
+ * display defined by its port and device as [:][port][.][device]
+ */
+static __hwloc_inline hwloc_obj_t
+hwloc_get_pcidev_by_display(hwloc_topology_t topology, const int port, const int device)
+{
+  hwloc_obj_t pcidev_obj;
+
+  /* Forming the display string */
+  char x_display [10];
+  snprintf(x_display,sizeof(x_display),":%d.%d", port, device);
+
+  pcidev_obj = hwloc_gl_query_display(topology, x_display);
+
+  if (pcidev_obj != NULL)
+    return pcidev_obj;
+  else
+    return NULL;
+}
+
 /** \brief Get the next OS device in the system.
  *
  * \return the first OS device if \p prev is \c NULL.
@@ -1387,6 +1409,15 @@ hwloc_get_hostbridge_by_pcibus(hwloc_topology_t topology,
   }
   return NULL;
 }
+
+/** \brief Returns a cpuset of the socket attached to the host bridge
+ * for a given PCI device defined by its info.
+ *
+ * This is useful for retrieving the cpuset of the socket attached
+ * to the host bridge where the PCI device defined by its bus, domain,
+ * function, device ID's is connected in the topology.
+ */
+HWLOC_DECLSPEC int hwloc_get_pcidevice_cpuset(hwloc_topology_t topology, const hwloc_obj_t pcidev_obj, hwloc_bitmap_t* cpuset);
 
 /** @} */
 

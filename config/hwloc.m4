@@ -11,6 +11,7 @@ dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart,
 dnl                         University of Stuttgart.  All rights reserved.
 dnl Copyright © 2006-2011  Cisco Systems, Inc.  All rights reserved.
 dnl Copyright © 2012       Oracle and/or its affiliates.  All rights reserved.
+dnl Copyright © 2012-2013  Blue Brain Project, BBP/EPFL. All rights reserved.
 dnl See COPYING in top-level directory.
 
 # Main hwloc m4 macro, to be invoked by the user
@@ -849,6 +850,43 @@ EOF])
     fi
     # don't add LIBS/CFLAGS/REQUIRES yet, depends on plugins
 
+    # GL Support 
+    hwloc_gl_happy=no
+    if test "x$enable_gl" != "xno"; then
+    	hwloc_gl_happy=yes								
+
+        AC_CHECK_HEADERS([X11/Xlib.h], [
+          AC_CHECK_LIB([X11], [XOpenDisplay], [:], [
+            AC_MSG_WARN([XOpenDisplay not found, GL backend disabled])
+            hwloc_gl_happy=no
+          ])
+        ], [
+          AC_MSG_WARN([X11 headers not found, GL backend disabled])
+          hwloc_gl_happy=no
+        ])
+       	 	
+        AC_CHECK_HEADERS(NVCtrl/NVCtrl.h, [
+          AC_CHECK_LIB(XNVCtrl, XNVCTRLQueryTargetAttribute, [:], [
+            AC_MSG_WARN([XNVCTRLQueryTargetAttribute not found, GL backend disabled])
+            hwloc_gl_happy=no
+          ], -lXext)
+        ], [
+          AC_MSG_WARN([NVCtrl headers not found, GL backend disabled])
+          hwloc_gl_happy=no
+        ])
+
+        if test "x$hwloc_gl_happy" = "xyes"; then
+            AC_DEFINE([HWLOC_HAVE_GL], [1], [Define to 1 if you have the GL module components.])
+            HWLOC_LIBS="$HWLOC_LIBS -lX11 -lXext -lXNVCtrl"
+            hwloc_have_gl=yes
+		else
+            AS_IF([test "$enable_gl" = "yes"], [
+                AC_MSG_WARN([--enable-gl requested, but GL/X11 support was not found due to a missing component])
+                AC_MSG_ERROR([Cannot continue])
+            ])
+ 		fi      
+    fi
+    
     # libxml2 support
     hwloc_libxml2_happy=
     if test "x$enable_libxml2" != "xno"; then
@@ -992,7 +1030,7 @@ EOF])
     AC_SUBST(HWLOC_CFLAGS)
     HWLOC_CPPFLAGS='-I$(HWLOC_top_builddir)/include -I$(HWLOC_top_srcdir)/include'
     AC_SUBST(HWLOC_CPPFLAGS)
-    HWLOC_LDFLAGS='-L$(HWLOC_top_builddir)/src'
+    HWLOC_LDFLAGS="'-L$(HWLOC_top_builddir)/src' $HWLOC_LDFLAGS_GL"
     AC_SUBST(HWLOC_LDFLAGS)
     AC_SUBST(HWLOC_LIBS)
     AC_SUBST(HWLOC_LIBS_PRIVATE)
@@ -1062,6 +1100,8 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
 		       [test "x$hwloc_have_myriexpress" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_CUDART],
 		       [test "x$hwloc_have_cudart" = "xyes"])
+	AM_CONDITIONAL([HWLOC_HAVE_GL],
+		       [test "x$hwloc_have_gl" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_LIBXML2], [test "$hwloc_libxml2_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_CAIRO], [test "$hwloc_cairo_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_LIBPCI], [test "$hwloc_pci_happy" = "yes"])

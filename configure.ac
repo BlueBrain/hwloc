@@ -228,6 +228,7 @@ Probe / display I/O devices:$hwloc_probeio_list
 Graphical output (Cairo):    $hwloc_cairo_happy
 XML input / output:          $hwloc_xml_status
 Plugin support:              $hwloc_have_plugins
+GL:                          $hwloc_gl_happy
 EOF
 
 # Linux specific support
