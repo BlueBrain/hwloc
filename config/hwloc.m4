@@ -730,7 +730,7 @@ EOF])
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
     fi
     # don't add LIBS/CFLAGS/REQUIRES yet, depends on plugins
-    
+
     # OpenCL support
     hwloc_opencl_happy=no
     if test "x$enable_opencl" != "xno"; then

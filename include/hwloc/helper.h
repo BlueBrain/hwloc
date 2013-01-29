@@ -3,7 +3,6 @@
  * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2012 Blue Brain Project, BBP/EPFL. All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -20,6 +19,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+
 
 #ifdef __cplusplus
 extern "C" {
