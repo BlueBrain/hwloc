@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2013 Inria.  All rights reserved.
  * Copyright © 2012 Université Bordeau 1
  * See COPYING in top-level directory.
  */
@@ -8,6 +8,10 @@
 #include <hwloc.h>
 #include <private/private.h>
 #include <private/xml.h>
+
+#define HWLOC_COMPONENT_STOP_NAME "stop"
+#define HWLOC_COMPONENT_EXCLUDE_CHAR '-'
+#define HWLOC_COMPONENT_SEPS ","
 
 /* list of all registered discovery components, sorted by priority, higher priority first.
  * noos is last because its priority is 0.
@@ -226,6 +230,19 @@ hwloc_disc_component_register(struct hwloc_disc_component *component,
 {
   struct hwloc_disc_component **prev;
 
+  if (!strcmp(component->name, HWLOC_COMPONENT_STOP_NAME)) {
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Cannot register component with reserved name `" HWLOC_COMPONENT_STOP_NAME "'\n");
+    return -1;
+  }
+  if (strchr(component->name, HWLOC_COMPONENT_EXCLUDE_CHAR)
+      || strcspn(component->name, HWLOC_COMPONENT_SEPS) != strlen(component->name)) {
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Cannot register component with name `%s' containing reserved characters `%c" HWLOC_COMPONENT_SEPS "'\n",
+	      component->name, HWLOC_COMPONENT_EXCLUDE_CHAR);
+    return -1;
+  }
+
   prev = &hwloc_disc_components;
   while (NULL != *prev) {
     if (!strcmp((*prev)->name, component->name)) {
@@ -382,30 +399,36 @@ void
 hwloc_disc_components_enable_others(struct hwloc_topology *topology)
 {
   struct hwloc_disc_component *comp;
+  struct hwloc_backend *backend;
   unsigned excludes = 0;
   int tryall = 1;
   char *env;
 
-  /* we have either no backends, or a single one, use its exclude */
-  if (topology->backends) {
-    excludes = topology->backends->component->excludes;
-    assert(!topology->backends->next);
+  /* compute current excludes */
+  backend = topology->backends;
+  while (backend) {
+    excludes |= backend->component->excludes;
+    backend = backend->next;
   }
 
   env = getenv("HWLOC_COMPONENTS");
-  if (env && '^' != env[0]) {
+  if (env) {
     size_t s;
 
     while (*env) {
-      s = strcspn(env, ",");
+      s = strcspn(env, HWLOC_COMPONENT_SEPS);
       if (s) {
 	char *arg;
 	char c;
+
+	if (env[0] == HWLOC_COMPONENT_EXCLUDE_CHAR)
+	  goto nextname;
+
 	/* save the last char and replace with \0 */
 	c = env[s];
 	env[s] = '\0';
 
-	if (!strcmp(env, "stop")) {
+	if (!strcmp(env, HWLOC_COMPONENT_STOP_NAME)) {
 	  tryall = 0;
 	  break;
 	}
@@ -427,6 +450,7 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
 	env[s] = c;
       }
 
+nextname:
       env += s;
       if (*env)
 	/* Skip comma */
@@ -436,16 +460,17 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
 
   if (tryall) {
     comp = hwloc_disc_components;
+    env = getenv("HWLOC_COMPONENTS");
     while (NULL != comp) {
-      if (env && '^' == env[0]) {
-	char *curenv = env+1;
+      if (env) {
+	char *curenv = env;
 	while (*curenv) {
-	  size_t s = strcspn(curenv, ",");
-	  if (s && !strncmp(curenv, comp->name, s)) {
+	  size_t s = strcspn(curenv, HWLOC_COMPONENT_SEPS);
+	  if (curenv[0] == HWLOC_COMPONENT_EXCLUDE_CHAR && !strncmp(curenv+1, comp->name, s-1)) {
 	    if (hwloc_components_verbose)
-	      fprintf(stderr, "Excluding %s component `%s' because of HWLOC_COMPONENT environment variable\n",
+	      fprintf(stderr, "Excluding %s component `%s' because of HWLOC_COMPONENTS environment variable\n",
 	    hwloc_disc_component_type_string(comp->type), comp->name);
-	    goto next;
+	    goto nextcomp;
 	  }
 	  curenv += s;
 	  if (*curenv)
@@ -454,15 +479,15 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
 	}
       }
       hwloc_disc_component_try_enable(topology, comp, NULL, &excludes, 0 /* defaults, not envvar forced */, 0 /* defaults don't need warnings on conflicts */);
-next:
+nextcomp:
       comp = comp->next;
     }
   }
 
   if (hwloc_components_verbose) {
     /* print a summary */
-    struct hwloc_backend *backend = topology->backends;
     int first = 1;
+    backend = topology->backends;
     printf("Final list of enabled components: ");
     while (backend != NULL) {
       printf("%s%s", first ? "" : ",", backend->component->name);
@@ -655,6 +680,15 @@ hwloc_backends_reset(struct hwloc_topology *topology)
 {
   hwloc_backends_disable_all(topology);
   if (topology->is_loaded) {
+    static int deprecated_warning = 0;
+    if (!deprecated_warning) {
+      if (!getenv("HWLOC_HIDE_DEPRECATED")) {
+	fprintf(stderr, "*** Modifying an already-loaded topology.\n");
+	fprintf(stderr, "*** This non-documented behavior will not be supported in future releases.\n");
+	fprintf(stderr, "*** Set HWLOC_HIDE_DEPRECATED in the environment to hide this message.\n");
+      }
+      deprecated_warning = 1;
+    }
     hwloc_topology_clear(topology);
     hwloc_distances_destroy(topology);
     hwloc_topology_setup_defaults(topology);

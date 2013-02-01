@@ -204,8 +204,9 @@ AM_CPPFLAGS += $(LTDLINCL)
 libhwloc_la_LDFLAGS += -export-dynamic
 libhwloc_la_LIBADD = $(LIBLTDL)
 libhwloc_la_DEPENDENCIES = $(LTDLDEPS)
-
+if HWLOC_LTDL_INCLUDED
 SUBDIRS = libltdl
+endif
 endif
 
 # Embedded library (note the lack of a .so version number -- that

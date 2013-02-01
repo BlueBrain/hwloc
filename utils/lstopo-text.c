@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2013 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -125,7 +125,8 @@ output_topology (hwloc_topology_t topology, hwloc_obj_t l, hwloc_obj_t parent, F
   if (l->arity || (!i && !l->arity))
     {
       for (x=0; x<l->arity; x++)
-	output_topology (topology, l->children[x], l, output, i, logical, verbose_mode);
+	if (l->children[x]->type != HWLOC_OBJ_PU || !lstopo_ignore_pus)
+	  output_topology (topology, l->children[x], l, output, i, logical, verbose_mode);
   }
 }
 
@@ -175,29 +176,8 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
   }
 
   if ((verbose_mode > 1 || !verbose_mode) && lstopo_show_only == (hwloc_obj_type_t)-1) {
-    unsigned depth, nbobjs;
-    for (depth = 0; depth < topodepth; depth++) {
-      hwloc_obj_t obj = hwloc_get_obj_by_depth(topology, depth, 0);
-      char type[64];
-      nbobjs = hwloc_get_nbobjs_by_depth (topology, depth);
-      indent(output, depth);
-      hwloc_obj_type_snprintf(type, sizeof(type), obj, 1);
-      fprintf (output, "depth %u:\t%u %s (type #%u)\n",
-	       depth, nbobjs, type, obj->type);
-    }
-    nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_BRIDGE);
-    if (nbobjs)
-      fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
-	       HWLOC_TYPE_DEPTH_BRIDGE, nbobjs, "Bridge", HWLOC_OBJ_BRIDGE);
-    nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_PCI_DEVICE);
-    if (nbobjs)
-      fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
-	       HWLOC_TYPE_DEPTH_PCI_DEVICE, nbobjs, "PCI Device", HWLOC_OBJ_PCI_DEVICE);
-    nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_OS_DEVICE);
-    if (nbobjs)
-      fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
-	       HWLOC_TYPE_DEPTH_OS_DEVICE, nbobjs, "OS Device", HWLOC_OBJ_OS_DEVICE);
-  }
+    hwloc_lstopo_show_summary(output, topology);
+ }
 
   if (verbose_mode > 1 && lstopo_show_only == (hwloc_obj_type_t)-1) {
     const struct hwloc_distances_s * distances;

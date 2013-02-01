@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2010-2012 Inria.  All rights reserved.
+.\" Copyright © 2010-2013 Inria.  All rights reserved.
 .\" Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
 .TH HWLOC-CALC "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
@@ -13,6 +13,11 @@ hwloc-calc \- Operate on cpu mask strings and objects
 .
 .B hwloc-calc
 [\fIoptions\fR] \fI<location1> [<location2> [...] ]
+.
+.PP
+Note that hwloc(7) provides a detailed explanation of the hwloc system
+and of valid <location> formats;
+it should be read before reading this man page.
 .
 .\" **************************
 .\"    Options Section
@@ -265,5 +270,5 @@ hwloc-calc will return nonzero if any kind of error occurs, such as
 .SH SEE ALSO
 .
 .ft R
-hwloc(7), hwloc-gather-topology(1)
+hwloc(7), lstopo(1), hwloc-info(1), hwloc-gather-topology(1)
 .sp
