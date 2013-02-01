@@ -193,7 +193,7 @@ hwloc_gl_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_b
     obj = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
     obj->name = strdup(display_name);
     obj->logical_index = -1;
-    obj->attr->osdev.type = HWLOC_OBJ_OSDEV_DISPLAY;
+    obj->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
     hwloc_insert_object_by_parent(topology, pcidev, obj);
     return 1;
   } else
