@@ -19,9 +19,18 @@
 
 #include <hwloc.h>
 
+#include <stdio.h>
+#include <string.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+/** \defgroup hwlocality_gl OpenGL Specific Functions
+ * @{
+ */
 
 /** \brief Get the hwloc OS device object corresponding to the
  * OpenGL display given by port and device index.
@@ -109,9 +118,13 @@ hwloc_gl_get_display_by_osdev(hwloc_topology_t topology __hwloc_attribute_unused
 	return -1;
 }
 
+/** @} */
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
 
 #endif /* HWLOC_GL_H */
 
