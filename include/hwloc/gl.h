@@ -1,7 +1,17 @@
 /*
  * Copyright © 2012 Blue Brain Project, EPFL. All rights reserved.
- * Copyright © 2012 Inria.  All rights reserved.
+ * Copyright © 2012-2013 Inria.  All rights reserved.
  * See COPYING in top-level directory.
+ */
+
+/** \file
+ * \brief Macros to help interaction between hwloc and the OpenGL interface.
+ *
+ * Applications that use both hwloc and OpenGL may want to
+ * include this file so as to get topology information for OpenGL displays.
+ *
+ * Only the NVIDIA device locality information is currently available,
+ * using the NV-CONTROL X11 extension and the NVCtrl library.
  */
 
 #ifndef HWLOC_GL_H
@@ -13,52 +23,90 @@
 extern "C" {
 #endif
 
-/** \brief Queries a display defined by its port and device in the
- * string format ":[port].[device]", and returns a hwloc_obj_t of
- * type HWLOC_OBJ_PCI_DEVICE containg the desired pci parameters
- * (bus,device id, domain, function) representing the GPU connected
- * to this display.
- */
-HWLOC_DECLSPEC hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName);
-
-/** \brief Find the PCI device object matching the GPU connected to the
- * display defined by its port and device as [:][port][.][device]
+/** \brief Get the hwloc OS device object corresponding to the
+ * OpenGL display given by port and device index.
+ *
+ * Return the OS device object describing the OpenGL display
+ * whose port (server) is \p port and device (screen) is \p device.
+ * Return NULL if there is none.
+ *
+ * The topology \p topology does not necessarily have to match the current
+ * machine. For instance the topology may be an XML import of a remote host.
+ * I/O devices detection and the OpenCL component must be enabled in the topology.
+ *
+ * \note The corresponding PCI device object can be obtained by looking
+ * at the OS device parent object.
  */
 static __hwloc_inline hwloc_obj_t
-hwloc_get_pcidev_by_display(hwloc_topology_t topology, int port, int device)
+hwloc_gl_get_display_osdev_by_port_device(hwloc_topology_t topology,
+					  unsigned port, unsigned device)
 {
-  char x_display [10];
-  snprintf(x_display,sizeof(x_display),":%d.%d", port, device);
-  return hwloc_gl_query_display(topology, x_display);
+        unsigned x = (unsigned) -1, y = (unsigned) -1;
+        hwloc_obj_t osdev = NULL;
+        while ((osdev = hwloc_get_next_osdev(topology, osdev)) != NULL) {
+                if (HWLOC_OBJ_OSDEV_GPU == osdev->attr->osdev.type
+                    && osdev->name
+                    && sscanf(osdev->name, ":%u.%u", &x, &y) == 2
+                    && port == x && device == y)
+                        return osdev;
+        }
+	errno = EINVAL;
+        return NULL;
 }
 
-/** \brief Returns a DISPLAY for a given GPU defined by pcidev_obj.
+/** \brief Get the hwloc OS device object corresponding to the
+ * OpenGL display given by name.
+ *
+ * Return the OS device object describing the OpenGL display
+ * whose name is \p name, built as :<port>.<device>.
+ * Return NULL if there is none.
+ *
+ * The topology \p topology does not necessarily have to match the current
+ * machine. For instance the topology may be an XML import of a remote host.
+ * I/O devices detection and the OpenCL component must be enabled in the topology.
+ *
+ * \note The corresponding PCI device object can be obtained by looking
+ * at the OS device parent object.
  */
-HWLOC_DECLSPEC int hwloc_gl_get_gpu_display(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device);
+static __hwloc_inline hwloc_obj_t
+hwloc_gl_get_display_osdev_by_name(hwloc_topology_t topology,
+				   const char *name)
+{
+        hwloc_obj_t osdev = NULL;
+        while ((osdev = hwloc_get_next_osdev(topology, osdev)) != NULL) {
+                if (HWLOC_OBJ_OSDEV_GPU == osdev->attr->osdev.type
+                    && osdev->name
+                    && !strcmp(name, osdev->name))
+                        return osdev;
+        }
+	errno = EINVAL;
+        return NULL;
+}
 
-/** \brief Returns an object of type HWLOC_OBJ_PCI_DEVICE
- * representing the GPU connected to the display defined by
- * its port and device.
- */
-HWLOC_DECLSPEC hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, int port, int device);
-
-/** \brief Returns the cpuset of the socket connected to the
- * host bridge connecting the GPU attached to the display
- * defined by its input port and device.
+/** \brief Get the OpenCL display port and device corresponding to the given hwloc OS object.
+ *
+ * Return the OpenGL display port (server) in \p port and device (screen)
+ * in \p screen that correspond to the given hwloc OS device object.
+ * Return \c -1 if there is none.
+ *
+ * The topology \p topology does not necessarily have to match the current
+ * machine. For instance the topology may be an XML import of a remote host.
+ * I/O devices detection and the OpenCL component must be enabled in the topology.
  */
 static __hwloc_inline int
-hwloc_gl_get_display_cpuset(hwloc_topology_t topology, int port, int device,
-			    hwloc_cpuset_t set)
+hwloc_gl_get_display_by_osdev(hwloc_topology_t topology __hwloc_attribute_unused,
+			      hwloc_obj_t osdev,
+			      unsigned *port, unsigned *device)
 {
-  hwloc_obj_t obj = hwloc_gl_get_gpu_by_display(topology, port, device);
-  if (!obj) {
-    errno = EINVAL;
-    return -1;
-  }
-  while (!obj->cpuset)
-    obj = obj->parent;
-  hwloc_bitmap_copy(set, obj->cpuset);
-  return 0;
+	unsigned x = -1, y = -1;
+	if (HWLOC_OBJ_OSDEV_GPU == osdev->attr->osdev.type
+	    && sscanf(osdev->name, ":%u.%u", &x, &y) == 2) {
+		*port = x;
+		*device = y;
+		return 0;
+	}
+	errno = EINVAL;
+	return -1;
 }
 
 #ifdef __cplusplus
