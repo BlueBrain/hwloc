@@ -647,7 +647,7 @@ man3_cuda_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_gl.3 \
         $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_osdev_by_port_device.3 \
         $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_osdev_by_name.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_osdev.3
+        $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_by_osdev.3
 
 man3_glibc_scheddir = $(man3dir)
 man3_glibc_sched_DATA = \
