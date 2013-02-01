@@ -1,175 +1,133 @@
 /*
  * Copyright © 2012 Blue Brain Project, BBP/EPFL. All rights reserved.
- * Copyright © 2012 Inria.  All rights reserved.
+ * Copyright © 2012-2013 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
 #include <private/autogen/config.h>
 #include <hwloc.h>
 #include <hwloc/plugins.h>
-#include <hwloc/helper.h>
+
+/* private headers allowed for convenience because this plugin is built within hwloc */
+#include <private/misc.h>
+#include <private/debug.h>
+
 #include <stdarg.h>
 #include <errno.h>
-#include <hwloc/gl.h>
 #include <X11/Xlib.h>
 #include <NVCtrl/NVCtrl.h>
 #include <NVCtrl/NVCtrlLib.h>
 
-/*****************************************************************
- * Queries a display defined by its port and device numbers in the
- * string format ":[port].[device]", and
- * returns a hwloc_obj_t containg the desired pci parameters (bus,
- * device id, domain, function)
- ****************************************************************/
-hwloc_obj_t hwloc_gl_query_display(hwloc_topology_t topology, char* displayName)
+#define HWLOC_GL_SERVER_MAX 10
+#define HWLOC_GL_SCREEN_MAX 10
+struct hwloc_gl_backend_data_s {
+  unsigned nr_display;
+  struct hwloc_gl_display_info_s {
+    char name[10];
+    unsigned port, device;
+    unsigned pcidomain, pcibus, pcidevice, pcifunc;
+    char *productname;
+  } display[HWLOC_GL_SERVER_MAX*HWLOC_GL_SCREEN_MAX];
+};
+
+static void
+hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
 {
-#ifdef HWLOC_HAVE_GL
-  hwloc_obj_t display_obj = NULL;
-  Display* display;
-  int opcode, event, error;
-  int default_screen_number;
-  unsigned int *ptr_binary_data;
-  int data_lenght;
-  int gpu_number;
-  int nv_ctrl_pci_bus;
-  int nv_ctrl_pci_device;
-  int nv_ctrl_pci_domain;
-  int nv_ctrl_pci_func;
   int err;
-
-  display = XOpenDisplay(displayName);
-  if (display == 0) {
-    return display_obj;
-  }
-
-  /* Check for NV-CONTROL extension */
-  if( !XQueryExtension(display, "NV-CONTROL", &opcode, &event, &error))
-  {
-    XCloseDisplay( display);
-    return display_obj;
-  }
-
-  default_screen_number = DefaultScreen(display);
-
-  /* Gets the GPU number attached to the default screen. */
-  /* For further details, see the <NVCtrl/NVCtrlLib.h> */
-  err = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, default_screen_number, 0,
-				      NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
-				      (unsigned char **) &ptr_binary_data, &data_lenght);
-  if (!err)
-    goto out_display;
-
-  gpu_number = ptr_binary_data[1];
-  free(ptr_binary_data);
-
-  /* Gets the ID's of the GPU defined by gpu_number
-   * For further details, see the <NVCtrl/NVCtrlLib.h> */
-  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-				    NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
-  if (!err)
-    goto out_display;
-
-  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-				    NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
-  if (!err)
-    goto out_display;
-
-  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-				    NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
-  if (!err)
-    goto out_display;
-
-  err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-				    NV_CTRL_PCI_FUNCTION, &nv_ctrl_pci_func);
-  if (!err)
-    goto out_display;
-
-  display_obj = hwloc_get_pcidev_by_busid(topology,
-					  (unsigned) nv_ctrl_pci_domain,
-					  (unsigned) nv_ctrl_pci_bus,
-					  (unsigned) nv_ctrl_pci_device,
-					  (unsigned) nv_ctrl_pci_func);
-
-  XCloseDisplay(display);
-  return display_obj;
-
-out_display:
-  XCloseDisplay(display);
-  errno = EINVAL;
-  return NULL;
-
-#else
-  errno = ENOSYS;
-  return NULL;
-#endif
-}
-
-/*****************************************************************
- * Returns a DISPLAY for a given GPU defined by its pcidev_obj
- * which contains the pci info required for doing the matching a
- * pci device in the topology.
- ****************************************************************/
-int hwloc_gl_get_gpu_display(hwloc_topology_t topology, hwloc_obj_t pcidev_obj, unsigned *port, unsigned *device)
-{
-  hwloc_obj_t query_display_obj;
-
-  unsigned x_server_max;
-  unsigned x_screen_max;
   unsigned i,j;
 
-  /* Try the first 10 servers with 10 screens */
-  /* For each x server, if the first x screen fails move to the next x server */
-  x_server_max = 10;
-  x_screen_max = 10;
+  /* mark the number of display as 0 in case we fail below,
+   * so that we don't try again later.
+   */
+  data->nr_display = 0;
 
-  for (i = 0; i < x_server_max; ++i) {
-    for (j = 0; j < x_screen_max; ++j) {
+  for (i = 0; i < HWLOC_GL_SERVER_MAX; ++i) {
+    for (j = 0; j < HWLOC_GL_SCREEN_MAX; ++j) {
+      struct hwloc_gl_display_info_s *info = &data->display[data->nr_display];
+      Display* display;
+      int opcode, event, error;
+      int default_screen_number;
+      unsigned int *ptr_binary_data;
+      int data_length;
+      int gpu_number;
+      int nv_ctrl_pci_bus;
+      int nv_ctrl_pci_device;
+      int nv_ctrl_pci_domain;
+      int nv_ctrl_pci_func;
+      char *productname;
 
       /* Formulate the display string with the format "[:][x_server][.][x_screen]" */
-      char x_display [10];
-      snprintf(x_display,sizeof(x_display),":%d.%d", i, j);
+      snprintf(info->name, sizeof(info->name), ":%u.%u", i, j);
+      display = XOpenDisplay(info->name);
+      if (!display)
+	continue;
 
-      /* Retrieve an object matching the x_display */
-      query_display_obj = hwloc_gl_query_display(topology, x_display);
+      /* Check for NV-CONTROL extension */
+      if(!XQueryExtension(display, "NV-CONTROL", &opcode, &event, &error))
+	goto next;
 
-      if (query_display_obj == NULL)
-        break;
+      default_screen_number = DefaultScreen(display);
 
-      if (query_display_obj->attr->pcidev.bus == pcidev_obj->attr->pcidev.bus &&
-          query_display_obj->attr->pcidev.device_id == pcidev_obj->attr->pcidev.device_id &&
-          query_display_obj->attr->pcidev.domain == pcidev_obj->attr->pcidev.domain &&
-          query_display_obj->attr->pcidev.func == pcidev_obj->attr->pcidev.func) {
+      /* Gets the GPU number attached to the default screen. */
+      /* For further details, see the <NVCtrl/NVCtrlLib.h> */
+      err = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, default_screen_number, 0,
+					  NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
+					  (unsigned char **) &ptr_binary_data, &data_length);
+      if (!err)
+	goto next;
 
-        *port = i;
-        *device = j;
+      gpu_number = ptr_binary_data[1];
+      free(ptr_binary_data);
 
-        return 0;
-      }
+      /* Gets the ID's of the GPU defined by gpu_number
+       * For further details, see the <NVCtrl/NVCtrlLib.h> */
+      err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+					NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
+      if (!err)
+	goto next;
+
+      err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+					NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
+      if (!err)
+	goto next;
+
+      err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+					NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
+      if (!err)
+	goto next;
+
+      err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+					NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
+      if (!err)
+	goto next;
+
+      err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+					NV_CTRL_PCI_FUNCTION, &nv_ctrl_pci_func);
+      if (!err)
+	goto next;
+
+      productname = NULL;
+      err = XNVCTRLQueryTargetStringAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
+					      NV_CTRL_STRING_PRODUCT_NAME, &productname);
+
+      info->port = i;
+      info->device = j;
+      info->pcidomain = nv_ctrl_pci_domain;
+      info->pcibus = nv_ctrl_pci_bus;
+      info->pcidevice = nv_ctrl_pci_device;
+      info->pcifunc = nv_ctrl_pci_func;
+      info->productname = productname;
+
+      hwloc_debug("GL device %s (product %s) on PCI 0000:%02x:%02x.%u\n", info->name, productname,
+		  nv_ctrl_pci_domain, nv_ctrl_pci_bus, nv_ctrl_pci_device, nv_ctrl_pci_func);
+
+      /* validate this device */
+      data->nr_display++;
+
+    next:
+      XCloseDisplay(display);
     }
   }
-  return -1;
-}
-
-/*****************************************************************
- * Returns a hwloc_obj_t HWLOC_OBJ_PCI_DEVICE representing the GPU
- * connected to a display defined by its port and device
- * parameters.
- * Returns NULL if no GPU was connected to the give port and
- * device or for non exisiting display.
- ****************************************************************/
-hwloc_obj_t hwloc_gl_get_gpu_by_display(hwloc_topology_t topology, int port, int device)
-{
-  char x_display [10];
-  hwloc_obj_t display_obj;
-
-  /* Formulate the display string */
-  snprintf(x_display, sizeof(x_display), ":%d.%d", port, device);
-  display_obj = hwloc_gl_query_display(topology, x_display);
-
-  if (display_obj != NULL)
-    return display_obj;
-  else
-    return NULL;
 }
 
 static int
@@ -177,27 +135,71 @@ hwloc_gl_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_b
 				   struct hwloc_obj *pcidev)
 {
   struct hwloc_topology *topology = backend->topology;
-  unsigned port, device;
-  int err;
+  struct hwloc_gl_backend_data_s *data = backend->private_data;
+  unsigned i;
 
-  /* Getting the display info [:port.device] */
-  err = hwloc_gl_get_gpu_display(topology, pcidev, &port, &device);
-
-  /* If GPU, Appending the display as a children to the GPU
-   * and add a display object with the display name */
-  if (!err) {
-    struct hwloc_obj *obj;
-    char display_name[64];
-    snprintf(display_name, sizeof(display_name), ":%d.%d", port, device);
-
-    obj = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
-    obj->name = strdup(display_name);
-    obj->logical_index = -1;
-    obj->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
-    hwloc_insert_object_by_parent(topology, pcidev, obj);
-    return 1;
-  } else
+  if (!(hwloc_topology_get_flags(topology) & (HWLOC_TOPOLOGY_FLAG_IO_DEVICES|HWLOC_TOPOLOGY_FLAG_WHOLE_IO)))
     return 0;
+
+  if (!hwloc_topology_is_thissystem(topology)) {
+    hwloc_debug("%s", "\nno GL detection (not thissystem)\n");
+    return 0;
+  }
+
+  if (HWLOC_OBJ_PCI_DEVICE != pcidev->type)
+    return 0;
+
+  if (data->nr_display == (unsigned) -1) {
+    /* first call, lookup all display */
+    hwloc_gl_query_devices(data);
+    /* if it fails, data->nr_display = 0 so we won't do anything below and in next callbacks */
+  }
+
+  if (!data->nr_display)
+    /* found no display */
+    return 0;
+
+  /* now the display array is ready to use */
+  for(i=0; i<data->nr_display; i++) {
+    struct hwloc_gl_display_info_s *info = &data->display[i];
+    hwloc_obj_t osdev;
+
+    if (info->pcidomain != pcidev->attr->pcidev.domain)
+      continue;
+    if (info->pcibus != pcidev->attr->pcidev.bus)
+      continue;
+    if (info->pcidevice != pcidev->attr->pcidev.dev)
+      continue;
+    if (info->pcifunc != pcidev->attr->pcidev.func)
+      continue;
+
+    osdev = hwloc_alloc_setup_object(HWLOC_OBJ_OS_DEVICE, -1);
+    osdev->name = strdup(info->name);
+    osdev->logical_index = -1;
+    osdev->attr->osdev.type = HWLOC_OBJ_OSDEV_GPU;
+    hwloc_obj_add_info(osdev, "Backend", "GL");
+    hwloc_obj_add_info(osdev, "GPUVendor", "NVIDIA Corporation");
+    if (info->productname)
+      hwloc_obj_add_info(osdev, "GPUModel", info->productname);
+    hwloc_insert_object_by_parent(topology, pcidev, osdev);
+    return 1;
+  }
+
+  return 0;
+}
+
+static void
+hwloc_gl_backend_disable(struct hwloc_backend *backend)
+{
+  struct hwloc_gl_backend_data_s *data = backend->private_data;
+  unsigned i;
+  if (data->nr_display != (unsigned) -1) { /* could be -1 if --no-io */
+    for(i=0; i<data->nr_display; i++) {
+      struct hwloc_gl_display_info_s *info = &data->display[i];
+      free(info->productname);
+    }
+  }
+  free(backend->private_data);
 }
 
 static struct hwloc_backend *
@@ -207,12 +209,24 @@ hwloc_gl_component_instantiate(struct hwloc_disc_component *component,
 			       const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
+  struct hwloc_gl_backend_data_s *data;
 
   /* thissystem may not be fully initialized yet, we'll check flags in discover() */
 
   backend = hwloc_backend_alloc(component);
   if (!backend)
     return NULL;
+
+  data = malloc(sizeof(*data));
+  if (!data) {
+    free(backend);
+    return NULL;
+  }
+  /* the first callback will initialize those */
+  data->nr_display = (unsigned) -1; /* unknown yet */
+
+  backend->private_data = data;
+  backend->disable = hwloc_gl_backend_disable;
 
   backend->notify_new_object = hwloc_gl_backend_notify_new_object;
   return backend;
