@@ -59,9 +59,9 @@ hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
       continue;
     }
 
-    for (j = 0; j < HWLOC_GL_SCREEN_MAX; ++j) {
+    for (j = 0; j < ScreenCount( display ); ++j) {
       struct hwloc_gl_display_info_s *info = &data->display[data->nr_display];
-      int default_screen_number = j;
+      const int screen = j;
       unsigned int *ptr_binary_data;
       int data_length;
       int gpu_number;
@@ -75,7 +75,7 @@ hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
 
       /* Gets the GPU number attached to the default screen. */
       /* For further details, see the <NVCtrl/NVCtrlLib.h> */
-      err = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, default_screen_number, 0,
+      err = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, screen, 0,
                                           NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
                                           (unsigned char **) &ptr_binary_data, &data_length);
       if (!err)
