@@ -42,11 +42,26 @@ hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
   data->nr_display = 0;
 
   for (i = 0; i < HWLOC_GL_SERVER_MAX; ++i) {
+    Display* display;
+    char displayName[10];
+    int opcode, event, error;
+
+    /* open X server */
+    snprintf(displayName, sizeof(displayName), ":%u", i);
+    display = XOpenDisplay(displayName);
+    if (!display)
+      continue;
+
+    /* Check for NV-CONTROL extension */
+    if(!XQueryExtension(display, "NV-CONTROL", &opcode, &event, &error))
+    {
+      XCloseDisplay(display);
+      continue;
+    }
+
     for (j = 0; j < HWLOC_GL_SCREEN_MAX; ++j) {
       struct hwloc_gl_display_info_s *info = &data->display[data->nr_display];
-      Display* display;
-      int opcode, event, error;
-      int default_screen_number;
+      int default_screen_number = j;
       unsigned int *ptr_binary_data;
       int data_length;
       int gpu_number;
@@ -56,25 +71,15 @@ hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
       int nv_ctrl_pci_func;
       char *productname;
 
-      /* Formulate the display string with the format "[:][x_server][.][x_screen]" */
       snprintf(info->name, sizeof(info->name), ":%u.%u", i, j);
-      display = XOpenDisplay(info->name);
-      if (!display)
-	continue;
-
-      /* Check for NV-CONTROL extension */
-      if(!XQueryExtension(display, "NV-CONTROL", &opcode, &event, &error))
-	goto next;
-
-      default_screen_number = DefaultScreen(display);
 
       /* Gets the GPU number attached to the default screen. */
       /* For further details, see the <NVCtrl/NVCtrlLib.h> */
       err = XNVCTRLQueryTargetBinaryData (display, NV_CTRL_TARGET_TYPE_X_SCREEN, default_screen_number, 0,
-					  NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
-					  (unsigned char **) &ptr_binary_data, &data_length);
+                                          NV_CTRL_BINARY_DATA_GPUS_USED_BY_XSCREEN,
+                                          (unsigned char **) &ptr_binary_data, &data_length);
       if (!err)
-	goto next;
+        continue;
 
       gpu_number = ptr_binary_data[1];
       free(ptr_binary_data);
@@ -82,33 +87,33 @@ hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
       /* Gets the ID's of the GPU defined by gpu_number
        * For further details, see the <NVCtrl/NVCtrlLib.h> */
       err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-					NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
+                                        NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
       if (!err)
-	goto next;
+        continue;
 
       err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-					NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
+                                        NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
       if (!err)
-	goto next;
+        continue;
 
       err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-					NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
+                                        NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
       if (!err)
-	goto next;
+        continue;
 
       err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-					NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
+                                        NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
       if (!err)
-	goto next;
+        continue;
 
       err = XNVCTRLQueryTargetAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-					NV_CTRL_PCI_FUNCTION, &nv_ctrl_pci_func);
+                                        NV_CTRL_PCI_FUNCTION, &nv_ctrl_pci_func);
       if (!err)
-	goto next;
+        continue;
 
       productname = NULL;
       err = XNVCTRLQueryTargetStringAttribute(display, NV_CTRL_TARGET_TYPE_GPU, gpu_number, 0,
-					      NV_CTRL_STRING_PRODUCT_NAME, &productname);
+                                              NV_CTRL_STRING_PRODUCT_NAME, &productname);
 
       info->port = i;
       info->device = j;
@@ -119,20 +124,18 @@ hwloc_gl_query_devices(struct hwloc_gl_backend_data_s *data)
       info->productname = productname;
 
       hwloc_debug("GL device %s (product %s) on PCI 0000:%02x:%02x.%u\n", info->name, productname,
-		  nv_ctrl_pci_domain, nv_ctrl_pci_bus, nv_ctrl_pci_device, nv_ctrl_pci_func);
+                  nv_ctrl_pci_domain, nv_ctrl_pci_bus, nv_ctrl_pci_device, nv_ctrl_pci_func);
 
       /* validate this device */
       data->nr_display++;
-
-    next:
-      XCloseDisplay(display);
     }
+    XCloseDisplay(display);
   }
 }
 
 static int
 hwloc_gl_backend_notify_new_object(struct hwloc_backend *backend, struct hwloc_backend *caller __hwloc_attribute_unused,
-				   struct hwloc_obj *pcidev)
+                                   struct hwloc_obj *pcidev)
 {
   struct hwloc_topology *topology = backend->topology;
   struct hwloc_gl_backend_data_s *data = backend->private_data;
@@ -204,9 +207,9 @@ hwloc_gl_backend_disable(struct hwloc_backend *backend)
 
 static struct hwloc_backend *
 hwloc_gl_component_instantiate(struct hwloc_disc_component *component,
-			       const void *_data1 __hwloc_attribute_unused,
-			       const void *_data2 __hwloc_attribute_unused,
-			       const void *_data3 __hwloc_attribute_unused)
+                               const void *_data1 __hwloc_attribute_unused,
+                               const void *_data2 __hwloc_attribute_unused,
+                               const void *_data3 __hwloc_attribute_unused)
 {
   struct hwloc_backend *backend;
   struct hwloc_gl_backend_data_s *data;
